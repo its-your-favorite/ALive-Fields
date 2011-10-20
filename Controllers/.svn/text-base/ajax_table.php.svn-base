@@ -1,0 +1,91 @@
+<?PHP 
+
+require_once( "../includes/alex_functions.php"); 
+require_once("../includes/dispatch_functions.php");
+
+validate_logged_in();
+error_reporting(E_ERROR | E_PARSE);
+set_error_handler (xml_error, E_ERROR | E_PARSE);
+set_time_limit(25);
+
+
+function query_to_json($sql)
+{
+header('Content-Type: text/html; charset=iso-8859-1');
+database_connect();
+
+$rs = mssql_query($sql);		
+
+if( $rs == false)
+     json_error(  print_r( mssql_get_last_message(), true) ,  $sql);
+
+echo '{ rows: [';//start output of data
+
+$q = 1;
+$row =  mssql_fetch_row($rs);
+
+if (!$row)
+	{
+		echo "]}";
+		return;
+	}
+
+	//broken into two pieces because of issues with commas, and I don't want an IF in my speedy loop
+	echo  "{id: " . $q++ .',data: ["' . implode('","', 
+			str_replace(array("\r", "\n"), array("\\r", "\\n"), str_replace(array('\\', '"', '"', '"', chr(147), chr(148) )
+			, "",  $row ))) . '"]} ';	
+				
+	while( $row =  mssql_fetch_row($rs)) //sqlsrv_fetch_array( $res, SQLSRV_FETCH_NUMERIC, SQLSRV_SCROLL_NEXT))
+		{  //create xml tag for grid's row		
+			echo  ",{id: " . $q++ .',data: ["' . implode('","', 
+			str_replace(array("\r", "\n"), array("\\r", "\\n"), str_replace(array('\\', '"', '“', '”', chr(147), chr(148) )
+			, "",  $row ))) . '"]} ';	
+		} 
+	echo '] }';
+
+return;
+}
+
+//Obselete. Now superceded by query_to_json
+function query_to_xml($sql)
+{
+database_connect();
+		
+$rs = mssql_query($sql);		
+if( $rs == false)
+     xml_error(  print_r( mssql_get_last_message(), true) ,  $sql);
+
+echo '<rows id="A">';//start output of data
+
+$q = 1;
+while( $row =  mssql_fetch_row($rs)) //sqlsrv_fetch_array( $res, SQLSRV_FETCH_NUMERIC, SQLSRV_SCROLL_NEXT))
+	{  //create xml tag for grid's row
+		echo "<row id='".($q++)."'>";
+		foreach ($row as $key => $value)
+			print("<cell><![CDATA[". clarify($value) ."]]></cell>\n");		
+		echo "</row>";
+	} 
+
+echo '</rows>';
+//sqlsrv_free_stmt( $rs);
+//sqlsrv_close( $conn);
+}
+////////////////////////////////////////////////////////////////////////////////////
+
+function clarify($param)
+{
+
+	if (gettype($param) == object)
+		{
+		if (get_class($param) == DateTime)
+			return date_format($param, 'Y-m-d H:i:s');
+		else
+			;//echo "no match";
+		}
+	return ($param);
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+
+
+?>

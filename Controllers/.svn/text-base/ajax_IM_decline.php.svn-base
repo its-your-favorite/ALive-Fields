@@ -1,0 +1,31 @@
+<?PHP 
+die("PAGE NOW OBSELETE");
+require_once( "../models/ActionRecord.php");
+require_once( "../includes/alex_functions.php"); 
+require_once("../includes/dispatch_functions.php");
+ 	validate_logged_in();
+include "ajax_table.php";
+
+function custom_error_handler($a,$b,$c,$d) { return json_error($a,$b,$c,$d);}
+
+error_reporting(E_ERROR | E_PARSE);
+//set_error_handler (xml_error, E_ERROR | E_PARSE);
+
+set_time_limit(10);
+$conn = database_connect(); 
+
+$var = json_decode($_GET['request'], true);
+
+$InterpID = (int)$var["InterpID"];
+$DispatchID = (int)$var["DispatchID"];
+
+
+   $ContactRS = database_query("SELECT DispatchID from [InterpContact] where DispatchID=" . $DispatchID . " and InterpID = " . $InterpID );
+
+    if (!mssql_num_rows($ContactRS))
+        database_query("INSERT INTO InterpContact (InterpID, DispatchID, Contacted, Declined, Available) VALUES (" . $InterpID . "," . $DispatchID . ", getDate(), -1, -1)");
+    else
+        database_query("UPDATE InterpContact SET Declined=1, Contacted= getDate() WHERE DispatchID= " . $DispatchID . " AND InterpID=" . $InterpID);
+
+echo "1";
+?>

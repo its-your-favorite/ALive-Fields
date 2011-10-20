@@ -1,0 +1,33 @@
+<?PHP 
+require_once( "../includes/alex_functions.php");
+ 	validate_logged_in();
+include "ajax_table.php";
+
+function custom_error_handler($a,$b,$c,$d) { return xml_error($a,$b,$c,$d);}
+
+error_reporting(E_ERROR | E_PARSE);
+//set_error_handler (xml_error, E_ERROR | E_PARSE);
+set_time_limit(10);
+
+$var = json_decode($_GET['request'], true);
+//$filters = json_decode($_GET['filters'], true);
+$filter_code = filters_to_sql($filters);
+
+$DispatchID = (int)$var["DispatchID"];
+
+
+$sql = "SELECT Invoice.DispatchID, Invoice.Cost, Invoice.Unit, Invoice.Min, Invoice.Quantity, Invoice.InterpRate, Invoice.CustItemID, CustItems.ItemCode, Invoice.PayQty, Invoice.PayUnit, Invoice.PayMin FROM Invoice INNER JOIN CustItems ON Invoice.CustItemID = CustItems.CustItemID WHERE DispatchID = '$DispatchID' " ;
+
+//echo "NUMY";
+if (! $DEBUG)
+	;//xmlHeader();
+else
+	{
+	header("Content-type: text/html");
+	echo " a - " . $sql;
+	}
+
+echo query_to_json($sql);
+
+
+?>

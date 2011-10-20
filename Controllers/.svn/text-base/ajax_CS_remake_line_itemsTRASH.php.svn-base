@@ -1,0 +1,101 @@
+<?PHP 
+$include_path = "../includes/";
+require_once( $include_path . "alex_functions.php");
+require_once( $include_path . "dispatch_functions.php");
+
+validate_logged_in();
+ 
+error_reporting(E_ALL);
+//set_error_handler (xml_error, E_ERROR | E_PARSE);
+set_time_limit(10);
+$CustID = $_GET['CustID'];
+$debug = true;
+//$CustID = 100;
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+CODE NO LONGER TO BE USED>
+
+NEW PLAN: Generate CustItems as soon as needed.
+/*
+database_connect();
+
+$grouping_traits = array("Language", "Type", "isAfterHours", "isEmergency", "Region", "ContractID", "ItemCode");
+
+//foreach ($grouping_traits as $x)
+//	$groups[$x] = get_unique_values_of($x, $CustID);
+
+$languagesRs = database_query("SELECT  " . implode(",", $grouping_traits) . ",RuleSet  from PackageRules WHERE 
+	((CustID = '$CustID' or CustID = '*') 	AND
+	(ContractID = '$ContractedID' or ContractID = '*')	AND
+	(Region = '$Region' or Region = '*')	AND
+	(FacilityID = '$FacilityID' or FacilityID = '*')) GROUP BY Language, Type, isAfterHours, isEmergency, Region, ContractID, CustID, RuleSet, ItemCode ", $debug);
+
+database_query("UPDATE CustItems set Active = 0 WHERE CustID = '$CustID'"); 
+
+while ($languageRow = mssql_fetch_assoc($languagesRs) )
+		{
+	//	echo "<br> combining for rule." ;
+		$grouping_string = "";
+		foreach ($grouping_traits as $x)
+			$grouping_string .= " ($x = '" . $languageRow[$x]  . "') AND ";
+
+		$rs = database_query("SELECT *, 
+				(CASE CustID WHEN '*' THEN 0 ELSE 100 END + 
+				 CASE ContractID WHEN '*' THEN 0 ELSE 1000 END  + 
+				 CASE Region WHEN '*' THEN 0 ELSE 10 END  + 
+				 CASE FacilityID WHEN '*' THEN 0 ELSE 10000 END  + 
+				 CASE Language WHEN '*' THEN 0 ELSE 1 END  + 
+				 CASE IsEmergency WHEN '*' THEN 0 ELSE 1 END  + 
+				 CASE IsAfterHours WHEN '*' THEN 0 ELSE 1 END  )
+			 
+			AS specificity FROM PackageRules WHERE 
+			
+			 (CustID = '$CustID' or CustID = '*') 	AND
+				$grouping_string 					 		
+				(RuleSet = '" . $languageRow['RuleSet'] . "') 	 	 
+			ORDER BY specificity ASC", 1);
+			
+		$payString = "";
+		$costString = "";
+		
+		if (mssql_num_rows($rs) )
+			{
+			while ($row = mssql_fetch_assoc($rs) )
+				{
+				$payString  .=  $row['PayEffect']  ;		
+				$costString .=  $row['CostEffect'] ;			 
+				$copy = $row;				
+				}			
+
+			$copy['CostEffect'] = ($costString);
+			$copy['PayEffect'] = ($payString); 
+		//echo "Chez";
+			addCustItem( $CustID , $copy);
+			}
+		else
+			{
+			if ($debug)
+				echo "<BR> NO ROWS";	
+				
+			}
+		
+  		} 
+return;
+		
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function addCustItem($CustID, $Row)
+{
+	//var_dump($Row);
+    //	First check for matching cust item. If not present, then add one... If present, then re-activate ?
+	$cost = (float)evaluate_string($Row['CostEffect']);
+	$pay = (float)evaluate_string($Row['PayEffect']);
+	//die("test: '" . $Row['Type'] . "' or " . (int)(trim($Row['Type']) == 'Hourly') );
+	database_query("INSERT INTO CustItems (Active, CustID , Description , Cost , Pay , Unit	, Min , Splitable, Team, ItemCode, Hourly  ,	Mileage   , PayMin,	PayUnit, PayCode )  VALUES   (1,    '$CustID', '" . $Row['LineItemName'] . "', $cost, $pay, '" .  $Row['Unit'] . "'   ,  '" .  $Row['Min'] . "' ,   0 	   ,   0 ,  '" . $Row['ItemCode'] . "',  '" . (int)(trim($Row['Type']) == 'Hourly') . "','" .   (int)(trim($Row['Type']) == 'Mileage')  . "','" .  $Row['PayMin'] . "','" .  $Row['PayUnit'] . "','" . $Row['PayCode'] . "') ", 1);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+?>

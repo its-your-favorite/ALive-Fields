@@ -1,0 +1,67 @@
+<?PHP 
+require_once( "../includes/alex_functions.php");
+require_once("../includes/dispatch_functions.php");
+ 	validate_logged_in();
+include "ajax_table.php";
+
+function custom_error_handler($a,$b,$c,$d) { return xml_error($a,$b,$c,$d);}
+
+error_reporting(E_ERROR | E_PARSE);
+//set_error_handler (xml_error, E_ERROR | E_PARSE);
+set_time_limit(10);
+
+$var = json_decode($_GET['request'], true);
+$filters = json_decode($_GET['filters'], true);
+$filter_code = filters_to_sql($filters);
+
+$InterpID = (int)$var["InterpID"];
+$requestNo = (int)$var["requestNo"];
+
+
+$sql_p1 = " SELECT Dispatch.InterpID, Convert(varchar(100), Dispatch.Scheduled, 100) as SKED, Convert(varchar(100), Dispatch.SchedEnd, 100), Dispatch.SpecialInstruction, Facility.City, Dispatch.InterpConfirmed, Dispatch.CustConfirmed, Customer.CustomerName, Client.ClientFName, Client.ClientLName, Dispatch.ContactPerson,   Dispatch.Location AS LocSpecs, Dispatch.ConfirmedBy,Dispatch.DispatchID,  Client.MedicalNo, Facility.Name AS Name,  CAST([Facility].[Address] as varchar) + ', ' + CAST([Facility].[City] as varchar) + ', ' + CAST([Facility].[State] as varchar) + ' ' + CAST([Facility].[zip] as varchar) AS FacilityAdd,  Dispatch.Location AS Location    FROM ((Dispatch INNER JOIN Client ON Dispatch.ClientID = Client.ClientID) INNER JOIN Customer ON Client.CustID = Customer.CustID) INNER JOIN Facility ON Dispatch.FacilityID = Facility.FacilityID WHERE (((Dispatch.InterpID)=" . $InterpID . ") AND ((Facility.FacilityID) Is Not Null)) AND ";
+   
+$sql_p2 = $filter_code;
+
+$sql_p3 = " UNION SELECT 
+Dispatch.InterpID, Convert(varchar(100), Dispatch.Scheduled, 100) as SKED, Convert(varchar(100), Dispatch.SchedEnd, 100), Dispatch.SpecialInstruction, Facility.City, Dispatch.InterpConfirmed, Dispatch.CustConfirmed, Customer.CustomerName, Client.ClientFName, Client.ClientLName, Dispatch.ContactPerson, Dispatch.Location AS LocSpecs, Dispatch.ConfirmedBy, Dispatch.DispatchID, Client.MedicalNo, '*OFF SITE*' AS Name, Dispatch.Location AS FacilityAdd, '' AS Location 
+ FROM ((Dispatch INNER JOIN Client ON Dispatch.ClientID = Client.ClientID) INNER JOIN Customer ON Client.CustID = Customer.CustID) INNER JOIN Facility ON Dispatch.FacilityID = Facility.FacilityID WHERE (((Dispatch.InterpID)=" . $InterpID . ") AND ((Facility.FacilityID) Is Null)) AND ";
+
+$sql_p4 = $filter_code;
+
+$sql_p5 = "	
+UNION SELECT 
+InterpUnAvail.InterpID, Convert(varchar(100), InterpUnAvail.[From], 100)  AS Scheduled, Convert(varchar(100), InterpUnAvail.[To], 100) AS SchedEnd, InterpUnAvail.Description AS specialinstruction, '' AS a, '' AS b, '' AS c, '' AS d, '' AS e, '' AS f, '' AS g, '' AS h, '' AS i, '' AS j, '' AS k, '' AS l, '' AS m, '' AS n FROM InterpUnAvail WHERE " ; 
+$sql_p6 = "";
+$sql_p7 = " ORDER BY SKED DESC ";
+
+// 1. Union #2
+// 2. Union #2
+// 3. Nada
+// 4. Nada  
+
+if ($requestNo == 1)
+	$sql_p6 = " (InterpUnAvail.InterpID=" . $InterpID . ") AND [From] > CAST(FLOOR(CAST(getDate() AS FLOAT)) AS DATETIME ) ";
+elseif ($requestNo == 2)
+	$sql_p6 = " (((InterpUnAvail.InterpID)=" . $InterpID .")) ";	
+
+/**/
+if ($requestNo > 2)
+	$sql = $sql_p1 . $sql_p2 . $sql_p3 . $sql_p4 . $sql_p7;
+else
+	$sql = $sql_p1 . $sql_p2 . $sql_p3 . $sql_p4 . $sql_p5 . $sql_p6 . $sql_p7;	
+
+header('Content-Type: text/html; charset=iso-8859-1'); //$DEBUG = true; 
+
+//echo $sql;
+if (! $DEBUG)
+	;//xmlHeader();
+else
+	{
+	header("Content-type: text/html");
+	echo " a - " . $sql;
+	}
+
+echo query_to_json($sql);
+
+
+?>

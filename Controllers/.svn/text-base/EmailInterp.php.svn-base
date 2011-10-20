@@ -1,0 +1,83 @@
+<?php
+/** * EmailInterp Controller;
+ * File: Controllers/EmailInterp.php;
+ * @copyright Copyright (c) 2008-2011, Language People, Inc.; All rights reserved.;
+ * @author Alex Rohde;
+ * ;
+ * Created: April 25 2011; */
+
+
+require_once("../includes/dispatch_functions.php");
+require_once("../includes/alex_functions.php");
+
+function emailInterpAppt($email, $DispatchID)
+{
+	 database_connect();
+
+	//security measure to make sure we don't send these out in
+			//test environment
+	 if (detectEnvironment() != "live")
+		$email = "languagepeople@mailmetrash.com"; 
+	
+	$DispatchID = (int)$DispatchID;
+	$strBCC = trim($email);
+	  
+	$DispRS = database_query(" SELECT  Convert(varchar(100), Dispatch.Scheduled, 100), Dispatch.SchedEnd, Dispatch.SpecialInstruction, Dispatch.Location as SpecLocation, Facility.Address as Facility, Facility.City as City, Facility.State as State, "
+						. 	"Customer.CustomerName, Client.MedicalNo, Client.ClientFName, Client.ClientLName, Dispatch.ContactPerson FROM ((Dispatch LEFT JOIN Client ON Dispatch.ClientID = Client.ClientID) " 
+						.   "LEFT JOIN Customer ON Client.CustID = Customer.CustID) LEFT JOIN Facility ON Dispatch.FacilityID = Facility.FacilityID WHERE(Dispatch.FacilityID Is Not Null) And (Dispatch.DispatchID =  $DispatchID )",0);
+										
+	$RateRS = database_query("SELECT CustItems.ItemCode, Invoice.InterpRate, CustItems.Mileage FROM Invoice LEFT JOIN CustItems ON Invoice.CustItemID = CustItems.CustItemID WHERE (DispatchID= " . $DispatchID . ")");
+		
+		if (mssql_num_rows($DispRS))
+			{    
+			$DispRS = mssql_fetch_assoc($DispRS);
+			$strSubj = "L.P. Job Sched. " . " at " . $DispRS['Scheduled'];
+		
+			$strMsg = "- Job Details - " . chr(10) . chr(13) .
+				 "Dispatch ID: " . $DispatchID . chr(10) . chr(13) .
+				 "Scheduled: " . $DispRS['Scheduled'] . chr(10) . chr(13) .
+				 "End Time: " . date("h:i A", strtotime($DispRS['SchedEnd'])) . chr(10) . chr(13) .
+				 "Customer: " . trim($DispRS['CustomerName']) . chr(10) . chr(13) .
+				 "Client: " . trim($DispRS['ClientLName']) . chr(10) . chr(13) .
+				 "Address: " . trim($DispRS['Facility']) . chr(10) . chr(13) .
+				 "City: " . trim($DispRS['City']) . ", " . trim($DispRS['State']) . chr(10) . chr(13);
+				  
+				 if (! is_null($DispRS['SpecLocation']) )
+					   $strMsg = $strMsg . "Location Specifics: " . trim($DispRS['SpecLocation']) . chr(13) . chr(10);
+		   
+				 if (! is_null($DispRS['SpecialInstruction'])) 
+					{
+					 $strMsg = $strMsg . 
+					 "Special Inst.: " . trim($DispRS['SpecialInstruction']) . chr(10) . chr(13) . 
+					 "Contact: " . trim($DispRS['ContactPerson']) . chr(10) . chr(13) . chr(10) . chr(13) . "- Rates - ";
+					}
+				 else
+					$strMsg = $strMsg .  "Contact: " . trim($DispRS['ContactPerson']) . chr(10) . chr(13) . chr(10) . chr(13) . 			 "- Rates - ";
+			}
+		else
+			die("not found");
+			 
+		$strRate = "";
+		
+		while ($rateRow = mssql_fetch_assoc($RateRS))
+			{
+			$strRate = $strRate . chr(10) . chr(13) . trim($rateRow['ItemCode']) . ": " . trim($rateRow['InterpRate']);
+				if (trim($rateRow['Mileage']) == 1 )
+					$strRateType = " per mile";
+				else
+					$strRateType = " per hr.";
+	
+			$strRate = $strRate . $strRateType;
+			}
+	
+		$strMsg = $strMsg . $strRate . chr(13) . chr(10) . chr(13) . chr(10) 
+			. "**IF APPOINTMENT IS LONGER THAN SCHEDULED, THEN YOU MUST CONTACT US WITH THE DETAILS WITHIN 24 HOURS**" . chr(13) . chr(10) . chr(13) . chr(10) 
+			. "**If you are running late, CALL US. If you are more than 10 minutes late to the Appointment, THERE IS A DEDUCTION OF YOUR PAY RATE, PER CUSTOMER CONTRACT**" . chr(13) . chr(10) . chr(13) . chr(10) 
+			. "Please contact us @ (707) 538-8900 with any questions you might have about this appointment.";
+	
+			//DoCmd.SendObject acSendNoObject, , , strBCC, , , strSubj, strMsg, True 
+			mail($email, $strSubj, $strMsg, "From: Dispatch@LanguagePeople.com");
+			return "Success";
+}
+
+?>

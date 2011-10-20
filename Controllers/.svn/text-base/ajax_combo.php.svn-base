@@ -1,0 +1,75 @@
+<?PHP
+header('Expires: Fri, 09 Jan 1981 05:00:00 GMT');
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Cache-Control: post-check=0, pre-check=0', FALSE);
+header('Pragma: no-cache');
+
+require_once("../includes/dispatch_functions.php"); 
+require_once("../includes/alex_functions.php");
+
+ validate_logged_in();
+error_reporting(E_ERROR | E_PARSE);
+set_error_handler (xml_error, E_ERROR | E_PARSE);
+set_time_limit(10);
+
+$DEBUG = false;
+
+if (isset($_GET['_debug']))
+	$DEBUG = true;
+
+if ($DEBUG)
+	echo "blah"; 
+else
+	{
+	xmlHeader();
+	}
+/* */
+
+$conn = database_connect();
+$dataRequest = json_decode($_GET['request'], 1);
+
+if ($DEBUG)
+	var_dump($dataRequest);
+	
+$column = $dataRequest["labels"];
+$column2 = $dataRequest["values"];
+$table = $dataRequest["table"];
+$filters = $dataRequest["filters"];
+
+$filterCode = filters_to_sql($filters);
+
+if ($dataRequest["distinct"])
+	{
+	$distinct = " distinct ";
+	$column_code = $column . " as a ,  $column2 COLLATE Latin1_General_CS_AS_KS_WS  as b ";	
+	}
+else 
+	{
+	$distinct = "";
+	$column_code = $column . " as a ,  $column2  as b ";	
+	}
+
+
+
+$sql = "SELECT $distinct TOP 8000 " . $column_code . "  FROM " . $table . " WHERE " . $filterCode . " ORDER BY " . $column . " ASC " ; 
+if ($DEBUG)
+	echo $sql;
+query_to_combo($sql);
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+function clarify($param)
+{
+
+	if (gettype($param) == object)
+		{
+		if (get_class($param) == DateTime)
+			return date_format($param, 'Y-m-d H:i:s');
+		else
+			;//echo "no match";
+		}
+
+	return ( $param); //cdata doesn't really need to be escaped
+}
+
+?>

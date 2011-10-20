@@ -1,0 +1,172 @@
+<?PHP
+header('Expires: Fri, 09 Jan 1981 05:00:00 GMT');
+header('Cache-Control: no-store, no-cache, must-revalidate');
+header('Cache-Control: post-check=0, pre-check=0', FALSE);
+header('Content-Type: text/html; charset=iso-8859-1');
+header('Pragma: no-cache');
+
+//This is a special set of permissions for AcFields which is indepedent of general site permissions.
+$SECURITY_PERMISSIONS = array();
+
+$SECURITY_PERMISSIONS['normal'] = array(  "Client" => "RW", "Customer" => "RW","Dispatch" => "RW","Facility" => "RW",  "InterpContact" => "RW", "Interpreter" => "RW", "Invoice" => "RW", "Language" => "RW", "Situation" => "RW", "CustAuxValues" => "RW", "Contact" => "RW", "DispatchHistory" => "RW");
+
+require_once("../includes/alex_functions.php"); 
+require_once("../includes/dispatch_functions.php");
+validate_logged_in();
+
+//error_reporting(E_ERROR | E_PARSE | E_ALL);
+set_error_handler ("auto_error", E_ERROR | E_PARSE | E_USER_ERROR );
+
+global $sql;
+$var = json_decode($_GET['request']);
+
+$conn = database_connect(); 
+
+$dataRequest = json_decode($_GET['request'], 1);
+//var_dump($dataRequest);
+/* $field_requested = $dataRequest['field']; 
+$value = $dataRequest['value'];
+$pkey_field = $dataRequest['pkeyField'];
+$pkey_value = $dataRequest['primaryKeyData']; */
+$limitations = $dataRequest['primaryInfo'];
+$values = $dataRequest["fieldInfo"];
+$table = str_replace(array("[","]"),"",$dataRequest['table']);  
+//$limitations[] = array(1, 1) ; // push an always true condition to the back 
+$DispatchID = NULL;
+
+if (is_array($limitations))
+ foreach ($limitations as $x)
+	{
+	$where_clause[] = cleanFieldName($x[0]) . " = " . cleanFieldValue($x[1]);
+	if (cleanFieldName($x[0]) == "DispatchID")
+		$DispatchID = (int)$x[1];
+	}
+
+
+if (($dataRequest['action'] === "addOrUpdate"))
+	{
+	 $where_clause_copy =  $where_clause;
+	 $where_clause_copy [] = '1=1';	
+	 $where_clause_copy  =  implode(" AND ", $where_clause_copy );
+	 
+	if (database_fetch_field("SELECT COUNT(*) FROM $table WHERE $where_clause_copy "))
+		$dataRequest['action'] = "save"; // there is a record to update so update it	
+	else
+		{
+		$dataRequest['action'] = "insert"; // there is not, so insert
+		$values = array_merge($values, $limitations); //instead of limiting to primary keys, we need to set primary keys
+		$limitations = array();
+		unset($where_clause); //important
+		}
+	}
+//////////////////////////////////////////////////////////////////////////////////	
+				
+if (($dataRequest['action'] === "save"))
+	{
+		 
+	foreach ($values as $x)
+		{
+		$values_clause[] = "[" . cleanFieldName($x[0]) . "]" . " =  " . cleanFieldValue($x[1]) . " ";
+		if (strpos($SECURITY_PERMISSIONS["normal"][$table], "W") === NULL)
+			trigger_error("Insufficient Permissions to write to table -$table-", E_USER_ERROR );
+
+		if ($DispatchID != NULL)
+			recordDataChange($DispatchID, "UPDATE", $table,$x[0],$x[1] );
+		}
+	$values_clause = implode(" , ", $values_clause);
+		 
+	}
+elseif (($dataRequest['action'] === "insert"))
+	{
+	foreach ($values as $x)
+		{
+		$values_clause1[] = cleanFieldName($x[0]);
+		$values_clause2[] = cleanFieldValue($x[1]);
+		$values_clause = " (" . join(",", $values_clause1) . ") VALUES (" . join(",", $values_clause2) . ") " ;
+		
+		if (isset($where_clause))
+			trigger_error("Cannot use limiting conditions in an insert", E_USER_ERROR );
+			
+		if (strpos($SECURITY_PERMISSIONS["normal"][$table], "W") === false)
+			trigger_error("Insufficient Permissions to write to table -$table-", E_USER_ERROR );
+			
+		recordDataChange($DispatchID, "INSERT", $table, $x[0],$x[1]);
+		}		
+	}
+/* Disabled. This method of doing this is just begging for errors.
+
+elseif (($dataRequest['action'] == "append"))
+	foreach ($values as $x)
+		{
+		$values_clause[] = "[" . cleanFieldName($x[0]) . "]" . " =  " . "[" . cleanFieldName($x[0]) . "] + " . cleanFieldValue($x[1], 1) . " ";
+		if (strpos($SECURITY_PERMISSIONS["normal"][$table], "R") === false)
+			trigger_error("Insufficient Permissions to read from table $table");
+		}		*/
+elseif ($dataRequest['action'] === "load")	
+	{
+	foreach ($values as $x)
+		{
+		$values_clause[] = "  [" . cleanFieldName( $x[0] ) . "] ";
+		if (strpos($SECURITY_PERMISSIONS["normal"][$table], "R") === false)
+			trigger_error("Insufficient Permissions to read from table -$table-",E_USER_ERROR  );
+		}
+	$values_clause = implode(" , ", $values_clause);
+	}
+else
+	{
+	trigger_error("Unknown action type requested in ajax_field: " . $dataRequest['action'], E_USER_ERROR );
+	}
+
+$where_clause[] = '1=1';	
+$where_clause =  implode(" AND ", $where_clause);
+
+if ($dataRequest['action'] === "load")				//apparently MSSQL can always accept ' ' around fields.... yay.
+	$sql = "SELECT $values_clause from $table WHERE  $where_clause ";
+elseif ($dataRequest['action'] === "save")
+	$sql = "UPDATE $table SET  $values_clause  WHERE  $where_clause ";
+elseif ($dataRequest['action'] === "insert")
+	$sql = "INSERT INTO $table  $values_clause  ";	
+else
+	{
+	trigger_error("Unknow Action:" . $dataRequest['action'], E_USER_ERROR);
+	die ();
+	}
+	
+
+$debug = false;
+if ($debug)
+	var_dump($dataRequest);
+if ($debug)
+	 echo $sql;
+	 
+database_query('set textsize 65536');	 
+$rs = database_query($sql, 0);
+
+if (!$rs)
+	manual_error( mssql_get_last_message(), $sql);
+
+$result = array("value" =>  null);
+if ($dataRequest['action'] === 'load')
+	{
+	$row =  mssql_fetch_row($rs); // sqlsrv_fetch($rs); //essential line apparently
+	$result['value'] = $row[0]; //(sqlsrv_get_field($rs,0,SQLSRV_PHPTYPE_STRING(SQLSRV_ENC_CHAR) )));
+	}
+echo json_encode($result);
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function manual_error($err, $sql) //specific to this file
+{
+	$callStack = print_r(debug_backtrace(), 1);	
+	$message = $err . " on " . $sql . " and " . $callStack;
+	
+	json_error($message);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+function auto_error($err,$b="",$c="",$d="",$e="")
+{
+	json_error( " " . join(func_get_args(), ","));
+}
+
+?>

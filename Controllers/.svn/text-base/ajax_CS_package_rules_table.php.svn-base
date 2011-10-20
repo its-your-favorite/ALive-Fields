@@ -1,0 +1,47 @@
+<?PHP 
+
+require_once( "../includes/alex_functions.php"); 
+require_once("../includes/dispatch_functions.php");
+ 	validate_logged_in();
+require_once( "ajax_table.php");
+error_reporting(E_ERROR | E_PARSE);
+set_error_handler (xml_error, E_ERROR | E_PARSE);
+set_time_limit(10);
+
+
+$CustID = (int)$_GET['CustID'];
+
+//"Day, Scheduled, Customer, City, St., Language, Facility Addr., Special Instructions, Location Specifics, Facility Name, Situation, Client Name, SchedEnd";//datename 
+
+$sql = "SELECT  LineItemName,Language, PayEffect,CostEffect,CustID,isAfterHours,isEmergency,RuleSet,Unit,Min,ItemCode,Type,PayMin,PayUnit, RuleID,RuleSet,
+		0+(CASE CustID WHEN '*' THEN 0 ELSE 100 END + 
+		 CASE ContractID WHEN '*' THEN 0 ELSE 1000 END  + 
+		 CASE Region WHEN '*' THEN 0 ELSE 10 END  + 
+		 CASE FacilityID WHEN '*' THEN 0 ELSE 10000 END  + 
+		 CASE Language WHEN '*' THEN 0 ELSE 1 END  + 
+		 CASE IsEmergency WHEN '*' THEN 0 ELSE 1 END  + 
+		 CASE IsAfterHours WHEN '*' THEN 0 ELSE 1 END  )
+	 
+	AS specificity from PackageRules WHERE 
+  
+	( 
+	(CustID = '$CustID' or CustID = '*')
+	AND
+	 (ContractID = '$ContractedID' or ContractID = '*')
+	AND
+	 (Region = '$Region' or Region = '*')
+	AND
+	 (FacilityID = '$FacilityID' or FacilityID = '*'))
+	ORDER BY specificity ASC";
+
+ //$DEBUG = true; 
+header('Content-Type: text/html; charset=iso-8859-1');
+if (! $DEBUG)
+	; //xmlHeader();
+else
+	echo " a";
+
+echo query_to_json($sql);
+
+
+?>

@@ -1,0 +1,61 @@
+/**
+* @class AcAppendbox A basic control for loading and appending to fields that can be represented as simple strings. Is initialized with an &lt;input&gt; (or &lt;textarea&gt;) tag.
+* @extends AcField
+* @requires AcControls.js and its dependencies
+*/
+
+AcAppendbox = function (field,table,pkey,loadable,savable,dependentFields)
+{
+ AcField.call(this, field,table,pkey,loadable,savable,dependentFields); //call parent constructor. Must be done this way-ish
+}
+
+AcAppendbox.prototype = new AcField();  // Here's where the inheritance occurs
+AcAppendbox.prototype.constructor=AcAppendbox; // Otherwise instances of AcAppendbox would have a constructor of AcField
+AcAppendbox.prototype.parent = AcField.prototype;
+
+
+AcAppendbox.prototype.initialize = function(pkey)
+{
+ AcField.prototype.initialize.call(this, pkey);	
+
+ this.correspondingElement.keyup(this, function (param) {
+	  return param.data.handleKeyup(param);
+	  } ) ; 
+ this.lock('loading');
+}
+
+////////////////////////////////////////////////////////
+/**
+* @description Called AFTER a key is pressed. 
+*/
+AcAppendbox.prototype.handleKeyup = function()
+{
+	var x = this.getValue();
+	var sepChar = String.fromCharCode(167);
+	
+ //This part is in case they added enough characters to make deletes not go below thresh-hold
+
+	if (x.indexOf(sepChar ) == -1)
+		return this.setValue(this.minimalValue + sepChar + ' ');
+		
+	else if (x.indexOf(sepChar ) != this.minimalValue.length)
+		return this.setValue(this.minimalValue + sepChar  + "" + x.substr(x.indexOf(sepChar)+2));
+}
+
+AcAppendbox.prototype.afterLoad = function()
+{
+	var sepChar = String.fromCharCode(167);
+	this.minimalValue = this.getValue();//important space
+    this.setValue(this.getValue().replace(/§/gi, "") + sepChar + ' '); //divider
+	this.unlock('loading');	
+}
+
+AcAppendbox.prototype.getValueForSave = function()
+{
+	var sepChar = String.fromCharCode(167);
+	var result = this.getValue();
+	
+	this.setValue(this.minimalValue + sepChar + ' ' + result.substr(result.indexOf(sepChar)+2));
+	
+	return this.minimalValue + ' ' + result.substr(result.indexOf(sepChar)+2);
+}

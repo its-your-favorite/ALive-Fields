@@ -1,0 +1,83 @@
+<?PHP
+require_once("../includes/alex_functions.php"); 
+require_once("../includes/dispatch_functions.php");
+
+ 	validate_logged_in();
+require_once( "../models/ActionRecord.php");	
+require("dhtmlxConnector/grid_connector.php");
+require("dhtmlxConnector/db_mssql.php");
+require_once("../../Classes/DispatchHistory.php");
+	
+error_reporting(E_ERROR | E_WARNING);
+$res = database_connect();
+
+	$hist = new DispatchHistory();
+	$details = array();
+	$details['StaffID'] = $_SESSION['login']['loginID'];
+	
+$DispatchID = (int) $_GET['DispatchID'] ; // Yes, Get
+//$InterpID = (int) $_POST['c3']; // Yes, post
+
+ $gridConn = new GridConnector($res,"MsSQL");
+ $gridConn->set_encoding("iso-8859-1");
+	    
+	if ((isset( $_POST['!nativeeditor_status'] ) && ( $_POST['!nativeeditor_status'] == "updated")) || ($_GET['override_test']))
+		{
+		//Invoice.InterpRate
+		$cols = array('c1', 'c2', 'c3', 'c4','c5', 'c6', 'c7', 'c8');
+		$fields = array('InterpRate','PayQty','PayUnit','PayMin','Cost', 'Quantity','Unit','Min');
+		foreach ($cols as $index => $val)
+			{
+			$sql = "UPDATE Invoice SET [" . $fields[$index] . "] = " . (float)$_POST[$val] . " WHERE Invoice.InvRecID = '" . (int)$_POST['c11'] . "'"; //YES get on the last one				
+			database_query($sql, 0);
+			
+			$hist = new DispatchHistory();
+			$details['DispatchID'] = database_fetch_field("SELECT DispatchID FROM Invoice where Invoice.InvRecID = " . (int)$_POST['c11'] );
+			$details['ActionID'] = ((int)0  ? 26  : 26 ); //26
+			$details['HistNotes'] = "Dispatch Line Items set " . str_replace("'", "", $fields[$index] . " = " . (float)$_POST[$val] ) . " by " . $_SESSION["login"]["username"] ;
+			$hist->create($details);  
+			}
+
+		header("Content-type: text/xml");//include XML Header (as response will be in xml format)
+		echo '<?xml version="1.0" encoding="iso-8859-1"?>'; //encoding may be different in your case
+		echo '  <data>     <action type="update" sid="' . $_POST['gr_id'] . '" tid="' . $_POST['gr_id'] . '" />  </data>';
+		}
+ 	if (isset($_GET['Delete']))
+		{
+		$target = (int) $_GET['Delete'];
+		$sql = "DELETE FROM Invoice WHERE InvRecID = $target ";
+		database_query($sql, 1);			
+		
+		$details['ActionID'] = ((int)0  ? 26  : 26 ); //26
+		$details['HistNotes'] = " DELETED Line item # $target by " . $_SESSION["login"]["username"] ;
+		$hist->create($details);  
+		}
+	if (isset($_GET['Insert']))
+		{
+		$target = (int)$_GET['Insert'];
+		$TempRecordset = database_query("Select * FROM CustItems WHERE [CustItemID]=" . $target );
+			
+        $TempRS = mssql_fetch_object($TempRecordset);
+			{
+			if ($TempRS->CustID != database_fetch_field("SELECT CustID from Client INNER JOIN Dispatch on Dispatch.ClientID = Client.ClientID WHERE DispatchID = $DispatchID"))
+				die(); //should never happen...
+				
+            $InvRS = new ActionRecord("Invoice", "NEW", "InvRecID");
+			$InvRS->_InvHdrID = database_fetch_field("SELECT InvHdrLink  From Dispatch WHERE DispatchID = " . $DispatchID);
+            $InvRS->_DispatchID = $DispatchID;
+            $InvRS->_CustItemID = $TempRS->CustItemID;
+            $InvRS->_Unit = $TempRS->Unit;
+            $InvRS->_Min = $TempRS->Min;
+            $InvRS->_PayUnit = $TempRS->PayUnit;
+            $InvRS->_PayMin = $TempRS->PayMin;
+            $InvRS->_Cost = $TempRS->Cost;
+            $InvRS->_InterpRate = $TempRS->Pay;
+            $InvRS->update(0);
+			}
+			
+		$details['ActionID'] = ((int)0  ? 26  : 26 ); //26
+		$details['HistNotes'] = " INSERTED Line item #" . $InvRS->getInsertedKey()  . " by " . $_SESSION["login"]["username"] ;
+		$hist->create($details);  
+  //          TempRS.MoveNex
+		}
+?>

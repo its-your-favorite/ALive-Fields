@@ -1,0 +1,34 @@
+<?PHP 
+require_once( "../includes/alex_functions.php"); 
+require_once("../includes/dispatch_functions.php");
+
+ 	validate_logged_in();
+include "ajax_table.php";
+
+function custom_error_handler($a,$b,$c,$d) { return xml_error($a,$b,$c,$d);}
+
+error_reporting(E_ERROR | E_PARSE);
+//set_error_handler (xml_error, E_ERROR | E_PARSE);
+set_time_limit(10);
+
+if (!isset($_GET['request']))
+	die("Request not set.");
+	
+//$var = json_decode($_GET['request'], true);
+//$filters = json_decode($_GET['filters'], true);
+//$filter_code = filters_to_sql($filters);
+ 
+$sql = "SELECT Convert(varchar(100), Dispatch.Scheduled, 100) , Dispatch.Caller, Dispatch.CallerPhone,Dispatch.CallerEMail,   Dispatch.DispatchID, Dispatch.InterpID, Client.CustID
+FROM Dispatch INNER JOIN Client ON Dispatch.ClientID = Client.ClientID
+WHERE (((Dispatch.InterpID) Is Not Null) AND ((Dispatch.CustConfirmed)=1) AND ((Dispatch.ConfirmedBy) Is Null));";
+
+if (! $DEBUG)
+	;//xmlHeader();
+else
+	{
+	header("Content-type: text/html");
+	echo " a - " . $sql;
+	}
+
+echo query_to_json($sql); 
+?>

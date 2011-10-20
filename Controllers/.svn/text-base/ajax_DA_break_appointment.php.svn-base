@@ -1,0 +1,246 @@
+<?PHP 
+error_reporting(E_ERROR | E_PARSE | E_NOTICE | E_WARNING);
+ set_time_limit(20);
+
+require_once("../../Classes/DispatchHistory.php"); 
+require_once( "../includes/alex_functions.php");
+validate_logged_in();
+require_once( "../models/ActionRecord.php");
+require_once( "../models/zipcodes.php");
+
+define ("INTERPRETER_CANCEL_HOURS", 24 );
+
+function custom_error_handler($a,$b,$c,$d)
+ { 
+	 json_error($a . "<br>" . $b. "<br>" . $c. "<br>" . $d);
+	 return false;
+}
+set_error_handler ( "custom_error_handler" , E_ALL   );
+
+//die(date("m/d/y h:i:s", strtotime("Wed Apr 30 2008 15:59")));
+ 
+$conn = database_connect(); 
+//$_GET['request'] = '{"DispatchID":71369,"cancelReason":"1","txtAction":"Accept","txtClient":"Any1 Body","txtScheduled":"05/11/2011 21:00","txtCancelled":"Fri MAY 11 2011 11:00","txtInterpName":"Abcde Interp","apptLength":"2"}';
+$var = json_decode($_GET['request'], true);
+
+$DispatchID = (int)$var['DispatchID'];
+if  (!$DispatchID)
+	die("No dispatch ID.");
+
+$txtClient = cleanFieldValue( $var["txtClient"], 1);  //...
+$txtAction = cleanFieldValue( $var["txtAction"], 0);   // Accept or Continue
+$cancelReasonID = (int)( $var["cancelReason"] ) ; //not actually a text...
+$txtScheduled = cleanFieldValue  ($var["txtScheduled"], 0); 
+$txtInterpName = cleanFieldValue ($var["txtInterpName"], 0);
+$InterpID = database_fetch_field("SELECT InterpID FROM Dispatch WHERE DispatchID = $DispatchID");
+
+if (isset($var["txtCancelled"])) //optional
+	$txtCancelled = cleanFieldValue ($var["txtCancelled"], 0) ; //when cancelled
+else
+	$txtCancelled = time();
+$apptLength = cleanFieldValue ($var["apptLength"] , 1);
+
+$rs = database_fetch_row("SELECT * FROM CancelReason WHERE CancelReasonID = $cancelReasonID ");
+$txtReason = $rs['Description'];
+$blnNoInvoice = $rs['blnNoInvoice'];
+
+// retrieve other dispatch info based on DispatchID
+$rs = database_query("SELECT InterpID, CustID from Dispatch INNER JOIN Client on Dispatch.ClientID = Client.ClientID where DispatchID = " . $DispatchID);
+$rs = mssql_fetch_row($rs);
+$InterpID = $rs[0];
+$CustID = $rs[1]; 
+
+
+// 'Test cancel rule' //
+    $dblCancelHrs = 0;
+    $lngCancelItemID = 0;
+	
+    $custRS = new ActionRecord("Customer", "SELECT", "CustID");
+    $custRS->find ($CustID );
+	
+    if ( ($custRS->numRows())) // if our Customer cancel settings Exist
+		{
+        if (( ! is_null($custRS->_CancelHours)) && (! is_null($custRS->_CancelItemID) )) 
+			{
+            $dblCancelHrs = $custRS->_CancelHours ;
+            $lngCancelItemID = $custRS->_CancelItemID ; 
+			}
+        elseif (! requestOverride("Missing Cancel settings for customer.  Continue?", 1) )
+			{
+				$response["message"] = "Voluntarily Quit";
+                die(json_encode($response));
+            }
+        }
+
+    //'Flag to trigger cancellation charges
+    $bolCancel = false;
+    $strMsg = "Cancel Dispatch for '" . $txtClient . "'" ;
+	
+    //' Determine Zipcode for appointment
+    $varFacilityID = new ActionRecord("Dispatch", "SELECT", "DispatchID");
+	$varFacilityID->find($DispatchID);
+    $strZip = new ActionRecord("Facility", "SELECT", "FacilityID"  );
+
+	if (   ( $varFacilityID->_FacilityID) )		
+   		$strZip->find( $varFacilityID->_FacilityID);	
+    else
+		$strZip->find( $custRS->_DefFacilityID);
+		
+   $strZip=$strZip->_Zip;
+//' Get confirmation and determine payable / billable states
+	 $z = new ZipCodes;
+
+	 /*  echo "$txtScheduled<br>";
+	echo strtotime(time()) . " vs " . strtotime($txtScheduled);
+	echo "<br>difference = " .  (strtotime($txtScheduled) - time()) / 60 /60 ;
+	echo "<br>hours apart: " . $z->hoursApart($strZip, LOCAL_ZIPCODE ) . "  - $strZip <br>"; */
+	 
+    if ( ($dblCancelHrs > 0) && ($lngCancelItemID > 0)) 
+		{
+        if ( ( strtotime($txtScheduled) - time()) / 3600 - $z->hoursApart($strZip, LOCAL_ZIPCODE )   < ($dblCancelHrs ))
+			{
+            $txtTime = time();
+ 
+            if ( $txtAction == "Accept" ) 
+				{
+                //'Check new time for billable
+                if ( (strtotime($txtScheduled) - strtotime($txtCancelled) ) / 3600 - $z->hoursApart($strZip, LOCAL_ZIPCODE )  < ($dblCancelHrs ) )
+					{
+						$bolCancel = true;
+						$strMsg = "Cancel Dispatch with cancel fee for '" . $txtClient . "'";
+						$chkBillable  = true;
+						//echo "billable";
+					}
+				else
+					{
+						$chkBillable  = false;
+						//echo "Not billable";
+					}
+				}
+              ///  'Check new time or payable
+            if (  strtotime($txtTime) - strtotime($txtScheduled) - $z->hoursApart($strZip, LOCAL_ZIPCODE ) < (INTERPRETER_CANCEL_HOURS * 60) ) 
+					{
+                    $strMsg = "Cancel Dispatch with payment to '" . $txtInterpName . "'";
+                    $chkPayable = true;
+					}
+            else
+                    $chkPayable = false;
+                
+		}
+    }
+    
+	if ($blnNoInvoice) // the user cancelled for a reason that disallows billing.
+		$bolCancel = false;  //no cancellation charges
+	
+	if ( !($InterpID) )
+		    {
+            if ( $bolCancel )
+                database_query ( "UPDATE Dispatch SET CancelReasonID=" . $cancelReasonID . ", CustCanceled= getDate(), CanceledBy='" . CurrentUser() . "', Ended=NULL WHERE DispatchID=" . $DispatchID); 
+            else
+                database_query ( "UPDATE Dispatch SET CancelReasonID=" . $cancelReasonID . ", CustCanceled= getDate(), CanceledBy='" . CurrentUser() . "', Ended=getDate() WHERE DispatchID=" . $DispatchID);
+            }
+        else
+			{
+			// now done through javascript : mailto
+           // if (!SendCancelEmailtoInterp( $InterpID,  $DispatchID))
+			//	$result["response"] = "could not send email - "; 
+            if ( $bolCancel ) 
+				{
+                database_query ( "UPDATE Dispatch SET CancelReasonID=" . $cancelReasonID . ", CustCanceled= getDate(), CanceledBy='" . CurrentUser() . "', Ended=NULL, Urgent=1, Comments = isnull(Comments, '') + 'Notify ( $txtInterpName)  of canceled Dispatch' WHERE DispatchID=" . $DispatchID);
+				}
+            else
+				{
+                database_query ( "UPDATE Dispatch SET CancelReasonID=" . $cancelReasonID . ", CustCanceled= getDate() , CanceledBy='" . CurrentUser() . "', Ended= getDate(), Urgent=1, Comments = isnull(Comments, '') + 'Notify ( $txtInterpName) of canceled Dispatch',InterpID=NULL WHERE DispatchID=" . $DispatchID) ;
+                $InterpID = NULL;
+                $txtInterpName = NULL;
+	            }
+            
+		    /* if ( IsLoaded("Urgent") ) 
+                Forms!Urgent.Requery
+            else
+                DoCmd.OpenForm "Urgent", acFormDS */
+			}
+        
+        database_query ( "DELETE FROM InterpContact WHERE DispatchID=" . $DispatchID);
+        database_query ( "DELETE FROM Invoice WHERE DispatchID=" . $DispatchID);
+		
+        if ( $bolCancel ) 
+			{
+            $custRS = new ActionRecord("CustItems", "SELECT", "CustItemID");
+			$custRS->find($lngCancelItemID);
+            //'InvRS.Close
+			$InvRS = new ActionRecord("Invoice", "NEW", "InvRecID");
+            
+            $InvRS->_DispatchID = $DispatchID;
+            $InvRS->_CustItemID = $lngCancelItemID;
+            $InvRS->_Unit = $custRS->_Unit ;
+            $InvRS->_Min = $custRS->_Min ;
+            $InvRS->_Cost = $custRS->_Cost ;
+            $InvRS->_InterpRate = $custRS->_Pay ;
+            $InvRS->_PayUnit = $custRS->_PayUnit ;
+            $InvRS->_PayMin = $custRS->_PayMin ;
+			
+            if ( $custRS->_Hourly ) 
+				{          
+                $dblLength = $apptLength ;   //'Quantity based on length of appt                
+                $lngTemp = $dblLength / $custRS->_Unit;//'Round up to nearest unit
+				
+                if ( $lngTemp <> ($dblLength / $custRS->_Unit) ) 
+                    $lngTemp++;
+                
+                $InvRS->_Quantity = $lngTemp;
+                $InvRS->_PayQty = $lngTemp;
+				}
+            else
+				{
+                $InvRS->_Quantity = $custRS->_Min ;
+                $InvRS->_PayQty = $custRS->_PayMin ;
+            	}
+            $InvRS->update();
+        }
+    
+ if (!(isset( $result["response"])))
+ 	 $result["response"] = "";
+ $result["response"] .= "Success";
+  recordCancel($DispatchID, $InterpID);
+ echo json_encode($result);
+//    myDB.Close
+/*	
+    Me.txtClient.SetFocus
+    Me.cmdUnAssign.Enabled = False
+    Me.cmdCancel.Enabled = False
+    Forms!Dispatch!DispByAptSub.Form.Requery
+    Set custRS = Forms!Dispatch!DispByAptSub.Form.RecordsetClone
+    custRS.FindFirst "DispatchID=" . $DispatchID
+    Forms!Dispatch!DispByAptSub.Form.Bookmark = custRS.Bookmark
+*/
+
+function requestOverride($message, $id)
+//this functions serves as a means to communicate with the user through PHP. It terminates the script
+// and returns the inquiry on the first run through. The script is ) { re-run by the client with a response
+// message.
+{
+	global $var;
+	$passed = $var;
+	
+	if (isset($passed["override"]))
+		if  (isset($passed["override"][$id]))
+			return $passed["override"][$id]; //Is there a response message (either affirmative (true) or negative) ?
+						
+	//else this is the first run through, so pass the required question to the user.
+	$result["requests"][$id] = $message;	
+	die(json_encode($result) ); //client-side javascript will get a 'confirm' box respond to this.
+}
+
+function recordCancel($DispatchID, $InterpID)
+{
+	$hist = new DispatchHistory();
+	$details = array();
+	$details['DispatchID'] = $DispatchID ;
+	$details['ActionID'] = DISPATCH_CANCELED; //made up an ID for New Dispatch
+	$details['HistNotes'] = "Web Dispatch Canceled (Prev Interp #$InterpID) " ;
+	$details['StaffID'] = $_SESSION['login']['loginID'];
+	$hist->create($details);    
+}
+
+?>

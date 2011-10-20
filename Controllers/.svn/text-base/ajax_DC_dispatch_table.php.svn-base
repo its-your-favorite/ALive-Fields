@@ -1,0 +1,48 @@
+<?PHP 
+require_once( "../includes/alex_functions.php"); 
+require_once("../includes/dispatch_functions.php");
+ 	validate_logged_in();
+require_once( "ajax_table.php");
+
+function custom_error_handler($a,$b,$c,$d) { return xml_error($a,$b,$c,$d);}
+
+error_reporting(E_ERROR | E_PARSE);
+set_error_handler (xml_error, E_ERROR | E_PARSE);
+set_time_limit(10);
+
+
+$var = json_decode($_GET['request']);
+$filters = json_decode($_GET['filters']);
+$filter_code = filters_to_sql($filters);
+//var_dump($filters);
+
+$sql = "SELECT TOP 300 " . 
+" Dispatch.DispatchID, Convert(varchar(100), Dispatch.Scheduled, 100), Client.Language, Facility.Address + ' ' + Facility.Address2 + ' ' + Facility.City + ', ' + Facility.State, Situation.Description, Client.ClientLName,  Client.ClientFName, Client.MedicalNo, Dispatch.Location, Dispatch.SpecialInstruction,  Convert(varchar(100), Dispatch.SchedEnd, 100), Dispatch.ContactPerson, Dispatch.ControlNo ,Client.BudgetNo, Dispatch.CustConfirmed   , Dispatch.Caller, Dispatch.CallerPhone, Dispatch.CallerEMail, Dispatch.Ongoing, Dispatch.Urgent, RIGHT(CONVERT(VARCHAR(30),Dispatch.[SchedEnd] , 0),7) as x,
+Comments, Dispatch.RecievedBy, 
+ Convert(varchar(100), Dispatch.Recieved, 100), Dispatch.ClientID, Dispatch.Latitude, Dispatch.Longitude, Dispatch.Billable, Dispatch.Payable,  Dispatch.InvoiceNotes, Client.CustID , Dispatch.InterpID, Dispatch.Scheduled 
+
+ FROM [Dispatch] 
+INNER JOIN [Client] ON Dispatch.ClientID = Client.ClientID
+LEFT JOIN [Situation] ON Dispatch.SituID = Situation.SituID 
+LEFT JOIN [Facility] ON Dispatch.FacilityID = Facility.FacilityID 
+LEFT JOIN [Customer] ON Client.CustID = Customer.CustID
+WHERE " 
+. " (1 = 1 ) " . " AND " . $filter_code . " ORDER BY Dispatch.Scheduled ASC ";
+
+//echo $sql; 
+header('Content-Type: text/html; charset=iso-8859-1');
+ //$DEBUG = true; 
+ 
+if (! $DEBUG)
+	{
+	//xmlHeader();
+	}
+else
+	{
+	echo " a - " . $sql;
+	}
+
+echo query_to_json($sql);
+
+
+?>
