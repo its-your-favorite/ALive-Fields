@@ -13,7 +13,7 @@ function verify_control_could_contain_value($page, $control_id, $value, $field)/
   elseif ($field == "text")
   	$fieldname = $test_field["bound_field"];
   elseif ($field == "optionValue")
-  	$fieldname = $test_field['options_pkey'];
+   	$fieldname = $test_field['options_pkey'];
   else
   	die("unknown verify type: $field");
   //WHat about stuff? which queries are active which filters I mean? All will be used in its last query... Cool.

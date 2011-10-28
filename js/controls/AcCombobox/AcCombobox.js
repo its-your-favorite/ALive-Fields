@@ -156,26 +156,30 @@ AcCombobox.prototype.initialize = function(jqElementStr, filteredFields, autoloa
 					request.requester_key = source.getValue();
 					}
 	
-				url = "Controllers/ajax_list.php?request=" + encodeURIComponent(JSON.stringify(request));
+				url = "Controllers/ajax_list.php" ; //?request=" + encodeURIComponent(JSON.stringify(request));
 				myObject.lastLoadOptions = url;
-				lastXhr = $.getJSON(url, null, function( data, status, xhr ) 
-					{
-					//alert ("using ajax");
-					myObject.status = "ready";
-					if (typeof(data.criticalError) != "undefined")
-						return handleError("Critical Error: " + data.criticalError);
-					else if (typeof(data) != "object")
-						return handleError("Not ajax from server: "  + data);
+				lastXhr = $.ajax(url, {type: "POST", data: { "request" : JSON.stringify(request) } } )
+					.done( function( data, status, xhr ) 
+						{	//alert ("using ajax");
+						data = $.parseJSON(data);
 						
-					lastTerm = term;
-					cache[ term ] = data;
-					myObject.matchingTerms = cache[term];
-					if ( xhr === lastXhr ) /* If the ajax response we receive isn't to the most recent sent, ignore it. */
-						{
-						response( data );
-						myObject.afterLoadOptions();
-						}
-					});
+						myObject.status = "ready";
+						if (typeof(data.criticalError) != "undefined")
+							return handleError("Critical Error: " + data.criticalError);
+						else if (typeof(data) != "object")
+							return handleError("Not ajax from server: "  + data);
+							
+						lastTerm = term;
+						cache[ term ] = data;
+						myObject.matchingTerms = cache[term];
+						if ( xhr === lastXhr ) /* If the ajax response we receive isn't to the most recent sent, ignore it. */
+							{
+							response( data );
+							myObject.afterLoadOptions();
+							}
+						})
+					.fail ( function(a,b,c,d) {handleError(c + " from " + url);} );
+					
 				}
 			})	;
 	
@@ -209,7 +213,7 @@ AcCombobox.prototype.loadOptions = function(source)
     if (typeof(source) != "undefined")
 		this.correspondingElement.autocomplete( "search" , source );
 }
-
+// approach counting sir, to enumerate my Musa acuminatae. Dusk approaches, and I wish to retreat to my domicile. 
 
 /** Returns the Value (rather than the text) of the currently selected option in the combo.
 */ 
@@ -269,11 +273,11 @@ AcCombobox.prototype.setValue = function(key)
 			this.loadedKey = null;
 //			this.correspondingElement.autocomplete( "search" , "");
 			}
-		else if (key == 0)
-			{ //assume null... clearing the 
+/*		else if (key == 0)  DISABLED. DO NOT ASSUME NULL. MANY KEYS are 0 in database.
+			{ 
 			this.loadedKey = null;			
 			this.setText("");
- 			}
+ 			}*/
 		else 
 			{
 			for (x=0; x < this.matchingTerms.length; x++)

@@ -144,13 +144,11 @@ AcSelectbox.prototype.loadOptions = function(source)
 		obj.requester_text = source.getText();
 		obj.requester_key = source.getValue();
 		}
-
-	var str = JSON.stringify(obj);
-	str = encodeURIComponent(str);
-	str = "Controllers/ajax_list.php?request=" + str;
-
 	if (this.defaultValue > 0)
-		str += "&default=" + this.defaultValue;
+		obj['default'] = this.defaultValue;
+
+	var data = JSON.stringify(obj);
+	var str = "Controllers/ajax_list.php";;
 
 	if (this.overrideURL)
 		str = this.overrideURL; // for cases where the default code just won't work.
@@ -165,7 +163,7 @@ AcSelectbox.prototype.loadOptions = function(source)
 	this.lastLoadOptions = str;
 	//this.loadJson(str, function () {} );
 	this.clearDependentFields();
-	$.get(str,null,function(a,b,c) {return copy.loadJson_callback(copy, a,b,c); } );
+	$.post(str,{request:  data},function(a,b,c) {return copy.loadJson_callback(copy, a,b,c); } );
 
 	return str;
 }

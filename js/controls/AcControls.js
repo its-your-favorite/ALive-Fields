@@ -190,14 +190,14 @@ AcField.prototype.saveField = function()
    var theObject = this;
    information = {  "fieldInfo" : [[ this.correspondingField,   this.getValueForSave() ]] ,  "action" : "save", "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId};
 
-	information = encodeURIComponent(JSON.stringify(information));
-	url = "Controllers/ajax_field.php?request=" + (information)
-	this.lastRequest = url; //for debugging sake
-	
+	url = "Controllers/ajax_field.php";
+	this.lastRequest = url; //for debugging sake	
  	this.setColor("#FFFFBB");
 	
 	 $.ajax({
 	  url: url,
+	  type: "POST",
+	  data: {"request":  JSON.stringify(information)},
 	  context: this,
 	  error : function (a, b , c) { if (typeof(window_unloading) != "undefined") handleError(" Saving of field interrupted by leaving page."); }, 
 	  success: function(data, b, c, d, e)
@@ -273,12 +273,14 @@ AcField.prototype.loadField = function(primaryKeyData, type, source)
 	information.source_field = source.uniqueId;
 	}
 
-   information = encodeURIComponent(JSON.stringify(information));
-   url = "Controllers/ajax_field.php?request=" + (information);
+   information = (JSON.stringify(information));
+   url = "Controllers/ajax_field.php";
    this.lastRequest = url; //for	 debugging sake
 	
  tmp = {
   url: url,
+  type: "POST",
+  data: {"request": information},
   context: this.lastRequest,
   error : function (a, b , c) { if (typeof(window_unloading) != "undefined") handleError(" field fetch failed "  ); }, 
   success: function (data, b, c) 

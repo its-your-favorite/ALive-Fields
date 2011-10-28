@@ -14,26 +14,27 @@
  * http://www.JSON.org/json2.js
  *
  * Last Revision: 
- * Date: Oct 11 2011 2:00PM
+ * Date: Oct 28 2011 1:15PM
  */
 
-// to do:  put copyright notices on every page.
-// to do: make it use PUT not GET so that: we can send longer fields without failing.  THen fix magic-quotes on a PUT.
-
-// to do: trim out extra unused action types in ajax_field.
-
+//future additions:
+// to do: server side validations. 
 // to do: make select Distinct Work, default, other things? 
+// to do: improve code beauty and coder-friendliness
+// -- adding rows, deleting rows
+// join tables (which can be hidden and function through a select multiple)
+
+
+//  to do: Check again if all pages can submit to themselves. This would totally avoid the need for a session usage. We would want to keep a unique key generated though, because of multiple instances and for security [just because you submit a request to administrate_users.php doesn't mean it CAME FROM administrate_users.php {which is a page only shown to admins}].  Or the security could be handled as described below: 
+// perhaps something like  FIRST LINE: require_once 'validate_security.php'; //some non-AcControls-related security check. SECOND LINE: myAcControls();   THEN below we use: AcControls->dumpAll();
+// The complicated result of this though is that it will require giant validation queries, with multiple joins. For example if A updates B updates C and we try to set C to 6, we need to check B could contain 6 for a value that A could contain (and so on and so forth).
+
 // 
 // to do: turn off errors on most pages.
- 
- // -- discuss limitations  cannot operate on tables that don't have 1 single primary key.
+// -- discuss limitations  cannot operate on tables that don't have 1 single primary key.
 
 // to do: test lock. Clean up 3 js files.
 // to do : differentiate options
-
-//future additions
-// -- adding rows, deleting rows
-// join tables (which can be hidden and function through a select multiple)
 
 session_start();
 global $PAGE_INSTANCE;
@@ -194,41 +195,4 @@ class AcField
 }
 
 require_once('AcList.php');
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-class AcList extends AcField
-{	
-	function AcList($field_type, $field, $table, $id, $loadable, $savable)
-	{
-		parent::__construct($field_type,$field,$table,$id,(int)$loadable,(int)$savable);
-		$tmp = &parent::get_session_object();
-		$tmp['options_field'] = $field; //default to same values.
-		$tmp['options_table'] = $table;
-		$tmp['options_pkey'] = $id; 				
-		$tmp['type'] = "multi";
-		$tmp['options_loadability'] = $loadable;
-	//	echo "<HR>";
-	//	var_dump($tmp);		
-	}
-	
-	function differentiate_options($field, $table, $id, $populatability)
-	{
-		$tmp = &$this->get_session_object();
-		$tmp['options_field'] = $field; //default to same values.
-		$tmp['options_table'] = $table;
-		$tmp['options_pkey'] = $id; 		
-		$tmp['options_loadability'] = $populatability;
-	//	echo "Val: " . $populatability;
-	//	echo "<HR>";
-	//	var_dump($tmp);
-	//	die($populatability);
-	}
-	
-	function bind($html_element_id, $autoload = true)
-	{
-		$this->add_output( $this->get_js_fieldname() . ".initialize(\"#" . $html_element_id . "\", null, " . (int)$autoload . "); ");			
-	}
-}
-
-//$x = new AcList(0,0,0,0,0,0);
 ?>

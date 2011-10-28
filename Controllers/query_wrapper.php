@@ -11,23 +11,30 @@
  *
  *
  *
- *
- *
  * Last Revision: 
- * Date: Oct 11 2011 2:00PM
+ * Date: Oct 28 2011 1:45PM
  */
 
 
 // ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** 
 //connect to DB -- Change this to whatever SQL resource you are using. If you wish to adapt this to not rely on SQL, that can be done by altering ajax_field.php
+
+      /* Prepend this line with // to alternate blocks
 $conn_readonly = mysql_connect("localhost:3306", "newuser_readonly", "a") or handleError("could not connect to database. Please check settings in query_wrapper.php ");
 mysql_query("USE Test;", $conn_readonly);
+/*/ 
+$conn_readonly = mysql_connect("db387843467.db.1and1.com", "dbo387843467", "horsebatterymagnet") or handleError("could not connect to database. Please check settings in query_wrapper.php");
+mysql_query("USE db387843467", $conn_readonly);
+/**/
 
 // ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
+     /* Prepend this line with // to alternate blocks
 $conn_readwrite = mysql_connect("localhost:3306", "newuser_readwrit", "bligsby cheese") or handleError("could not connect to database. Please check settings in query_wrapper.php ");
 mysql_query("USE Test;", $conn_readwrite);
-
-
+/*/
+$conn_readwrite = mysql_connect("db387843467.db.1and1.com", "dbo387843467", "horsebatterymagnet") or handleError("could not connect to database. Please check settings in query_wrapper.php");
+mysql_query("USE db387843467", $conn_readwrite);
+/**/
 
 ////////////////////////////////////////////////////////////////////////
 /* 				SETTING UP QUERY WRAPPER 
@@ -58,7 +65,7 @@ function _AcField_call_query_read ($query, $limit_rows_returned = 0) // allows r
  if ($limit_rows_returned > 0) //In mysql (default) we limit updates by appending the string LIMIT X to them. Change this line according to your database
   	$query .= " LIMIT " . (int)$limit_rows_returned;
 	
- $rs = mysql_query($query, $conn_readonly) or _AcField_handleError("Failed on query $query" . mysql_error());	
+ $rs = mysql_query($query, $conn_readonly) or _AcField_handleError(($DEBUG ? "Failed on query $query": "") . mysql_error());	
 
  while ($row = mysql_fetch_assoc($rs))
  	$result[] = $row;
@@ -78,7 +85,7 @@ function _AcField_call_query_write ($query, $limit_rows_affected = 0)
   if ($limit_rows_affected > 0) //In mysql (default) we limit selects by appending the string LIMIT X to them. Change this line according to your database
   	$query .= " LIMIT " . (int)$limit_rows_affected;
 	
- 	$rs = mysql_query($query, $conn_readwrite) or _AcField_handleError("Failed on query $query" . mysql_error());	
+ 	$rs = mysql_query($query, $conn_readwrite) or _AcField_handleError(($DEBUG ? "Failed on query $query" : "") . mysql_error());	
 }
 
 ////////////////////////////////////////////////////////////////

@@ -15,7 +15,7 @@ if (get_magic_quotes_gpc())
     	{
         $value = stripslashes($value);
     	}
-	array_walk_recursive($_GET, 'stripslashes_gpc');
+	array_walk_recursive($_REQUEST, 'stripslashes_gpc');
 	}
 header('Expires: Fri, 09 Jan 1981 05:00:00 GMT');
 header('Cache-Control: no-store, no-cache, must-revalidate');
@@ -32,9 +32,9 @@ error_reporting(E_ERROR | E_PARSE | E_ALL ^ E_NOTICE);
 set_error_handler ("auto_error", E_ERROR | E_PARSE | E_USER_ERROR );
 
 global $sql;
-$var = json_decode($_GET['request']);
+$var = json_decode($_REQUEST['request']);
 
-$dataRequest = json_decode($_GET['request'], 1);
+$dataRequest = json_decode($_REQUEST['request'], 1);
 $requester_page = $dataRequest['requesting_page'];
 $fieldUniqueId = $dataRequest['request_field'];
 $sourceUniqueId = $dataRequest['source_field'];

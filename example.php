@@ -16,7 +16,7 @@ AcField::$output_mode = "postponed";
 
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link link rel="stylesheet" type="text/css" href="css/custom-theme/jquery-ui-1.8.16.custom.css"  />
-<title>Untitled Document</title>
+<title>ALive Fields Demo App</title>
 <style type="text/css">
 <!--
 body {

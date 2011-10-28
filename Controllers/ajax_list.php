@@ -28,14 +28,14 @@ if (get_magic_quotes_gpc())
     	{
         $value = stripslashes($value);
     	}
-	array_walk_recursive($_GET, 'stripslashes_gpc');
+	array_walk_recursive($_REQUEST, 'stripslashes_gpc');
 	}
 session_start();
 //var_dump($_SESSION);
 require_once "query_wrapper.php";
 require_once "include.php";
 
-$request = json_decode($_GET['request'], 1);
+$request = json_decode($_REQUEST['request'], 1);
 
 if (isset($request['term'])) 
 	$term = $request['term'];
