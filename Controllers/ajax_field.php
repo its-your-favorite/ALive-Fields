@@ -25,7 +25,6 @@ header('Pragma: no-cache');
 
 require_once "query_wrapper.php";
 require_once "include.php";
-session_start();
 
 
 error_reporting(E_ERROR | E_PARSE | E_ALL ^ E_NOTICE);

@@ -146,7 +146,7 @@ AcCombobox.prototype.initialize = function(jqElementStr, filteredFields, autoloa
 					return;
 					}
 
-				var request = {"labels": myObject.optionsTexts, "table": myObject.optionsTable, "values": myObject.optionsKeys, "filters": myObject.filters, "distinct": myObject.requestDistinct,
+				var request = {"AcFieldRequest": "getlist", "labels": myObject.optionsTexts, "table": myObject.optionsTable, "values": myObject.optionsKeys, "filters": myObject.filters, "distinct": myObject.requestDistinct,
 		"requesting_page" : AcFieldGetThisPage(), "request_field" : myObject.uniqueId, "filters": myObject.filters };
 			
 				if (typeof(source) != "undefined" )
@@ -156,11 +156,17 @@ AcCombobox.prototype.initialize = function(jqElementStr, filteredFields, autoloa
 					request.requester_key = source.getValue();
 					}
 	
-				url = "Controllers/ajax_list.php" ; //?request=" + encodeURIComponent(JSON.stringify(request));
-				myObject.lastLoadOptions = url;
-				lastXhr = $.ajax(url, {type: "POST", data: { "request" : JSON.stringify(request) } } )
+				url = document.location.toString();//"Controllers/ajax_list.php" ; //?request=" + encodeURIComponent(JSON.stringify(request));
+/*				if (url.indexOf('?') + 1)
+					url += '&_=' + new Date().getTime();
+				else
+					url += "?_=" + new Date().getTime();*/
+				myObject.lastLoadOptions = url
+				lastXhr = $.ajax(url, {cache: false, type: "POST", data: { "request" : JSON.stringify(request) } } )
 					.done( function( data, status, xhr ) 
 						{	//alert ("using ajax");
+						if ((data[0] != '[') && (data[0] != '{'))
+							return handleError("Not json from server: " + data);
 						data = $.parseJSON(data);
 						
 						myObject.status = "ready";

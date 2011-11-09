@@ -30,10 +30,13 @@ if (get_magic_quotes_gpc())
     	}
 	array_walk_recursive($_REQUEST, 'stripslashes_gpc');
 	}
-session_start();
+	
+
+//session_start();
 //var_dump($_SESSION);
-require_once "query_wrapper.php";
-require_once "include.php";
+require_once ("query_wrapper.php");
+require_once ("include.php");
+_AcField_call_query_read("SELECT 1 ");
 
 $request = json_decode($_REQUEST['request'], 1);
 
@@ -80,7 +83,7 @@ elseif ($this_field["options_loadability"] == 2)
 	;// okay, we can load without filters
 else
 	{
-	var_dump($this_field);
+	//var_dump($this_field);
 	json_error("Field ($fieldUniqueId) not loadable.. ");
 	}
 
@@ -90,7 +93,7 @@ $table = _AcField_escape_field_name($this_field['options_table']);
 
 if ($filtering)
 	{
-	//var_dump($this_field);
+
 	foreach ($request["filters"] as $filt)
 		foreach ($filt as $source_control_id) //pick all enabled filtering controls
 			{
@@ -100,8 +103,8 @@ if ($filtering)
 				if ($filtering_type[0] == $fieldUniqueId)
 					{
 //	var_dump($request);
-//					if (verify_key($request["requester_key"])
-// var_dump($filtering_type);
+//  if (verify_key($request["requester_key"]))
+// 		var_dump($filtering_type);
 //							;						
  					if ($filtering_type[2] == "value")
 						{
@@ -110,7 +113,6 @@ if ($filtering)
 						}
 					else
 						{
-						 //var_dump($request);
 						verify_control_could_contain_value($requester_page, $request['requester'], $request["requester_text"], "text") or die("security issue 2"); 							
 						$filters[] = ($table) . "." . _AcField_escape_field_name($filtering_type[1])  . " = " . _AcField_escape_field_value($request["requester_text"]);					
 						}
@@ -125,9 +127,16 @@ $conditions[] = " UCASE($field2) like '%$term%'";
 if ($filtering)
 	$conditions = array_merge($conditions, $filters);
 $conditions = join($conditions, " AND ");
+$distinct = "";
 
-
-$query = "SELECT $field1 as id, $field2 as label, $field2 as value FROM $table WHERE $conditions ";
+if ($request['distinct'] )
+	{
+	if ($field1 != $field2)
+		return json_error("Fields (pkey, value) must be the same in a distinct request");
+	else
+		$distinct = "distinct";
+	}
+$query = "SELECT $distinct $field1 as id, $field2 as label, $field2 as value FROM $table WHERE $conditions ";
 $this_field["last_used_query"] = $query;
 $query .= "  ORDER BY $field2 ";
   

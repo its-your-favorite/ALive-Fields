@@ -14,27 +14,27 @@
  * http://www.JSON.org/json2.js
  *
  * Last Revision: 
- * Date: Oct 28 2011 1:15PM
+ * Date: November 08 2011 1:15PM
  */
 
+// join tables (which can be hidden and function through a select multiple)
+
 //future additions:
+// to do: make default values on dropdowns work, other things? 
 // to do: server side validations. 
-// to do: make select Distinct Work, default, other things? 
 // to do: improve code beauty and coder-friendliness
 // -- adding rows, deleting rows
-// join tables (which can be hidden and function through a select multiple)
 
 
 //  to do: Check again if all pages can submit to themselves. This would totally avoid the need for a session usage. We would want to keep a unique key generated though, because of multiple instances and for security [just because you submit a request to administrate_users.php doesn't mean it CAME FROM administrate_users.php {which is a page only shown to admins}].  Or the security could be handled as described below: 
 // perhaps something like  FIRST LINE: require_once 'validate_security.php'; //some non-AcControls-related security check. SECOND LINE: myAcControls();   THEN below we use: AcControls->dumpAll();
-// The complicated result of this though is that it will require giant validation queries, with multiple joins. For example if A updates B updates C and we try to set C to 6, we need to check B could contain 6 for a value that A could contain (and so on and so forth).
+
+// The complicated result of this though, if we wish to drop the whole SESSION reliance,  is that it will require giant validation queries, with multiple joins. For example if A updates B updates C and we try to set C to 6, we need to check B could contain 6 for a value that A could contain (and so on and so forth). OOOR. Encryption // RSA fingerprint. I can think of a simple way to do this with SHA but is it valid?
 
 // 
 // to do: turn off errors on most pages.
 // -- discuss limitations  cannot operate on tables that don't have 1 single primary key.
-
 // to do: test lock. Clean up 3 js files.
-// to do : differentiate options
 
 session_start();
 global $PAGE_INSTANCE;
@@ -94,7 +94,6 @@ class AcField
 			{
 			if (is_array($filt[reset(array_keys($filt))]))
 				{
-				
 				foreach ($filt as $f)
 					{			
 					if (strpos($f[0], ".") === false)
@@ -111,6 +110,7 @@ class AcField
 			handleError("Must pass array to add_filters");
 	}
 	
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//*Define stuff here on how this function works*	
 	function set_filtered_fields($filt)
 	{
@@ -137,6 +137,11 @@ class AcField
 	function get_js_fieldname()
 	{
 		return  "AcField" . $this->unique_id;
+	}
+	
+	function set_property($prop, $val)
+	{
+		$this->add_output($this->get_js_fieldname() . ".$prop = $val;");	
 	}
 		
 	function &get_session_object()
@@ -191,6 +196,29 @@ class AcField
 	{
 		echo AcField::$cached_output;
 		AcField::$cached_output = "";
+	}
+	
+	static function handleRequests()
+	{
+		if (!isset($_REQUEST['request']))
+			return; //No requests.
+		else
+			{
+			$request = json_decode($_REQUEST['request'], true);
+			if (!isset($request['AcFieldRequest']))
+				return;
+			elseif (($request['AcFieldRequest'] == 'getfield') || ($request['AcFieldRequest'] == 'savefield'))
+				{
+				require_once ("Controllers/ajax_field.php");
+				die();
+				}
+			elseif ($request['AcFieldRequest'] == 'getlist')
+				{
+				//echo "LIST";
+				require_once ("Controllers/ajax_list.php");
+				die();
+				}
+			}		
 	}
 }
 

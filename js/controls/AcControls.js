@@ -188,9 +188,9 @@ AcField.prototype.saveField = function()
 	return handleError("Field not set to savable");
  
    var theObject = this;
-   information = {  "fieldInfo" : [[ this.correspondingField,   this.getValueForSave() ]] ,  "action" : "save", "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId};
+   information = {"AcFieldRequest": "savefield" , "fieldInfo" : [[ this.correspondingField,   this.getValueForSave() ]] ,  "action" : "save", "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId};
 
-	url = "Controllers/ajax_field.php";
+	url = document.location.toString();
 	this.lastRequest = url; //for debugging sake	
  	this.setColor("#FFFFBB");
 	
@@ -263,7 +263,7 @@ AcField.prototype.loadField = function(primaryKeyData, type, source)
   if (this.correspondingField == "")
   	return handleError("Cannot load a control that has no fieldname.");
 	
-  information = {"primaryInfo": [this.pkeyField , primaryKeyData] , "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId};
+  information = {"AcFieldRequest": "savefield" ,"primaryInfo": [this.pkeyField , primaryKeyData] , "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId};
 
   if (type == "static")
   	information.action = "hardcoded_load";
@@ -274,7 +274,7 @@ AcField.prototype.loadField = function(primaryKeyData, type, source)
 	}
 
    information = (JSON.stringify(information));
-   url = "Controllers/ajax_field.php";
+   url = document.location.toString();//"Controllers/ajax_field.php";
    this.lastRequest = url; //for	 debugging sake
 	
  tmp = {

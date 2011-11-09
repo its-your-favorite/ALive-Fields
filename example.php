@@ -1,9 +1,31 @@
 <?PHP
-require_once( "AcField.php");
-AcField::$output_mode = "postponed";
+	require_once( "AcField.php");
+
+	AcField::$output_mode = "postponed";
+	
+	$user_enabled = new AcField("AcCheckbox", "enabled", "users", "userID", 1, 1);
+	$user_enabled->bind("user_enabled");
+	
+	$join_date = new AcField("AcDatebox", "join_date", "users", "userID", 1, 1);
+	$join_date->bind("user_join_date");
+
+	$article_content = new AcField("AcTextbox", "content", "articles", "articleID", 1, 1);
+	$article_content->bind("content");
+
+	$users_articles = new AcList("AcSelectbox", "title", "articles", "articleID", 1, 0);
+	$users_articles->bind("articles");
+	$users_articles->set_dependent_fields(array($article_content));
+
+	$all_the_users = new AcList("AcCombobox", "username", "users", "userid", 2, 0);
+//	$all_the_users->set_property("requestDistinct", true);
+	$all_the_users->bind("all_users");
+	$all_the_users->set_dependent_fields(array($user_enabled, $join_date));
+	$all_the_users->set_filtered_fields(array(array("control" => $users_articles, "field" => "author")));
+	//var_dump($_REQUEST);
+	AcField::handleRequests();
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="h	ttp://www.w3.org/1999/xhtml">
 <head>
 <script src="js/jquery.js" ></script>
 <script src="js/jquery-ui.js"></script>
@@ -157,7 +179,7 @@ ul.nav a { zoom: 1; }  /* the zoom property gives IE the hasLayout trigger it ne
     <ul class="nav">
       <li><a href="#">Administrate</a></li>
       <li><a href="#">View Settings</a></li>
-      <li></li>
+      <li><a href="#">Blahblah</a></li>
       <li><a href="#">Logout</a></li>
     </ul>
     <p>Blah Blah this is just a right container that could contain anything and is pretty much irrelevant to this Alive Fields demonstration.</p>
@@ -203,27 +225,7 @@ ul.nav a { zoom: 1; }  /* the zoom property gives IE the hasLayout trigger it ne
     <!-- end .footer --></div>
   <!-- end .container --></div>
   <script language="javascript">
-  <?PHP
-	$user_enabled = new AcField("AcCheckbox", "enabled", "users", "userID", 1, 1);
-	$user_enabled->bind("user_enabled");
-	
-	$join_date = new AcField("AcDatebox", "join_date", "users", "userID", 1, 1);
-	$join_date->bind("user_join_date");
-
-	$article_content = new AcField("AcTextbox", "content", "articles", "articleID", 1, 1);
-	$article_content->bind("content");
-
-	$users_articles = new AcList("AcSelectbox", "title", "articles", "articleID", 1, 0);
-	$users_articles->bind("articles");
-	$users_articles->set_dependent_fields(array($article_content));
-
-	
-	$all_the_users = new AcList("AcCombobox", "username", "users", "userID", 2, 0);
-	$all_the_users->bind("all_users");
-	$all_the_users->set_dependent_fields(array($user_enabled, $join_date));
-	$all_the_users->set_filtered_fields(array(array("control" => $users_articles, "field" => "author")));
-
-	
+  <?PHP	
 	AcField::flush_output();
   ?>
   </script>

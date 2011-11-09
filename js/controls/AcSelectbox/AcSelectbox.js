@@ -136,7 +136,7 @@ AcSelectbox.prototype.loadOptions = function(source)
 	if (this.requestDistinct && (this.optionsTexts != this.optionsKeys))
 		handleError("Request distinct doesn't work when the values and options fields are different");
 			
-	var obj = {"labels": this.optionsTexts, "table": this.optionsTable, "values": this.optionsKeys, "filters": this.filters, "distinct": this.requestDistinct,
+	var obj = {"AcFieldRequest": "getlist", "labels": this.optionsTexts, "table": this.optionsTable, "values": this.optionsKeys, "filters": this.filters, "distinct": this.requestDistinct,
 		"requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId, "filters": this.filters };
 	if (typeof(source) != "undefined" )
 		{
@@ -148,7 +148,7 @@ AcSelectbox.prototype.loadOptions = function(source)
 		obj['default'] = this.defaultValue;
 
 	var data = JSON.stringify(obj);
-	var str = "Controllers/ajax_list.php";;
+	var str = document.location.toString(); //"Controllers/ajax_list.php";;
 
 	if (this.overrideURL)
 		str = this.overrideURL; // for cases where the default code just won't work.
