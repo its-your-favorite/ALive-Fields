@@ -20,11 +20,13 @@
 // join tables (which can be hidden and function through a select multiple)
 
 //future additions:
-// to do: make default values on dropdowns work, other things? 
 // to do: server side validations. 
+// 		// make them return the new value in the event that they change the value, so that the client-side control can immediately know what actually was saved.
+//		// make them allow a certain specific error message on a validation fail.
+
+// to do: make default values on dropdowns work, other things? 
 // to do: improve code beauty and coder-friendliness
 // -- adding rows, deleting rows
-
 
 //  to do: Check again if all pages can submit to themselves. This would totally avoid the need for a session usage. We would want to keep a unique key generated though, because of multiple instances and for security [just because you submit a request to administrate_users.php doesn't mean it CAME FROM administrate_users.php {which is a page only shown to admins}].  Or the security could be handled as described below: 
 // perhaps something like  FIRST LINE: require_once 'validate_security.php'; //some non-AcControls-related security check. SECOND LINE: myAcControls();   THEN below we use: AcControls->dumpAll();
@@ -36,7 +38,9 @@
 // -- discuss limitations  cannot operate on tables that don't have 1 single primary key.
 // to do: test lock. Clean up 3 js files.
 
-session_start();
+@session_start();
+require_once("Controllers/query_wrapper.php");
+
 global $PAGE_INSTANCE;
 $PAGE_INSTANCE = md5(time());
 
@@ -49,20 +53,25 @@ function generate_unique_id()
 class AcField
 {
 	var $unique_id;
+	protected $validators;
 	public static $output_mode;
 	public static $cached_output;
 	public static $basics_included;
+	protected static $all_instances;
+	public $bound_field, $bound_table, $bound_pkey;
 	
 	function AcField($field_type, $field, $table, $id, $loadable, $savable)
 	{
 		$this->include_basics();
-		$data["bound_field"] = $field;
-		$data["bound_table"] = $table;
-		$data["bound_pkey"] = $id;
-		$data["loadable"] = $loadable;
+		$this->validators = array();
+		$data["bound_field"] = $this->bound_field = $field;
+		$data["bound_table"] = $this->bound_table = $table;
+		$data["bound_pkey"] = $this->bound_pkey = $id;
+		$data["loadable"] = $this->loadable = $loadable;
 		$data["savable"] = $savable;
 		$data["filters"] = array();
 		$this->unique_id = generate_unique_id();
+		static::$all_instances[$this->unique_id] = &$this;
 		$data["unique_id"] = $this->unique_id;
 		
 		$tmp = &$this->get_session_object();
@@ -85,6 +94,90 @@ class AcField
 			}
 	}
 	
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// This function registers a validator
+	function register_validator($callback)
+	{
+		if (is_array($callback))//using an assoc array
+			{
+			if (isset($callback["length"]))
+				{					
+				preg_match_all('/[0-9]?<' . '?' . '>' . '?=?/', $callback["length"], $matches);
+				$length_expr = join($matches[0], "");
+								
+				$this->register_validator(function($val) use ( $length_expr )
+					{ 
+					$x = strlen($val);
+					//json_error("testing length: $x $length_expr of $val: " . eval("return $x $length_expr;"));
+					return eval("return $x $length_expr;");
+					});
+				}
+			if (isset($callback['regex']))
+				{
+
+				$this->register_validator(function($val) use ($callback)
+					{
+					try
+						{
+						$res = preg_match($callback['regex'], $val);
+						}
+					catch (Exception $e)
+						{
+						json_error("Error in Regex Validator"); 
+						}
+					if ($res === false)
+						json_error("error in regex validator");
+					return $res;
+					});
+				}
+				
+			if (isset($callback['uniqueness']) || isset($callback['unique']))
+				{
+				if (isset($callback['uniqueness']))
+					$callback['unique'] = $callback['uniqueness'];				
+				$copy = $this;
+				$this->register_validator(function($val, $pkey) use ($callback, $copy)
+				 	{					
+					$query = "SELECT count(*) as res from " . _AcField_escape_table_name($copy->bound_table) . " WHERE  " . _AcField_escape_field_name($copy->bound_field) . " = " . _AcField_escape_field_value($val) . " AND " ._AcField_escape_field_name($copy->bound_pkey) . " != " . _AcField_escape_field_value($pkey);
+//					json_error($query);
+					$result = _AcField_call_query_read($query) ;
+//					json_error((bool)($callback['unique']));					
+					return (($result[0]['res'] == 0) == (bool)($callback['unique'])) ;
+					});				
+				}
+			}
+		else
+			$this->validators[] = $callback;
+	}
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// This function returns a particular instance from an ID (useful for passing IDs through session)
+	static function instance_from_id($id)
+	{
+		$tmp = static::$all_instances[$id];
+		return $tmp;
+				//echo "K";
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// 
+	function do_validations(& $prev_value, $key_val)
+	{
+
+		foreach ($this->validators as $validator)
+			{
+				if (!$validator($prev_value, $key_val))
+					return false;
+			}
+		return true;
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////
+	// 	
+	function __toString()
+	{
+		return "This is an AcField";	
+	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////
 	// See set_filtered_fields for information
 	function add_filters($filt)

@@ -28,7 +28,7 @@ require_once "include.php";
 
 
 error_reporting(E_ERROR | E_PARSE | E_ALL ^ E_NOTICE);
-set_error_handler ("auto_error", E_ERROR | E_PARSE | E_USER_ERROR );
+set_error_handler ("auto_error", E_ERROR | E_PARSE | E_ALL ^ E_NOTICE );
 
 global $sql;
 $var = json_decode($_REQUEST['request']);
@@ -64,13 +64,16 @@ $values = $dataRequest["fieldInfo"];
 //////////////////////////////////////////////////////////////////////////////////	
 				
 if (($dataRequest['action'] === "save"))
-	{
+	{	
+	$theAcField = AcField::instance_from_id($fieldUniqueId);
+	
 	if (! $this_field['savable'])
 		die("Field not savable."); //security violation
 	 
-	foreach ($values as $x)
+	foreach ($values as $x) //so even though we are looping right here, as written controls can only update 1 field per ajax request. This loop is more for theoretical future use then?
+		{		
 		$values_clause[] = _AcField_escape_field_name($this_field['bound_field'])  . " =  " . _AcField_escape_field_value($x[1]) . " ";
-
+		}
 	$values_clause = implode(" , ", $values_clause);
 	if ($this_field['type'] == 'multi')
 		verify_control_could_contain_value($requester_page, $fieldUniqueId, ($x[1]) , "optionValue") or json_error("expectedError");
@@ -108,7 +111,7 @@ elseif (($dataRequest['action'] === "hardcoded_load") || ($dataRequest['action']
 
 	if ($dataRequest['action'] === "dynamic_load")	
 		{
-		$where_clause['key_piece'] = $this_field["bound_table"] . "." . $this_field['bound_pkey'] . " = " . _AcField_escape_field_value( $dataRequest['primaryInfo'][1] ) ;
+		$where_clause['key_piece'] = _AcField_escape_table_name($this_field["bound_table"]) . "." . _AcField_escape_field_name( $this_field['bound_pkey'] ) . " = " . _AcField_escape_field_value($dataRequest['primaryInfo'][1]);
 		if ( count($_SESSION['_AcField'][$requester_page][$sourceUniqueId]['filters']) )
 			{
 			$source_field = $_SESSION['_AcField'][$requester_page][$sourceUniqueId];
@@ -116,15 +119,19 @@ elseif (($dataRequest['action'] === "hardcoded_load") || ($dataRequest['action']
 			if (! in_array($this_field["unique_id"], $source_field['dependent_fields']) ) //verify that this control is indeed allowed to update the other control. Do this verification by looking at session records.
 				die("NOT A MATCH");
 				
-			$join_clause[] = $source_field['bound_table'] . " ON " . $this_field['bound_table'] . "." . $this_field["bound_pkey"] . " = " . $source_field['bound_table'] . "." . $source_field["bound_pkey"];
+			$join_clause[] = $source_field['bound_table'] . " ON " . _AcField_escape_table_name($this_field['bound_table']) . "." . _AcField_escape_field_name($this_field["bound_pkey"]) . " = " . _AcField_escape_table_name($source_field['bound_table']) . "." . _AcField_escape_field_value($source_field["bound_pkey"]);
 			if (count($join_clause))
 				$join_clause = "INNER JOIN " . join($join_clause, " INNER JOIN ");
-			$this_field['loaded_join_clause'] = $join_clause;
+			$this_field['loaded_join_clause'] = $join_clause;			
 			$where_clause['join_piece'] = join($_SESSION['_AcField'][$requester_page][$sourceUniqueId]['filters'], " AND ");
 			}
+		$this_field['loaded_pkey'] = $dataRequest['primaryInfo'][1] ;
 		}
 	else
-		$where_clause[] = $this_field['bound_table'] . "." . $this_field['bound_pkey'] . " = " . $this_field['hardcoded_loads'][$dataRequest['primaryInfo'][1]];
+		{
+		$where_clause[] = _AcField_escape_table_name($this_field['bound_table']) . "." . _AcField_escape_field_name($this_field['bound_pkey']) . " = " . _AcField_escape_field_value($this_field['hardcoded_loads'][$dataRequest['primaryInfo'][1]]);
+		$this_field['loaded_pkey'] = $this_field['hardcoded_loads'][$dataRequest['primaryInfo'][1]];
+		}
 	$this_field['loaded_where_clause'] = $where_clause;
 	}
 else
@@ -144,7 +151,7 @@ if (($dataRequest['action'] === "hardcoded_load") || ($dataRequest['action'] ===
 	$result = _AcField_call_query_read($sql);
 	$result = array("value" => $result[0]['answer']);
 	}
-elseif ($dataRequest['action'] === "save")
+elseif ($dataRequest['action'] === "save")//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	{
 	if (! isset($this_field['loaded_where_clause']))
 		die(); //library isn't currently designed to securely handle a save before a load. 
@@ -156,7 +163,11 @@ elseif ($dataRequest['action'] === "save")
 		die("security violation");			// apply to the value which will be saved here. That is, if this field can only load values WHERE X < 3 then we can apply the same WHERE X < 3 check on our save.
 	else if ($security_check[0]['count_rec'] > 1) // You probably don't want to do something that affects multiple rows since you are usually operating on primary key. 
 		json_error("Cancelled. Affects multiple rows."); //However if you know what you are doing, you can disable this restriction by commenting these two lines.
-	
+		
+	foreach ($values as $x)
+		if (! $theAcField->do_validations($x[1], $this_field['loaded_pkey']))
+			json_error("Could not save field: Validation Failed");
+
 	$sql = "UPDATE $table SET  $values_clause  WHERE  " . join($this_field['loaded_where_clause'], " AND ");
 	_AcField_call_query_write($sql, 1);
 	$result['value'] = "success";
@@ -177,10 +188,12 @@ if ($debug)
 //database_query('set textsize 65536');	 Good idea for MsSql
 //$rs = database_query($sql, 0);
 
+
 if ($dataRequest['action'] === 'load')
 	{
 	$result['value'] = $row[0];//Our result should be the first field in the first row.
 	}
+		
 echo json_encode($result);
 
 

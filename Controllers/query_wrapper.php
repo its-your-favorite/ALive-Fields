@@ -15,7 +15,6 @@
  * Date: Oct 28 2011 1:45PM
  */
 
-
 // ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** 
 //connect to DB -- Change this to whatever SQL resource you are using. If you wish to adapt this to not rely on SQL, that can be done by altering ajax_field.php
 
@@ -97,6 +96,14 @@ function _AcField_escape_field_name ($field, $add_quotes = true)
 {
 	// ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
 	return _AcField_escape_field_name_mysql($field, $add_quotes);
+}
+
+////////////////////////////////////////////////////////////////
+
+function _AcField_escape_table_name ($field, $add_quotes = true)
+{
+	// ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
+	return _AcField_escape_field_name_mysql($field, $add_quotes); //happens to be the same for mysql
 }
 
 ////////////////////////////////////////////////////////////////

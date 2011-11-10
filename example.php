@@ -1,4 +1,9 @@
 <?PHP
+
+	function ensure_logged_in() {};
+	session_start();
+	ensure_logged_in(); //It is important to validate security at this point, before AcFields.
+
 	require_once( "AcField.php");
 
 	AcField::$output_mode = "postponed";
@@ -11,7 +16,13 @@
 
 	$article_content = new AcField("AcTextbox", "content", "articles", "articleID", 1, 1);
 	$article_content->bind("content");
-
+	$article_content->register_validator( array("unique" => true, "length" => ">0", "regex" => '/^[0-9]+ace/') );
+	$article_content->register_validator(
+			function ($new_value) 
+				{					
+					return (strpos($new_value, "test") == false);
+				});
+	
 	$users_articles = new AcList("AcSelectbox", "title", "articles", "articleID", 1, 0);
 	$users_articles->bind("articles");
 	$users_articles->set_dependent_fields(array($article_content));
