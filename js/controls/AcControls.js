@@ -30,6 +30,15 @@ if (typeof(handleError) == "undefined")
 if (typeof(jQuery) == "undefined")
 	handleError("This library requires jquery.");
 	
+function addParam(url, variable, val)	
+{
+	if (url.indexOf("#") + 1)
+		url = url.substring(0, url.indexOf("#"));
+	if (url.indexOf("?") == -1)
+		url += "?";
+	url += variable + "=" + encodeURIComponent(val);
+	return url;
+}
 /** BASE
  * @class Base class for a set of controls that extend standard HTML controls to make them ajax, powered
  and connect them to a database in a way that resembles Microsoft Access.
@@ -275,7 +284,7 @@ AcField.prototype.loadField = function(primaryKeyData, type, source)
 
    information = (JSON.stringify(information));
    url = document.location.toString();//"Controllers/ajax_field.php";
-   this.lastRequest = url; //for	 debugging sake
+   this.lastRequest = url + "?request=" + encodeURIComponent(information); //for	 debugging sake
 	
  tmp = {
   url: url,

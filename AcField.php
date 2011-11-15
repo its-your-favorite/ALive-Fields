@@ -17,27 +17,28 @@
  * Date: November 08 2011 1:15PM
  */
 
-// join tables (which can be hidden and function through a select multiple)
+// ERRORS: 
+// -- [not reproducible] leaving a page while ajax request is out should not cause an error
+// -- [fixed?] weird bug where field loads and closes itself.
+
+// to do: make default values on dropdowns work, other things? 
+// to do: improve code beauty and coder-friendliness
+// -- adding rows, deleting rows
+// join tables (which can be hidden and function through a select multiple) [relies on adding, deleting rows]
 
 //future additions:
 // to do: server side validations. 
 // 		// make them return the new value in the event that they change the value, so that the client-side control can immediately know what actually was saved.
 //		// make them allow a certain specific error message on a validation fail.
 
-// to do: make default values on dropdowns work, other things? 
-// to do: improve code beauty and coder-friendliness
-// -- adding rows, deleting rows
 
-//  to do: Check again if all pages can submit to themselves. This would totally avoid the need for a session usage. We would want to keep a unique key generated though, because of multiple instances and for security [just because you submit a request to administrate_users.php doesn't mean it CAME FROM administrate_users.php {which is a page only shown to admins}].  Or the security could be handled as described below: 
-// perhaps something like  FIRST LINE: require_once 'validate_security.php'; //some non-AcControls-related security check. SECOND LINE: myAcControls();   THEN below we use: AcControls->dumpAll();
-
+// Investigate alternatives to using the session. 
 // The complicated result of this though, if we wish to drop the whole SESSION reliance,  is that it will require giant validation queries, with multiple joins. For example if A updates B updates C and we try to set C to 6, we need to check B could contain 6 for a value that A could contain (and so on and so forth). OOOR. Encryption // RSA fingerprint. I can think of a simple way to do this with SHA but is it valid?
 
 // 
 // to do: turn off errors on most pages.
 // -- discuss limitations  cannot operate on tables that don't have 1 single primary key.
 // to do: test lock. Clean up 3 js files.
-
 @session_start();
 require_once("Controllers/query_wrapper.php");
 
@@ -58,7 +59,7 @@ class AcField
 	public static $cached_output;
 	public static $basics_included;
 	protected static $all_instances;
-	public $bound_field, $bound_table, $bound_pkey;
+	public $bound_field, $bound_table, $bound_pkey, $loadable, $savable;
 	
 	function AcField($field_type, $field, $table, $id, $loadable, $savable)
 	{
@@ -68,10 +69,10 @@ class AcField
 		$data["bound_table"] = $this->bound_table = $table;
 		$data["bound_pkey"] = $this->bound_pkey = $id;
 		$data["loadable"] = $this->loadable = $loadable;
-		$data["savable"] = $savable;
+		$data["savable"] = $this->savable = $savable;
 		$data["filters"] = array();
 		$this->unique_id = generate_unique_id();
-		static::$all_instances[$this->unique_id] = &$this;
+		AcField::$all_instances[$this->unique_id] = &$this;
 		$data["unique_id"] = $this->unique_id;
 		
 		$tmp = &$this->get_session_object();
@@ -98,19 +99,22 @@ class AcField
 	// This function registers a validator
 	function register_validator($callback)
 	{
+		$our_version = explode(".",phpversion());
 		if (is_array($callback))//using an assoc array
 			{
 			if (isset($callback["length"]))
 				{					
 				preg_match_all('/[0-9]?<' . '?' . '>' . '?=?/', $callback["length"], $matches);
 				$length_expr = join($matches[0], "");
-								
-				$this->register_validator(function($val) use ( $length_expr )
-					{ 
-					$x = strlen($val);
-					//json_error("testing length: $x $length_expr of $val: " . eval("return $x $length_expr;"));
-					return eval("return $x $length_expr;");
-					});
+
+				if ($our_version[0] >= 5)
+					{
+					$this->register_validator(function($val) use ( $length_expr )
+						{ 
+						$x = strlen($val);
+						return eval("return $x $length_expr;");
+						});
+					}
 				}
 			if (isset($callback['regex']))
 				{

@@ -12,42 +12,59 @@ body {
 	padding: 0;
 	color: #000;
 }
-p:first-letter {margin-left:20px;}
-body {margin:10px;}
+p:first-letter {margin-left:30px; }
+p {margin-left:20px;}
+h3 {margin-left:25px;}
+body {margin:20px;}
+/*.left_align { float:left; width:50% }*/
+.right_align {float:right; text-align:right; margin-right:50px;}
 </style>
 </head>
 <body>
-<h1>ALive Fields </h1>
-<h2>Table of Contents</h2>
-<ol type="1">
-<li><a href="#overview">Overview</a></li>
-<li><a href="#security">Security</a></li>
-<li><a href="#usage">Usage Guide</a></li>
-</ol>
-<br />
+<div class="right_align">
+    <img src='ALfields%20logo.png' />
+    </div>
+
+    <h1>ALive Fields </h1><br />
+
+    <h2>Table of Contents</h2>
+    <ol type="1">
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#security">Security</a></li>
+    <li><a href="#usage">Usage Guide</a></li>
+    </ol>
+    <br />
 
 <h2 id="overview">Overview</h2>
 <p>ALive fields (Ajax Live Fields) are a variety of Javascript controls (operating on a provided PHP backend) I built to provide a live, secure, rapid-deployment
 database-binding system. The setup I provide here is relatively basic, however it is open source and easy to adapt to your own specific needs.<br />
 </p> 
 <p>
-You can see the <a href='http://www.youtube.com/watch?v=ZTLXeKz9Vvo'>youtube screencast</a> on basic usage and functioning. Or you can try the <a href='example.php'>live example</a> out for yourself. You can access the source at   <a href="https://github.com/anfurny/ALive-Fields">https://github.com/anfurny/ALive-Fields</a> .</p>
-
-<h3>Requirements</h3>
-<p>ALive fields requires Jquery, JSON, and its controls require JqueryUI.
+You can see the <a href='http://www.youtube.com/watch?v=ZTLXeKz9Vvo'>youtube screencast</a> on basic usage and functioning. Or you can try the <a href='example.php'>live example</a> out for yourself. The source is also <a href="https://github.com/anfurny/ALive-Fields">hosted on github</a>.<br />
 <br />
+
 <h2  id="security">Security</h2>
 <p>These controls are designed to be entirely secure. This means that they are designed to: not reveal any information about table or field names in the database, not allow editing of fields; rows; or tables by fiddling with requests, and not be susceptible to SQL injection. I highly encourage you to verify the security for yourself on the example; if you can break the security (i.e. fiddling with requests in a way that lets you change or view data that could not be changed/altered without fiddling with requests) I will add your name as a contributor to the source code. </p>
-<p>The one thing that the coder needs to be sure to do is prevent arbitrary input from entering into an AcField parameters. For example calling ->load_unchecked($_POST['some_variable']); will allow arbitrary loading of any row in the table. Additionally, tables, fields, and primary keys should never get passed from/through the client (i.e. AcField(&quot;AcTextbox&quot;, $_GET['field'], ... ). </p>
+<p>The one thing that the coder needs to be sure to do is prevent arbitrary user input from entering into an AcField parameters. For example calling <nobr>-&gt;load_unchecked($_POST['some_variable']);</nobr> would be a big security no-no. Additionally, tables, fields, and primary keys should never get passed from/through the client (i.e. AcField(&quot;AcTextbox&quot;, $_GET['field'], ... ). </p>
 <h2 id="usage">Usage Guide</h2>
+<p>
+<h3>Requirements</h3>
+<ul>
+<li type="disc">Jquery</li>
+<li type="disc">JSON</li>
+<li type="jQueryUI">JqueryUI</li>
+</ul>
 <h3> Setup</h3>
 <ul>
+<li>Setup a working PHP webserver. </li>
 <li>Setup a database.</li>
+<li>Download ALive Fields, including requirements.</li>
 <li>Set the correct connection string in query_wrapper.php</li>
 <li>Set the correct escaping and wrapping functions for your database (default: mysql)</li>
 <li>Create a page that pulls from your table structure (include libraries, jquery, AcField, set an output mode, create controls, flush output).</li>
-
 </ul>
 </p>
+<hr />
+Copyright 2011 Alex Rohde
 </body>
 </html>

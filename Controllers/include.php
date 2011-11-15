@@ -3,7 +3,9 @@ function verify_control_could_contain_value($page, $control_id, $value, $field)/
 {
   $test_field = $_SESSION['_AcField'][$page][$control_id];
   ///echo $control_id;
+  //var_dump(func_get_args());
   //var_dump($test_field);
+
   if (! isset($test_field["last_used_query"]) )
   		return false;
 

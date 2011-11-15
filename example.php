@@ -1,7 +1,8 @@
 <?PHP
-
-	function ensure_logged_in() {};
+				
 	session_start();
+	function ensure_logged_in() {/* hypothetical. In your app you would check the session to do this AT THIS POINT;*/}
+	
 	ensure_logged_in(); //It is important to validate security at this point, before AcFields.
 
 	require_once( "AcField.php");
@@ -16,27 +17,26 @@
 
 	$article_content = new AcField("AcTextbox", "content", "articles", "articleID", 1, 1);
 	$article_content->bind("content");
-	$article_content->register_validator( array("unique" => true, "length" => ">0", "regex" => '/^[0-9]+ace/') );
-	$article_content->register_validator(
-			function ($new_value) 
+	//$article_content->register_validator( array("unique" => true, "length" => ">0", "regex" => '/^[0-9]+ace/') );
+	$article_content->register_validator(	function ($new_value) 
 				{					
-					return (strpos($new_value, "test") == false);
-				});
+					return (strpos($new_value, "fail") === false);
+				}); 
 	
 	$users_articles = new AcList("AcSelectbox", "title", "articles", "articleID", 1, 0);
 	$users_articles->bind("articles");
 	$users_articles->set_dependent_fields(array($article_content));
 
-	$all_the_users = new AcList("AcCombobox", "username", "users", "userid", 2, 0);
+	$all_the_users = new AcList("AcCombobox", "username", "users", "userID", 2, 0);
 //	$all_the_users->set_property("requestDistinct", true);
 	$all_the_users->bind("all_users");
 	$all_the_users->set_dependent_fields(array($user_enabled, $join_date));
 	$all_the_users->set_filtered_fields(array(array("control" => $users_articles, "field" => "author")));
-	//var_dump($_REQUEST);
+
 	AcField::handleRequests();
 ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="h	ttp://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <script src="js/jquery.js" ></script>
 <script src="js/jquery-ui.js"></script>

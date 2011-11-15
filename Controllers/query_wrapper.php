@@ -18,7 +18,7 @@
 // ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** 
 //connect to DB -- Change this to whatever SQL resource you are using. If you wish to adapt this to not rely on SQL, that can be done by altering ajax_field.php
 
- //     /* Prepend this line with // to alternate blocks
+//     /* Prepend this line with // to alternate blocks
  global $conn_readonly;
 $conn_readonly = mysql_connect("localhost:3306", "newuser_readonly", "a") or handleError("could not connect to database. Please check settings in query_wrapper.php ");
 mysql_query("USE Test;", $conn_readonly);

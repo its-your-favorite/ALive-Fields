@@ -11,6 +11,7 @@
  * Last Revision: 
  * Date: Oct 11 2011 2:00PM
  */
+@session_start();
 
 function json_error($x)
 {

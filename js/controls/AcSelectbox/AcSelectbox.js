@@ -148,24 +148,26 @@ AcSelectbox.prototype.loadOptions = function(source)
 		obj['default'] = this.defaultValue;
 
 	var data = JSON.stringify(obj);
-	var str = document.location.toString(); //"Controllers/ajax_list.php";;
+	var url = document.location.toString(); //"Controllers/ajax_list.php";;
 
 	if (this.overrideURL)
-		str = this.overrideURL; // for cases where the default code just won't work.
+		url = this.overrideURL; // for cases where the default code just won't work.
+		
+	url = addParam(url, "_", new Date().getTime()); //prevent caching, since jquery seems to have trouble with this.
 			
-	if (DEBUG)	
-		window.open(str);
+	if (DEBUG)
+		window.open(url);
 	
 	var copy = this;
 	this.previousValue = this.getValue();
 	this.previousText = this.getText();	
 	this.status = "loading";
-	this.lastLoadOptions = str;
+	this.lastLoadOptions = url + "?request=" + encodeURIComponent(data);
 	//this.loadJson(str, function () {} );
 	this.clearDependentFields();
-	$.post(str,{request:  data},function(a,b,c) {return copy.loadJson_callback(copy, a,b,c); } );
+	$.post(url,{request:  data},function(a,b,c) {return copy.loadJson_callback(copy, a,b,c); } );
 
-	return str;
+	return url;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

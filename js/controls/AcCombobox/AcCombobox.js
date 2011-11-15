@@ -76,7 +76,7 @@ AcCombobox.prototype.initialize = function(jqElementStr, filteredFields, autoloa
    jqElement.bind("keydown", function(e) 
   		{
 	 	if (e.which == 46) // if user presses DELETE key
-			myObject.setValue("");//clear field.
+			myObject.setValue(null);//clear field.
 	    } );
   /*jqElement.bind("focusout", function() 
   		{
@@ -87,8 +87,12 @@ AcCombobox.prototype.initialize = function(jqElementStr, filteredFields, autoloa
 	
 	jqElement.bind("focus", function()
 		{
-		if ((myObject.status != "ready") || (myObject.loadedKey == null))
+		if ((myObject.status != "ready"))
+			{
 			myObject.loadOptions();	
+			}
+		else if (myObject.loadedKey == null)
+			myObject.correspondingElement.autocomplete( "open" );
 		//if an option is already picked, don't reload, as this will clear what we have selected.
 		});
   	
@@ -157,11 +161,9 @@ AcCombobox.prototype.initialize = function(jqElementStr, filteredFields, autoloa
 					}
 	
 				url = document.location.toString();//"Controllers/ajax_list.php" ; //?request=" + encodeURIComponent(JSON.stringify(request));
-/*				if (url.indexOf('?') + 1)
-					url += '&_=' + new Date().getTime();
-				else
-					url += "?_=" + new Date().getTime();*/
-				myObject.lastLoadOptions = url
+				url = addParam(url, "_", new Date().getTime());
+									
+				myObject.lastLoadOptions = url + "?request" + encodeURIComponent(JSON.stringify(request));
 				lastXhr = $.ajax(url, {cache: false, type: "POST", data: { "request" : JSON.stringify(request) } } )
 					.done( function( data, status, xhr ) 
 						{	//alert ("using ajax");
