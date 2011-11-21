@@ -26,7 +26,7 @@
 // -- adding rows, deleting rows
 // join tables (which can be hidden and function through a select multiple) [relies on adding, deleting rows]
 
-//future additions:
+//future additions:0
 // to do: server side validations. 
 // 		// make them return the new value in the event that they change the value, so that the client-side control can immediately know what actually was saved.
 //		// make them allow a certain specific error message on a validation fail.
