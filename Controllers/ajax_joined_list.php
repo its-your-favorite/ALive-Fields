@@ -40,5 +40,12 @@ Filters
 Request distinct
 - Not really 
 
-BUT WHY NOT JUST MERGE THIS ALL TO one file, how? 
+BUT WHY NOT JUST MERGE THIS ALL TO one file. 
+	-Okay, let''s do it.
+	
+	- My only question is: does filtering need any changes, or can I join the generated filters and drop them right into the query? 
+	- So to answer this all I have to do is look at the example above... and not watch the office.
+
+
+
 ?>
