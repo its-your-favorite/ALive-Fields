@@ -15,17 +15,17 @@ https://github.com/anfurny/ALive-Fields/wiki
 
 What problem do I solve?
 ===================================================================================
-The problem is that online our benchmark for Rapid Application Development is leagues below what we are used to on the desktop environment. Though I can solve that for the general case, I'm presenting an open-source solution that fixes this for database-driven applications. 
+The problem is that online our benchmark for Rapid Application Development for database-driven applications is leagues below what we are used to on the desktop environment. 
 
-My benchmark for a great library is that the source-code that utilizes it isn't much longer than the definition of the problem in plain english. Frequently one wants a page that simply "Lets you edit fields A, B, and C on row 10 in table X," and though this can be done we're probably talking 20 lines if we utilize appropriate security, error handling for out-of-range values, and loading/saving functionality. Now if we need an additional page, that's another 20 lines. Solutions like ColdFusion fix this with a simple way to assign a database field to an html input element, but aren't open-source, aren't php, and aren't live and AJAX powered.
+My benchmark for a great library is that allows you to write source-code that isn't much longer than the description of the solution in plain english. Frequently one wants a page that simply "Lets you edit fields A, B, and C on row 10 in table X," and we're realistically talking 20 lines and more than an hour if we utilize appropriate security, error handling for out-of-range values, and loading/saving functionalit+y. Now if we need an additional page, that's another 20 lines. Other solutions like ColdFusion fix this problem, but have the caveats of not being open-source and aren't live and AJAX powered.
 
 It takes 3 lines (one html, two php) to create and assign an input element to a database field. One more line for a validation. 
 
-That's a moderate improvement, and certainly convenient. But the real benefit is when you put these building blocks together. Suppose you want to make this little PHP program, what would it take? :
+That's a moderate improvement, and certainly convenient. But the real benefit is when you put these building blocks together. Suppose you want to make a little PHP program, what would it take to :
 
 * Make a list of names of people in the company who are not administrators, when a user clicks a name, it shows a list of that employee's current projects, and when a project is clicked it shows that project's start date, and description (both of which are editable) all through ajax. 
 
-And now in twelve lines (3 html, 9 php) you can make a simple page. 
+Using this library, it can be done in twelve lines (3 html, 9 php) and probably twelve minutes. 
 
 *Let's say your boss now decides after the fact that this application should not monitor administrators' projects, even with tampering?
 
