@@ -17,6 +17,15 @@
  * Date: November 24 2011 1:15PM
  */
 
+// to do: clean up javascript by using parent instead of AcWHATEVER (if possible) and use the type of call that automatically passes params as an array.
+
+// to do: Allow php to intelligently determine what javascript files to include independently.
+
+// to do: test out this pretty jqUI stuff here: http://www.erichynds.com/jquery/jquery-ui-multiselect-widget/ 
+
+// to do: Testing -- locking on all types of fields
+//			testing -- 		 
+
 // To do:
 // 	-Make select Multi that only shows actual links (read only) e.g. John's classes -> English, French
 //	-Make select Multi that shows all possible links (writable) e.g. John's classes -> English*, French*, Spanish, History
@@ -36,6 +45,8 @@
 //		// make them allow a certain specific error message on a validation fail.
 
 // B) Instead of making this loose script in controllers to handle updates (i.e. ajax_field.php, ajax_script.php) put it inside the classes. This way everything stays object oriented.
+
+// C) A way to instead of making things auto-save, allow them to be controlled by two buttons (auto-inserted) that read "Save" or "Restore Value" .
 
 // Investigate alternatives to using the session. 
 // The complicated result of this though, if we wish to drop the whole SESSION reliance,  is that it will require giant validation queries, with multiple joins. For example if A updates B updates C and we try to set C to 6, we need to check B could contain 6 for a value that A could contain (and so on and so forth). OOOR. Encryption // RSA fingerprint. I can think of a simple way to do this with SHA but is it valid?
@@ -65,11 +76,14 @@ class AcField
 	public static $basics_included;
 	protected static $all_instances;
 	public $bound_field, $bound_table, $bound_pkey, $loadable, $savable, $filtered_fields, $filters;
+	public $type_temp, $type;
 	
 	function AcField($field_type, $field, $table, $id, $loadable, $savable)
 	{
+		$type_temp = 0;
 		$this->include_basics();
 		$this->validators = array();
+		$this->type = "single"; //necessary? If not remove from here and AcList.php
 		$data["bound_field"] = $this->bound_field = $field;
 		$data["bound_table"] = $this->bound_table = $table;
 		$data["bound_pkey"] = $this->bound_pkey = $id;
@@ -219,7 +233,7 @@ class AcField
 	
 	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 
-	// This sets the array of filters that STEM FROM this field (not that apply to it). In this respect this fucntion is the opposite of add_filters.
+	// This sets the array of filters that STEM FROM this field (not that apply to it). In this respect this function is the opposite of add_filters.
 	// Accepts an array of filters (assoc arrays) that have keys  [type] = ("value" / "text") , ['control'] = the actual AcField being updated
 	function set_filtered_fields($filt)
 	{
@@ -242,8 +256,7 @@ class AcField
 
 	//////////////////////////////////////
 	function bind($html_element_id)
-	{
-		//spit out bound javascript	
+	{	//spit out bound javascript	
 		$this->add_output( $this->get_js_fieldname() . ".initialize(\"#" . $html_element_id . "\"); ");
 	}
 		
@@ -297,6 +310,18 @@ class AcField
 		// but I do want savable and loadable to apply. Those make no sense before differentiate_options
 	}
 	
+	function request_handler($request)
+	{		
+		if (!isset($request['AcFieldRequest']))
+				return;
+		elseif (($request['AcFieldRequest'] == 'getfield') || ($request['AcFieldRequest'] == 'savefield'))
+				{
+				require_once ("Controllers/ajax_field.php");
+				die();
+				}
+		//no list handler in base class of AcFields
+	}
+	
 	static function add_output($js_code)
 	{
 		AcField::$cached_output .= $js_code . "\n";
@@ -311,26 +336,16 @@ class AcField
 		AcField::$cached_output = "";
 	}
 	
-	static function handleRequests()
-	{
+	static function handle_all_requests()
+	{   // In release mode, I recommend changing these $_REQUEST to post for a minor reduction in xsrf risk. 
 		if (!isset($_REQUEST['request']))
 			return; //No requests.
 		else
-			{
-			$request = json_decode($_REQUEST['request'], true);
-			if (!isset($request['AcFieldRequest']))
-				return;
-			elseif (($request['AcFieldRequest'] == 'getfield') || ($request['AcFieldRequest'] == 'savefield'))
-				{
-				require_once ("Controllers/ajax_field.php");
-				die();
-				}
-			elseif ($request['AcFieldRequest'] == 'getlist')
-				{
-				//echo "LIST";
-				require_once ("Controllers/ajax_list.php");
-				die();
-				}
+			{			
+			$request = json_decode($_REQUEST['request'], true);		
+//			echo($request['request_field']);
+//var_dump($_REQUEST);			die();
+			AcField::instance_from_id($request['request_field'])->request_handler($request);
 			}		
 	}
 }

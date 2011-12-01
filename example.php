@@ -1,5 +1,5 @@
 <?PHP
-				
+		
 	session_start();
 	function ensure_logged_in() {/* hypothetical. In your app you would check the session to do this AT THIS POINT;*/}
 	ensure_logged_in(); //It is important to validate security at this point, before AcFields.
@@ -31,12 +31,16 @@
 	$users_articles->bind("articles");
 	$users_articles->set_dependent_fields(array($article_content));
 
+	$users_departments_join = new AcListJoin("AcJoinSelectbox", "department_name", "departments", "departmentID", "join_users_departments", "department_id", "departmentID",  1, 1);
+	$users_departments_join->bind("departments_select");
+	
 	$all_the_users = new AcList("AcCombobox", "username", "users", "userID", 2, 0);
 	$all_the_users->bind("all_users");
 	$all_the_users->set_dependent_fields(array($user_enabled, $join_date));
-	$all_the_users->set_filtered_fields(array(array("control" => $users_articles, "field" => "author")));
+	$all_the_users->set_filtered_fields(array(array("control" => $users_articles, "field" => "author"), array("control" => $users_departments_join, "field" => "user_id" )) );
 
-	AcField::handleRequests();
+
+	AcField::handle_all_requests(); //In the event that this page is being called as an ajax call to load/save data (or return a list etc) handle appropriately.
 	
 	///// End Of PHP /////////////////////////////////////////////////////
 	// This is all the code a user of this library would need to write to make the page that you see. 
@@ -50,6 +54,7 @@
 <script src="js/jquery-ui.js"></script>
 <script src="js/controls/AcControls.js"></script>
 <script src="js/controls/AcSelectbox/AcSelectbox.js"></script>
+<script src="js/controls/AcSelectbox/AcJoinSelectbox.js"></script>
 <script src="js/controls/AcCombobox/AcCombobox.js"></script>
 <script src="js/controls/AcCheckbox/AcCheckbox.js"></script>
 <script src="js/controls/AcTextbox/AcTextbox.js"></script>
@@ -218,21 +223,33 @@ ul.nav a { zoom: 1; }  /* the zoom property gives IE the hasLayout trigger it ne
     <table width="100%" border="1">
       <tr>
         <td>Users<br />
-<input name="all_users" id="all_users" style="width:150px"></td>
-        <td>User's Articles<br />
-<select name="articles" size="10" id="articles" style="width:150px">
-</select></td>
+		<input name="all_users" id="all_users" style="width:150px">
+		</td>
+        
+        <td>
+        User's Articles<br />
+		<select name="articles" size="10" id="articles" style="width:150px"></select>
+		</td>
+		
+        <td>
+		User Belongs to these Departments<br />        
+        <select multiple="multiple" name="departments_select" size="10" id="departments_select" style="width:150px"></select>
+        </td>
+        
       </tr>
       <tr>
-        <td>        User is enabled:
+        <td>User is enabled:
           <input type="checkbox" id="user_enabled" />
           <br />
           Join Date
 <input type="text" id="user_join_date" />
         <br /></td>
-        <td>Article's content          
+        <td colspan="1">Article's content          
           <br />
         <textarea id="content" rows="5" cols="53" /></textarea></td>
+        <td>
+        You could put department-joined fields here...
+        </td>
       </tr>
     </table>
     <p>&nbsp;</p>
@@ -247,7 +264,7 @@ ul.nav a { zoom: 1; }  /* the zoom property gives IE the hasLayout trigger it ne
   <?PHP	
 	AcField::flush_output();
   ?>
-  </script>
-  
+   </script>
+
 </body>
 </html>

@@ -75,7 +75,7 @@ if (($dataRequest['action'] === "save"))
 	{	
 	$theAcField = AcField::instance_from_id($fieldUniqueId);
 	
-	if (! $this_field->savable)
+	if ( $this_field->savable < 1)
 		die("Field not savable."); //security violation
 	 
 	foreach ($values as $x) //so even though we are looping right here, as written controls can only update 1 field per ajax request. This loop is more for theoretical future use then?
@@ -114,7 +114,7 @@ elseif (($dataRequest['action'] === "hardcoded_load") || ($dataRequest['action']
 	{
 	if (! $this_field->loadable)
 		die("Field not loadable"); //security violation
-		
+				
 	$values_clause = $this_field->bound_field . " as answer ";
 
 	if ($dataRequest['action'] === "dynamic_load")	
@@ -169,6 +169,7 @@ elseif ($dataRequest['action'] === "save")//////////////////////////////////////
 	$security_check = _AcField_call_query_read($sql); // By seeing how many rows our current where clause selects we can add an additional level of security.
 	if (! $security_check[0]['count_rec']) // This is the critical line that ensures that the filters that limit which values are loaded (as stored in the loaded_where_clause) also 
 		die("security violation");			// apply to the value which will be saved here. That is, if this field can only load values WHERE X < 3 then we can apply the same WHERE X < 3 check on our save.
+											// technically this is redundant with the inclusion of "loaded_where_clause" in the actual UPDATE statement. 
 	else if ($security_check[0]['count_rec'] > 1) // You probably don't want to do something that affects multiple rows since you are usually operating on primary key. 
 		json_error("Cancelled. Affects multiple rows."); //However if you know what you are doing, you can disable this restriction by commenting these two lines.
 		
@@ -177,10 +178,10 @@ elseif ($dataRequest['action'] === "save")//////////////////////////////////////
 			json_error("Could not save field: Validation Failed");
 
 	$sql = "UPDATE $table SET  $values_clause  WHERE  " . join($this_field_session['loaded_where_clause'], " AND ");
-	_AcField_call_query_write($sql, 1);
+	_AcField_call_query_write($sql, 1);	
+	
 	$result['value'] = "success";
 	}
-
 else
 	{
 	trigger_error("Unknow Action:" . $dataRequest['action'], E_USER_ERROR);

@@ -163,7 +163,8 @@ AcCombobox.prototype.initialize = function(jqElementStr, filteredFields, autoloa
 				url = document.location.toString();//"Controllers/ajax_list.php" ; //?request=" + encodeURIComponent(JSON.stringify(request));
 				url = addParam(url, "_", new Date().getTime());
 									
-				myObject.lastLoadOptions = url + "?request" + encodeURIComponent(JSON.stringify(request));
+				myObject.lastLoadOptions = addParam(url, "request", (JSON.stringify(request)) );
+				
 				lastXhr = $.ajax(url, {cache: false, type: "POST", data: { "request" : JSON.stringify(request) } } )
 					.done( function( data, status, xhr ) 
 						{	//alert ("using ajax");

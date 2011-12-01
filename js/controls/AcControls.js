@@ -36,6 +36,9 @@ function addParam(url, variable, val)
 		url = url.substring(0, url.indexOf("#"));
 	if (url.indexOf("?") == -1)
 		url += "?";
+	else
+		url += "&";
+		
 	url += variable + "=" + encodeURIComponent(val);
 	return url;
 }
@@ -126,6 +129,7 @@ AcField.prototype.initialize = function(jqElementStr)
   	//however, this may prevent them from being json Encoded. If this becomes an issue, change it
 	// from a pointer to the actual element to a boolean.
 	///*
+
 	this.correspondingElement.bind("blur", this, function(myEvent)
 		 	{
 			if (myEvent.data.oldValue != myEvent.data.getValue()) 
@@ -197,10 +201,10 @@ AcField.prototype.saveField = function()
 	return handleError("Field not set to savable");
  
    var theObject = this;
-   information = {"AcFieldRequest": "savefield" , "fieldInfo" : [[ this.correspondingField,   this.getValueForSave() ]] ,  "action" : "save", "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId};
+   information = {"AcFieldRequest": "savefield" , "fieldInfo" : [[ this.correspondingField,  this.getValueForSave()  ]] ,  "action" : "save", "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId};
 
 	url = document.location.toString();
-	this.lastRequest = url; //for debugging sake	
+	this.lastRequest = addParam(url,"request",JSON.stringify(information)); //for debugging sake	
  	this.setColor("#FFFFBB");
 	
 	 $.ajax({

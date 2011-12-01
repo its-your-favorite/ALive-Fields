@@ -82,6 +82,9 @@ AcSelectbox.prototype.initialize = function(jqElementStr, filteredFields, autolo
  if (typeof(this.filteredFields) == "undefined")
  	this.filteredFields = [];
 
+  if (jqElement.size() == 0)
+  	return handleError("Error: Cannot find HTML element to bind to");
+	
  oldId = jqElement[0].id;
  if (jqElement[0].nodeName.toLowerCase() != "select")
  	handleError("Error: Please be sure that all AcSelectboxes are bound to SELECT tags. ");
@@ -94,7 +97,7 @@ AcSelectbox.prototype.initialize = function(jqElementStr, filteredFields, autolo
 
  var myObject = this;
  
-   jqElement.bind("change", function() 
+ jqElement.bind("change", function() 
   		{
 	    if (myObject.oldValue != myObject.getValue()) 
 	   		myObject.handleDropdownChange();	
@@ -111,7 +114,7 @@ AcSelectbox.prototype.initialize = function(jqElementStr, filteredFields, autolo
 AcSelectbox.prototype.loadField = function(primaryKeyData, type, source) 
 {
 	this.ensureLoading(source);
-	AcField.prototype.loadField.call(this, primaryKeyData, type, source);
+	this.parent.loadField.call(this, primaryKeyData, type, source);
 
 }
 /////////////////////////////////////////////////////////////////////////////////
@@ -124,12 +127,10 @@ AcSelectbox.prototype.loadOptions = function(source)
 		return;
 	
 	this.statusLoading++;
-	if ((this.savable == -1) && (this.defaultValue == null))
-		return; ///*if savable is -1 then the field is read only and should only be populated with 1 value. */
-	else if (this.savable == -1)
-		this.filters['zug_squared'] = [ [this.optionsKeys, "=", this.defaultValue] ]; 
-		//We only need 1 value, so no point returning a huge recordset.
-	
+	// disabled because it doesn't seem that useful AND it causes problems with AcJoinSelectbox which wants to load rows even if savable == -1
+	//if ((this.savable == -1) && (this.defaultValue == null))
+	//	return; ///*if savable is -1 then the field is read only and should only be populated with 1 value. */
+		
 	this.loadingOptions = true;
  	//clear all ?
 
@@ -148,7 +149,7 @@ AcSelectbox.prototype.loadOptions = function(source)
 		obj['default'] = this.defaultValue;
 
 	var data = JSON.stringify(obj);
-	var url = document.location.toString(); //"Controllers/ajax_list.php";;
+	var url = document.location.toString(); //Current location
 
 	if (this.overrideURL)
 		url = this.overrideURL; // for cases where the default code just won't work.
