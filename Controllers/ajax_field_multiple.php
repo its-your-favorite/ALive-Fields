@@ -2,6 +2,12 @@
 // TO DO:
 // make it work: 
 // handle filters
+//
+// ajax_field_multiple_php
+// Copyright Alex Rohde 2011. Part of ALive Fields project.  https://github.com/anfurny/ALive-Fields
+// Created November 26th 2011
+// 
+// This file houses the ajax handler for AcJoinSelect write operations.
 
 
 /////////////////////////////////////////////////////////////////
