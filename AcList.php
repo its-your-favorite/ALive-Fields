@@ -2,13 +2,13 @@
 // Requires AcField. Include AcField directly which will include this.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class AcList extends AcField
+abstract class AcList extends AcField
 {	
 	public $options_field, $options_table, $options_pkey, $options_loadability;
 	
-	function AcList($field_type, $field, $table, $id, $loadable, $savable)
+	function AcList($field, $table, $id, $loadable, $savable)
 	{
-		parent::__construct($field_type,$field,$table,$id,(int)$loadable,(int)$savable);
+		parent::__construct($field,$table,$id,(int)$loadable,(int)$savable);
 		$tmp = &parent::get_session_object();
 		$this->options_field = $tmp['options_field'] = $field; //default to same values.
 		$this->options_table = $tmp['options_table'] = $table;
@@ -16,6 +16,10 @@ class AcList extends AcField
 		$this->type = $tmp['type'] = "multi";
 		$this->options_loadability = $tmp['options_loadability'] = $loadable;
 	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//
+
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
@@ -52,23 +56,80 @@ class AcList extends AcField
 				die();
 				}
 	}
+	
+	function do_js_includes_for_this_control()
+	{  //Unique to AcField
+		AcField::include_js_file(AcField::$path_to_jquery);			
+		AcField::include_js_file(Acfield::$path_to_controls . "/AcControls.js");	
+		AcField::include_js_file(Acfield::$path_to_controls . "/AcSelectbox/AcSelectbox.js");
+	}
+	
+	function get_js_field_type()
+	{
+		return "AcSelectBox";	
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class AcListCombo extends AcList
+{
+	function do_js_includes_for_this_control()
+	{  //Unique to AcField
+		AcField::include_js_file(AcField::$path_to_jquery);			
+		AcField::include_js_file(AcField::$path_to_jqueryui);
+		AcField::include_js_file(Acfield::$path_to_controls . "/AcControls.js");	
+		AcField::include_js_file(Acfield::$path_to_controls . "/AcSelectbox/AcSelectbox.js");
+		AcField::include_js_file(Acfield::$path_to_controls . "/AcCombobox/AcCombobox.js");
+	}	
 	
+	function get_field_type_for_javascript()
+	{
+		return "AcCombobox";	
+	}
+}
+
+
+class AcListSelect extends AcList
+{
+	function get_field_type_for_javascript()
+	{ 
+		return "AcSelectbox";
+	}
+}
+//////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// 
+/////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// 
+
 class AcListJoin extends AcList // used for lists that represent join tables and thus pull from a join table on the backend but look like plain old (multi-select) lists on the front end
 {
 	public  $join_table, $join_to_right_field, $join_from_right_field;
 	private $multi_validators;
 	
-	function AcListJoin($field_type, $field, $table, $id, $join_table, $join_to_right_field, $join_from_right_field, $loadable, $savable)
+	function AcListJoin($field, $table, $id, $join_table, $join_to_right_field, $join_from_right_field, $loadable, $savable)
 	{
-		parent::__construct($field_type,$field,$table,$id,(int)$loadable,(int)$savable);
+		parent::__construct($field,$table,$id,(int)$loadable,(int)$savable);
 		$this->join_to_right_field = $join_to_right_field;
 		$this->join_from_right_field = $join_from_right_field;
 		$this->join_table = $join_table;
 		$this->type_temp = 1;
 		$this->multi_validators = array();
+	}	
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//	
+	function get_field_type_for_javascript()
+	{ 
+		return "AcJoinSelectbox";
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//
+	function do_js_includes_for_this_control()
+	{  //Unique to AcField
+		AcField::include_js_file(AcField::$path_to_jquery);			
+		AcField::include_js_file(Acfield::$path_to_controls . "/AcControls.js");	
+		AcField::include_js_file(Acfield::$path_to_controls . "/AcSelectbox/AcSelectbox.js");
+		AcField::include_js_file(Acfield::$path_to_controls . "/AcSelectbox/AcJoinSelectbox.js");
 	}	
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,40 +1,37 @@
 <?PHP
-		
+
 	session_start();
 	function ensure_logged_in() {/* hypothetical. In your app you would check the session to do this AT THIS POINT;*/}
 	ensure_logged_in(); //It is important to validate security at this point, before AcFields.
 
 	require_once( "AcField.php");
 
-	///////////////////// Main File //////////////////////////////////////////////////////////////////////////////
+	///////////////////// Main File //////////////////////////////////////////////////////////////////////////////	
 	
-	AcField::$output_mode = "postponed";
-	
-	$user_enabled = new AcField("AcCheckbox", "enabled", "users", "userID", 1, 1);
+	$user_enabled = new AcCheckbox("enabled", "users", "userID", 1, 1);
 	$user_enabled->bind("user_enabled");
 	
-	$join_date = new AcField("AcDatebox", "join_date", "users", "userID", 1, 1);
+	$join_date = new AcDatebox("join_date", "users", "userID", 1, 1);
 	$join_date->bind("user_join_date");
 
-	$article_content = new AcField("AcTextbox", "content", "articles", "articleID", 1, 1);
+	$article_content = new AcTextbox("content", "articles", "articleID", 1, 1);
 	$article_content->bind("content");
 	
 	// This is also valid.
 	//$article_content->register_validator( array("unique" => true, "length" => ">0", "regex" => '/^[0-9]+ace/') );
-	
-	$article_content->register_validator(	function ($new_value) 
+		$article_content->register_validator(	function ($new_value) 
 				{					
 					return (strpos($new_value, "fail") === false);
 				}); 
 	
-	$users_articles = new AcList("AcSelectbox", "title", "articles", "articleID", 1, 0);
+	$users_articles = new AcListSelect("title", "articles", "articleID", 1, 0);
 	$users_articles->bind("articles");
 	$users_articles->set_dependent_fields(array($article_content));
 
-	$users_departments_join = new AcListJoin("AcJoinSelectbox", "department_name", "departments", "departmentID", "join_users_departments", "department_id", "departmentID",  1, 1);
+	$users_departments_join = new AcListJoin("department_name", "departments", "departmentID", "join_users_departments", "department_id", "departmentID",  1, 1);
 	$users_departments_join->bind("departments_select");
 	
-	$all_the_users = new AcList("AcCombobox", "username", "users", "userID", 2, 0);
+	$all_the_users = new AcListCombo("username", "users", "userID", 2, 0);
 	$all_the_users->bind("all_users");
 	$all_the_users->set_dependent_fields(array($user_enabled, $join_date));
 	$all_the_users->set_filtered_fields(array(array("control" => $users_articles, "field" => "author"), array("control" => $users_departments_join, "field" => "user_id" )) );
@@ -50,15 +47,21 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<?PHP
+AcField::flush_head_output();
+
+/*  If you were to set include to manual, you would need to include these javascript files.
 <script src="js/jquery.js" ></script>
-<script src="js/jquery-ui.js"></script>
-<script src="js/controls/AcControls.js"></script>
+ <script src="js/controls/AcControls.js"></script>
+ <script src="js/jquery-ui.js"></script>
 <script src="js/controls/AcSelectbox/AcSelectbox.js"></script>
-<script src="js/controls/AcSelectbox/AcJoinSelectbox.js"></script>
 <script src="js/controls/AcCombobox/AcCombobox.js"></script>
-<script src="js/controls/AcCheckbox/AcCheckbox.js"></script>
-<script src="js/controls/AcTextbox/AcTextbox.js"></script>
+<script src="js/controls/AcCheckbox/AcCheckbox.js"></script> 
 <script src="js/controls/AcDatebox/AcDatebox.js"></script>
+<script src="js/controls/AcTextbox/AcTextbox.js"></script>
+<script src="js/controls/AcSelectbox/AcJoinSelectbox.js"></script>
+*/
+?>
 
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <link link rel="stylesheet" type="text/css" href="css/custom-theme/jquery-ui-1.8.16.custom.css"  />
@@ -232,7 +235,7 @@ ul.nav a { zoom: 1; }  /* the zoom property gives IE the hasLayout trigger it ne
 		</td>
 		
         <td>
-		User Belongs to these Departments<br />        
+		User Belongs to these Departments (select multiple)<br />        
         <select multiple="multiple" name="departments_select" size="10" id="departments_select" style="width:150px"></select>
         </td>
         

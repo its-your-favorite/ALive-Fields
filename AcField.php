@@ -17,9 +17,10 @@
  * Date: November 24 2011 1:15PM
  */
 
+// to do: differentiate options does nothing? 
+// to do: try two fields filtering one.
+// to do: add validations for join table multi
 // to do: clean up javascript by using parent instead of AcWHATEVER (if possible) and use the type of call that automatically passes params as an array.
-
-// to do: Allow php to intelligently determine what javascript files to include independently.
 
 // to do: test out this pretty jqUI stuff here: http://www.erichynds.com/jquery/jquery-ui-multiselect-widget/ 
 
@@ -33,10 +34,10 @@
 //  Override AcList? 
 // 
 
+// To do: ReMake a date-time control.
+
 // ERRORS: 
 // -- [not reproducible] leaving a page while ajax request is out should not cause an error
-// -- [fixed?] weird bug where field loads and closes itself.
-
 
 
 //future additions:
@@ -67,18 +68,30 @@ function generate_unique_id()
 	return ++$x;	
 }
 
-class AcField
+abstract class AcField //You cannot declare an AcField. It's abstract. For a list of instantiable subclasses see the github wiki: https://github.com/anfurny/ALive-Fields/wiki
 {
 	var $unique_id;
 	protected $validators;
-	public static $output_mode;
+	
+	public static $included_js_files; // to prevent double-inclusion of controls
+	
+	public static $output_mode = "postponed"; 
 	public static $cached_output;
+	public static $cached_head_output; 
 	public static $basics_included;
+	
+	public static $include_directory_js = "/js";
+	public static $path_to_jquery = "/jquery.js";
+	public static $path_to_jqueryui = "/jquery-ui.js";
+	public static $path_to_controls = "/controls";
+	public static $include_js_manually = false; //by default, handle including JS files for the user
+	private static $declaration_progress = 0; //Help new users of the library avoid basic errors.
+	
 	protected static $all_instances;
 	public $bound_field, $bound_table, $bound_pkey, $loadable, $savable, $filtered_fields, $filters;
 	public $type_temp, $type;
 	
-	function AcField($field_type, $field, $table, $id, $loadable, $savable)
+	function AcField($field, $table, $id, $loadable, $savable)
 	{
 		$type_temp = 0;
 		$this->include_basics();
@@ -94,14 +107,24 @@ class AcField
 		AcField::$all_instances[$this->unique_id] = &$this;
 		$data["unique_id"] = $this->unique_id;
 		
+		if (AcField::$declaration_progress > .25)
+			AcField::register_error("Please declare all AcFields before proceeding to call handle_all_requests");
+		AcField::$declaration_progress = .25;
+		
 		$tmp = &$this->get_session_object();
 		$tmp = $data;
 		
-		$this->add_output( "\n\nvar " . $this->get_js_fieldname() . " = new $field_type($this->unique_id, $loadable, $savable, null); \n " . $this->get_js_fieldname() . ".uniqueId = '" . $this->unique_id . "';"); 	
+		$this->add_output( "\n\nvar " . $this->get_js_fieldname() . " = new " . $this->get_field_type_for_javascript() . "($this->unique_id, $loadable, $savable, null); \n " . $this->get_js_fieldname() . ".uniqueId = '" . $this->unique_id . "';"); 	
+	
+		if (! AcField::$include_js_manually)
+			$this->do_js_includes_for_this_control();
 		//JS needs the unique id so that when saving, it can determine what the originating field is.
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//
+	abstract function get_field_type_for_javascript();
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// This function sets up a dependency for the page exactly once.
 	function include_basics()
 	{
@@ -114,7 +137,7 @@ class AcField
 			}
 	}
 	
-	//////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// This function registers a validator
 	function register_validator($callback)
 	{
@@ -187,7 +210,6 @@ class AcField
 	// 
 	function do_validations(& $prev_value, $key_val)
 	{
-
 		foreach ($this->validators as $validator)
 			{
 				if (!$validator($prev_value, $key_val))
@@ -254,22 +276,25 @@ class AcField
 		return NULL;	
 	}
 
-	//////////////////////////////////////
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	function bind($html_element_id)
 	{	//spit out bound javascript	
 		$this->add_output( $this->get_js_fieldname() . ".initialize(\"#" . $html_element_id . "\"); ");
 	}
 		
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////		
 	function get_js_fieldname()
 	{
 		return  "AcField" . $this->unique_id;
 	}
-	
+
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////	
 	function set_property($prop, $val)
 	{
 		$this->add_output($this->get_js_fieldname() . ".$prop = $val;");	
 	}
 		
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////		
 	function &get_session_object()
 	{
 		global $PAGE_INSTANCE;		
@@ -279,6 +304,7 @@ class AcField
 		return 	$_SESSION['_AcField'][$_SERVER['PHP_SELF'] . " " . $PAGE_INSTANCE  ][$this->unique_id];
 	}
 	
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	function load_unchecked($key)
 	{ //Take a key that refers to a primary key value in the table, and store it in the session to prevent client-side manipulation that would allow arbitrary load requests.
 		$hardcoded_key_id = generate_unique_id();
@@ -289,6 +315,7 @@ class AcField
 		$this->add_output($this->get_js_fieldname() . ".loadField( $hardcoded_key_id, 'static'); ");
 	}
 	
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	function set_dependent_fields($arr)
 	{
 		$tmp = &$this->get_session_object();
@@ -301,6 +328,7 @@ class AcField
 			}
  	}
 	
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	function differentiate_options($field, $table, $pkey)
 	{
 		//set the session variable to load options for these fields. 
@@ -310,6 +338,7 @@ class AcField
 		// but I do want savable and loadable to apply. Those make no sense before differentiate_options
 	}
 	
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	function request_handler($request)
 	{		
 		if (!isset($request['AcFieldRequest']))
@@ -322,6 +351,36 @@ class AcField
 		//no list handler in base class of AcFields
 	}
 	
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
+	static function include_js_file($file)
+	{
+		// These 6 lines ensure that includes don't accidentally double or omit the / for paths.
+		if (strlen(AcField::$include_directory_js) && (substr(AcField::$include_directory_js, 0, 1) == '/') )
+			AcField::$include_directory_js = ltrim(AcField::$include_directory_js, "/");
+		if (strlen(AcField::$include_directory_js) && (substr(AcField::$include_directory_js, -1) == '/') )
+			AcField::$include_directory_js = rtrim(AcField::$include_directory_js, "/");
+		if (strlen($file) && (substr($file,0,1) != '/'))
+			$file = '/' . $file; 
+		if (isset(AcField::$included_js_files[$file])) //prevent double-inclusion of files
+			return;
+
+		AcField::$included_js_files[$file] = true;
+		AcField::add_head_output("<script language='javascript' src='" . AcField::$include_directory_js . "$file'></script>");	
+	}
+	
+	function do_js_includes_for_this_control()
+	{  //Unique to AcField
+		AcField::include_js_file(AcField::$path_to_jquery);			
+		AcField::include_js_file(Acfield::$path_to_controls . "/AcControls.js");	
+	}
+	
+	static function register_error($string)
+	{	// outputs library-generated errors
+		//Alter this function as appropriate for your level of experience, error reporting system, and development/release systems.
+		trigger_error("Error: $string. <br>\n You may find the wiki useful: https://github.com/anfurny/ALive-Fields/wiki/Using-the-Library");
+		die();
+	}
+	
 	static function add_output($js_code)
 	{
 		AcField::$cached_output .= $js_code . "\n";
@@ -330,18 +389,52 @@ class AcField
 			AcField::flush_output();			
 	}
 	
+	static function add_head_output($html_code)
+	{
+		AcField::$cached_head_output .= $html_code . "\n";	
+	}
+	
 	static function flush_output()
 	{
+		//Generate useful error messages in the event that a new user declares things out of order.		
+		if (!AcField::$declaration_progress && !AcField::$include_js_manually)
+			AcField::register_error("Be sure to flush head output before flushing output.");
+			
+		AcField::$declaration_progress=2;			
 		echo AcField::$cached_output;
 		AcField::$cached_output = "";
 	}
 	
+	static function flush_head_output() //dumps includes that need to be in the HEAD of the html document
+	{
+		echo AcField::$cached_head_output; 
+		AcField::$cached_head_output = "";
+		
+		//Generate useful error messages in the event that a new user declares things out of order.
+		if (AcField::$declaration_progress < .5)				
+			AcField::register_error("Please call handle-all-requests before any output and call flush_head_output in the head of the document. Thus flush_head_output should not be called first. ");
+		elseif (AcField::$declaration_progress != .5)
+			AcField::register_error("Flush head output should be called one time, before flush output, after handle_all_requests, and in the HEAD section of the HTML document");
+		AcField::$declaration_progress=1;
+	}
+	
+	function __destruct()
+	{
+		
+		if (AcField::$declaration_progress < 2)
+			AcField::register_error("Flush output should be called somewhere in the document.");
+	}
+	
 	static function handle_all_requests()
 	{   // In release mode, I recommend changing these $_REQUEST to post for a minor reduction in xsrf risk. 
+		if (AcField::$declaration_progress < .25)				
+			AcField::register_error("Please declare your AcFields before calling handle_all_requests");
+		AcField::$declaration_progress = .5;
 		if (!isset($_REQUEST['request']))
 			return; //No requests.
 		else
 			{			
+			AcField::$declaration_progress = 100; //Don't monitor declaration progress in ajax request mode, we obviously don't javascript declared.
 			$request = json_decode($_REQUEST['request'], true);		
 //			echo($request['request_field']);
 //var_dump($_REQUEST);			die();
@@ -350,5 +443,6 @@ class AcField
 	}
 }
 
-require_once('AcList.php');
+require_once('AcList.php'); //req
+require_once('AcField_common.php'); //req
 ?>
