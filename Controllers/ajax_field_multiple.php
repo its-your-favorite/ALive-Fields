@@ -1,27 +1,32 @@
 <?PHP
-// TO DO:
-// make it work: 
-// handle filters
-//
-// ajax_field_multiple_php
-// Copyright Alex Rohde 2011. Part of ALive Fields project.  https://github.com/anfurny/ALive-Fields
-// Created November 26th 2011
+/*!
+ * ajax_list_multiple.php
+ * Copyright Alex Rohde 2011. Part of ALive Fields project.  https://github.com/anfurny/ALive-Fields
+ * http://alexrohde.com/
+ *
+ * Copyright 2011, Alex Rohde
+ * Licensed under the GPL Version 2 license.
+ *
+ * Last Revision: 
+ * Date: Dec 5 2011 7:45PM
+ *
+ * Purpose:  This file houses the ajax handler for AcJoinSelect write operations.
+ */
+
+
+// Security concerns and how/where they are protected against in this file
 // 
-// This file houses the ajax handler for AcJoinSelect write operations.
-
-
-/////////////////////////////////////////////////////////////////
-// ERROR HANDLER. By default, it passes all errors to client, that by default, displays them in a message box. You may wish to instead log them in production mode.
-function json_error($x)
-{
-	die (json_encode(array("criticalError" => $x)));	
-} 
-
-function auto_error($err,$b="",$c="",$d="",$e="")
-{
-	json_error( " " . implode(",", func_get_args()));
-}
-
+// A) Passing an array of made up integers, or even non-integers from client side.
+//	*) Handled in verify_control_could_contain_value_set. 
+//  Status: Untested
+//
+// B) SQL Injection
+//  *) Escaping
+//  Status: Untested
+//
+// C) Trying to get the control to delete from join table inappropriately
+//  *) Filters should take care of this
+//	Status: Not explored in depth
 
 function handle_multiple_field($request)
  {
@@ -65,6 +70,11 @@ function handle_multiple_field($request)
 	$table = $this_field->bound_table;
 	$values = $dataRequest["fieldInfo"];
 	
+	$post_val = NULL; // $x[1] is just a little too ambiguous.  Post Val represents the data from tho multi-select as an array of keys e.g. [1,3,5]
+
+	if ($this_field->mode == "limited")
+		json_error("expectedError"); // No updating a limited field.
+		
 	/*if (($dataRequest['action'] === "addOrUpdate"))
 		{
 		 $where_clause_copy =  $where_clause;
@@ -84,22 +94,21 @@ function handle_multiple_field($request)
 	//////////////////////////////////////////////////////////////////////////////////	
 					
 	if (($dataRequest['action'] === "save"))
-		{	
-		$theAcField = AcField::instance_from_id($fieldUniqueId);
-		
+		{		
 		if ($this_field->savable < 1)
-			die("Field not savable."); //security violation
-		 
+			die(json_error("Field not savable.")); //security violation
+		if (count($values) > 1)
+			die(json_error("Multiple values not implement" ));
 		foreach ($values as $x) //so even though we are looping right here, as written controls can only update 1 field per ajax request. This loop is more for theoretical future use then?
 			{		
 			$fields_arr[] = _AcField_escape_field_name($this_field->bound_field);
 			$values_arr[] = array( _AcField_escape_field_value($x[1]) ) ;
 			}
-	
+		$post_val = json_decode($x[1], true);
 		// ** I need to analyze this more
 		// So we only save to a Select in the event that it has differentiateOptions (right?) 
-		if ($theAcField->type == 'multi') //probably eventually change this to an accessor? So it can be overloaded differently by subclasses?
-			verify_control_could_contain_value($requester_page, $fieldUniqueId, ($x[1]) , "optionValue") or json_error("expectedError");
+		 //probably eventually change this to an accessor? So it can be overloaded differently by subclasses?
+		verify_control_could_contain_value_set($requester_page, $fieldUniqueId, $post_val /*don't escape. Checked outside of a query*/ /*, "optionValue"*/) or json_error("expectedError");
 		}
 	/*elseif (($dataRequest['action'] === "insert"))
 		{
@@ -177,22 +186,21 @@ function handle_multiple_field($request)
 		$result = array("value" => $result[0]['answer']);
 		}
 	else*/if ($dataRequest['action'] === "save")//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		{
+		{			
 		if (! isset($this_field_session['filter_fields']))
 			die(json_error("This library isn't currently designed to handle a save before a load.")); //library isn't currently designed to securely handle a save before a load. 
-			
-		$post_val = json_decode($x[1], true); // $x[1] is just a little too ambiguous.  Post Val represents the data from tho multi-select as an array of keys e.g. [1,3,5]
+					
 		if (! is_array($post_val))
 			json_error("Invalid parameter #17");
 		//Two STEP VALIDATION PROCESS. ONE pass the list of fields to be updated (so a validator can verify/change which rows are inserted/deleted)
 		//	??
-		if (! $theAcField->do_multi_validations($post_val, $this_field_session['loaded_pkey']))
+		if (! $this_field->do_multi_validations($post_val, $this_field_session['loaded_pkey']))
 			json_error("Could not save field: Validation Failed");
 	
 		$join_table = _AcField_escape_table_name($this_field->join_table);	
 		$join_to_left = _AcField_escape_field_name($this_field->bound_pkey );
 		$join_to_right = _AcField_escape_field_name($this_field->join_to_right_field );
-		
+	
 		foreach ($post_val as $i=>$pv)
 			$post_val[$i] = _AcField_escape_field_value($post_val[$i]); //since this comes from the client it MUST be escaped.
 			
@@ -204,10 +212,9 @@ function handle_multiple_field($request)
 		foreach ($insert_values as $i => $v)
 			$where_condition[] = ($insert_fields[$i] ) . " = " . ($insert_values[$i]);
 		$where_condition = join(" AND ", $where_condition);
+		
 		// remove all rows that weren't selected			
-		$sql = "DELETE FROM $join_table WHERE ($join_table.$join_to_right NOT IN (" . join(",", $post_val) . ") AND $where_condition)";
-		//die($sql);
-		//echo "<BR>" . $sql;
+		$sql = "DELETE FROM $join_table WHERE ($join_table.$join_to_right NOT IN (" . join(",", $post_val) . ") AND $where_condition)";		
 		_AcField_call_query_write($sql);
 
 		$insert_fields[] = $join_to_right;
@@ -219,18 +226,15 @@ function handle_multiple_field($request)
 			foreach ($insert_values as $i => $v)
 				$where_condition[] = ($insert_fields[$i] ) . " = " . ($insert_values[$i]);
 			$where_condition = join(" AND ", $where_condition);
-			//
-			
-			//echo "<HR> Trying postval $this_post_val";
+	
 			$query = "SELECT COUNT(*) as res FROM $join_table WHERE $where_condition";
 			$result = _AcField_call_query_read($query);
-			//echo "<BR>$query<br>";
-			//var_dump($result);
+			
 			if ($result[0]['res'] == 0)
 				{
 				//echo "not found";
 				// TWO : pass individual fields so that a validator can set fields for particular rows
-				$theAcField->do_insert_validations (array_combine($insert_fields, $insert_values));
+				$this_field->do_insert_validations (array_combine($insert_fields, $insert_values));
 				
 				// Code here to handle filters!
 				$sql = "INSERT INTO $join_table (" . join(",", $insert_fields) . ") VALUES (" . join(",", $insert_values) . ") ";

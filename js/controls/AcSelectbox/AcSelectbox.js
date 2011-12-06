@@ -133,6 +133,7 @@ AcSelectbox.prototype.loadOptions = function(source)
 		
 	this.loadingOptions = true;
  	//clear all ?
+	 this.setColor("#DDDDFF");
 
 	if (this.requestDistinct && (this.optionsTexts != this.optionsKeys))
 		handleError("Request distinct doesn't work when the values and options fields are different");
@@ -166,7 +167,10 @@ AcSelectbox.prototype.loadOptions = function(source)
 	this.lastLoadOptions = url + "?request=" + encodeURIComponent(data);
 	//this.loadJson(str, function () {} );
 	this.clearDependentFields();
-	$.post(url,{request:  data},function(a,b,c) {return copy.loadJson_callback(copy, a,b,c); } );
+	$.post(url,{request:  data},function(a,b,c) {
+		 	copy.setColor("");
+			return copy.loadJson_callback(copy, a,b,c); 
+			} );
 
 	return url;
 }

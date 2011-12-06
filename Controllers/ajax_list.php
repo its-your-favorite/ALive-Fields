@@ -1,31 +1,19 @@
 <?php
 /*!
- * ALive Fields V 1.0
+ * ajax_list.php
+ * Copyright Alex Rohde 2011. Part of ALive Fields project.  https://github.com/anfurny/ALive-Fields
  * http://alexrohde.com/
  *
  * Copyright 2011, Alex Rohde
  * Licensed under the GPL Version 2 license.
  *
- *
- *
  * Last Revision: 
- * Date: Nov 24 2011 2:00PM
+ * Date: Dec 5 2011 7:45PM
+ *
+ * Purpose: This file contains the ajax handler to retrieve content for List type controls
  */
 @session_start();
 
-function json_error($x)
-{
-	die(json_encode(array("criticalError" => $x)));	
-} 
-
-function auto_error($err,$b="",$c="",$d="",$e="")
-{
-	json_error( " " . implode(",", func_get_args()));
-}
-
-
-//session_start();
-//var_dump($_SESSION);
 require_once ("query_wrapper.php");
 require_once ("include.php");
 
@@ -123,7 +111,7 @@ if ($request['distinct'] )
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////	
 // Produce Result
-if ($this_field->type_temp == 0)
+if ($this_field->type_temp == 0) 
 	{
 	$query = "SELECT $distinct $field1 as id, $field2 as label, $field2 as value FROM $table WHERE $conditions ";
 	}
@@ -136,16 +124,20 @@ elseif ($this_field->type_temp == 1)
 	$join_from_right_field = _AcField_escape_field_name($this_field->join_from_right_field);
 	//Set the session thingy
 	
-	//. (LEFT or INNER) . 
 	//We require as a means to tell which rows have an associated record in the left table [rather than just showing up from the RIGHT join]. 
-	 $query = "SELECT  $join_table.$join_to_right_field as nada, $table.$field2 as label, $table.$field1 as value from $join_table " . "inner" . " JOIN $table ON $join_table.$join_to_right_field = $table.$join_from_right_field " ." WHERE $conditions "; 
 	
-	 $query = "SELECT  $join_table.$join_to_right_field as isset, $table.$field2 as label, $table.$field1 as value from $join_table " . "RIGHT" . " JOIN $table ON $join_table.$join_to_right_field = $table.$join_from_right_field AND $conditions " ; 
+	if ( $this_field->mode == 'limited' ) //In the event that we wish the table to show only records in the right-table that have a join-table record.
+		 $query = "SELECT  $join_table.$join_to_right_field as nada, $table.$field2 as label, $table.$field1 as value from $join_table " . "inner" . " JOIN $table ON $join_table.$join_to_right_field = $table.$join_from_right_field " ." WHERE $conditions "; 
+	else // Show all the records in the right table, regardless of whether they have a join table record, to let the user select from the full list.
+		 $query = "SELECT  $join_table.$join_to_right_field as isset, $table.$field2 as label, $table.$field1 as value from $join_table " . "RIGHT" . " JOIN $table ON $join_table.$join_to_right_field = $table.$join_from_right_field AND $conditions " ; 
 	 // Right join cannot handle a WHERE the way we want. This solution won't function properly if we have a right join (i.e. show EVERY record in the right table) that is trying to use filtering terms
 	
 	//echo $query;
 	//die($query);
 	}
+else
+	return json_error("Unrecognized field type requesting");
+	
 $this_field_session["last_used_query"] = $query;
 $query .= "  ORDER BY $field2 ";
   

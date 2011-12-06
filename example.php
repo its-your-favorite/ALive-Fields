@@ -30,6 +30,7 @@
 
 	$users_departments_join = new AcListJoin("department_name", "departments", "departmentID", "join_users_departments", "department_id", "departmentID",  1, 1);
 	$users_departments_join->bind("departments_select");
+	$users_departments_join->mode = "limited";
 	
 	$all_the_users = new AcListCombo("username", "users", "userID", 2, 0);
 	$all_the_users->bind("all_users");

@@ -1,17 +1,5 @@
 <?PHP
 @session_start();
-/////////////////////////////////////////////////////////////////
-// ERROR HANDLER. By default, it passes all errors to client, that by default, displays them in a message box. You may wish to instead log them in production mode.
-function json_error($x)
-{
-	die (json_encode(array("criticalError" => $x)));	
-} 
-
-function auto_error($err,$b="",$c="",$d="",$e="")
-{
-	json_error( " " . implode(",", func_get_args()));
-}
-
 ////////////////////////////////////////////////////////////////
 // Removes Magic Quotes (In the event your webserver has them enabled and doesn't give you the option to change it).
 if (get_magic_quotes_gpc()) 

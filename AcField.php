@@ -17,6 +17,13 @@
  * Date: November 24 2011 1:15PM
  */
 
+// To do:
+//  - Make sure validations work of both types on the new whatcha-ma-call-it list
+
+// to do: Think up some sample applications. 
+// 	which of these do or don't make sense, why?  Github in my app. Codility in my app. Job search program in my app. 
+//													registering for courses in my app, craigslist in my app, gmail in my app, 
+
 // to do: differentiate options does nothing? 
 // to do: try two fields filtering one.
 // to do: add validations for join table multi
@@ -27,9 +34,6 @@
 // to do: Testing -- locking on all types of fields
 //			testing -- 		 
 
-// To do:
-// 	-Make select Multi that only shows actual links (read only) e.g. John's classes -> English, French
-//	-Make select Multi that shows all possible links (writable) e.g. John's classes -> English*, French*, Spanish, History
 // How to:
 //  Override AcList? 
 // 

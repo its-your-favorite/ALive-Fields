@@ -104,6 +104,7 @@ class AcListJoin extends AcList // used for lists that represent join tables and
 {
 	public  $join_table, $join_to_right_field, $join_from_right_field;
 	private $multi_validators;
+	public $mode; //"default" or "limited"
 	
 	function AcListJoin($field, $table, $id, $join_table, $join_to_right_field, $join_from_right_field, $loadable, $savable)
 	{
@@ -113,6 +114,7 @@ class AcListJoin extends AcList // used for lists that represent join tables and
 		$this->join_table = $join_table;
 		$this->type_temp = 1;
 		$this->multi_validators = array();
+		$this->mode = "default";
 	}	
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

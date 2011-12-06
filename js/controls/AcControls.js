@@ -269,7 +269,7 @@ AcField.prototype.loadField = function(primaryKeyData, type, source)
     this.setBorder("#777700");
   	return this.resetValue(); //this should also clear dependent fields.
 	}
-	
+  this.setColor("");
   this.setBorder("#9999DD");	
   var theObject = this; // "VAR" is CRUCIAL in this line!
   

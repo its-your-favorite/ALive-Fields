@@ -1,4 +1,16 @@
 <?PHP
+/////////////////////////////////////////////////////////////////
+// ERROR HANDLER. By default, it passes all errors to client, that by default, displays them in a message box. You may wish to instead log them in production mode.
+function json_error($x)
+{
+	die (json_encode(array("criticalError" => $x)));	
+} 
+
+function auto_error($err,$b="",$c="",$d="",$e="")
+{
+	json_error( " " . implode(",", func_get_args()));
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 //
@@ -29,6 +41,54 @@ function verify_control_could_contain_value($page, $fieldUniqueId, $value, $fiel
   $query = $test_field["last_used_query"] . " AND " . _AcField_escape_field_name($fieldname) . " = " . _AcField_escape_field_value($value);
   
   $result = (_AcField_call_query_read($query, 1));
+	
+//echo "RESULT Is: .";
+//var_dump($result);
+
+  return $result;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Verifies control given by fieldUniqueId actually could contain the value array passed by post: $value
+//   Used for AcJoinSelectboxes
+function verify_control_could_contain_value_set($page, $fieldUniqueId, $value_array /*, $field*/)
+{
+  $test_field = $_SESSION['_AcField'][$page][$fieldUniqueId];
+  $this_field = AcField::instance_from_id($fieldUniqueId);
+  ///echo $fieldUniqueId;
+  //var_dump(func_get_args());
+  //var_dump($test_field);
+
+  if (! isset($test_field["last_used_query"]) )
+  		return false;
+
+  $query = $test_field["last_used_query"]; 
+  $result = (_AcField_call_query_read($query, 1));
+  
+  foreach ($result as $this_row)
+  	$valid_values[] = $this_row['value'];
+
+  //var_dump($value_array);
+  foreach ($value_array as $value)
+  	{
+	//echo "<BR> Testing $value against " . join(",", $valid_values);
+	if (! array_search($value, $valid_values) === false)
+		return false;		
+	}
+  return true;
+  /*
+//die($field);		
+  if ($field == "pkey")
+  	$fieldname = $this_field->bound_pkey;
+  elseif ($field == "text")
+  	$fieldname = $this_field->bound_field;
+  elseif ($field == "optionValue")
+   	$fieldname = $this_field->options_pkey;
+  else
+  	die("unknown verify type: $field");*/
+  //WHat about stuff? which queries are active which filters I mean? All will be used in its last query... Cool.
+
 	
 //echo "RESULT Is: .";
 //var_dump($result);
