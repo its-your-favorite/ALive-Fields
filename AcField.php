@@ -63,6 +63,7 @@
 @session_start();
 require_once("Controllers/query_wrapper.php");
 
+
 global $PAGE_INSTANCE;
 $PAGE_INSTANCE = md5(time());
 
@@ -72,9 +73,8 @@ function generate_unique_id()
 	return ++$x;	
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*	AcField is the (PHP) heart of this project. It is the base class from which all other components derive 
-* (much in the way that AcControl is in the javascript portion). 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*	AcField is the (PHP) heart of this project. It is the base class from which all other components derive (much in the way that AcControl is in the javascript portion). 
 *		
 *	All of these classes act as controllers, handling various ajax requests and connecting themselves to your view (which is pure HTML).
 *   Abstract. For a list of instantiable subclasses see the github wiki: https://github.com/anfurny/ALive-Fields/wiki
@@ -150,18 +150,17 @@ abstract class AcField
 		$tmp = &$this->get_session_object();
 		$tmp = $data;
 		
-		$this->add_output( "\n\nvar " . $this->get_js_fieldname() . " = new " . $this->get_field_type_for_javascript()
-			. "($this->unique_id, $loadable, $savable, null); \n " . $this->get_js_fieldname() . ".uniqueId = '" . $this->unique_id . "';"); 	
+		$this->add_output( "\n\nvar " . $this->get_js_fieldname() . " = new " . $this->get_field_type_for_javascript() . "($this->unique_id, $loadable, $savable, null); \n " . $this->get_js_fieldname() . ".uniqueId = '" . $this->unique_id . "';"); 	
 	
 		if (! AcField::$include_js_manually)
 			$this->do_js_includes_for_this_control();
 		//JS needs the unique id so that when saving, it can determine what the originating field is.
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
 	abstract function get_field_type_for_javascript();
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// This function sets up a dependency for the page exactly once.
 	function include_basics()
 	{
@@ -221,10 +220,10 @@ abstract class AcField
 				$copy = $this;
 				$this->register_validator(function($val, $pkey) use ($callback, $copy)
 				 	{					
-					$query = "SELECT count(*) as res from " . _AcField_escape_table_name($copy->bound_table) 
-						. " WHERE  " . _AcField_escape_field_name($copy->bound_field) . " = " . _AcField_escape_field_value($val)
-						. " AND " ._AcField_escape_field_name($copy->bound_pkey) . " != " . _AcField_escape_field_value($pkey);
+					$query = "SELECT count(*) as res from " . _AcField_escape_table_name($copy->bound_table) . " WHERE  " . _AcField_escape_field_name($copy->bound_field) . " = " . _AcField_escape_field_value($val) . " AND " ._AcField_escape_field_name($copy->bound_pkey) . " != " . _AcField_escape_field_value($pkey);
+//					json_error($query);
 					$result = _AcField_call_query_read($query) ;
+//					json_error((bool)($callback['unique']));					
 					return (($result[0]['res'] == 0) == (bool)($callback['unique'])) ;
 					});				
 				}
@@ -263,18 +262,16 @@ abstract class AcField
 	}
 	
 	//////////////////////////////////////////////////////////////////////////////////////////////////
-	// This function sets the APPLIED FILTERS to this field, that is to say, the filters that AFFECT THIS 
-	// FIELD [NOT filters from this field]. This is opposite of Set_filtered_fields
+	// This function sets the APPLIED FILTERS to this field, that is to say, the filters that AFFECT THIS FIELD [NOT filters from this field]. This is opposite of Set_filtered_fields
 	//  Accepts either a single filter [assoc array] or an array of filters [multidimensional array]
-	// 	Each filter is an array with 3 elements: [field], [relationship], [value]   
-	// 				e.g. UserId > 6 or Username like 'Jon' or Age = 3
+	// 	Each filter is an array with 3 elements: [field], [relationship], [value]   e.g. UserId > 6 or Username like 'Jon' or Age = 3
 	function add_filters($filt) 
 	{
 		$tmp = &$this->get_session_object();
 		if (is_array($filt))
 			{
-			if (is_array($filt[reset(array_keys($filt))]))
-				{ // If the first element (of $filt) is itself an array i.e. this function is being passed an array of filters
+			if (is_array($filt[reset(array_keys($filt))])) // If the first element (of $filt) is itself an array i.e. this function is being passed an array of filters
+				{
 				foreach ($filt as $f)
 					{			
 					if (strpos($f[0], ".") === false)
@@ -292,10 +289,10 @@ abstract class AcField
 			handleError("Must pass array to add_filters");
 	}
 	
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// This sets the array of filters that STEM FROM this field (not that apply to it). In this 
-	//	 respect this function is the opposite of add_filters. Accepts an array of filters 
-	// (assoc arrays) that have keys  [type] = ("value" / "text") , ['control'] = the actual AcField being updated
+	///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// 
+	// This sets the array of filters that STEM FROM this field (not that apply to it). In this respect this function is the opposite of add_filters.
+	// Accepts an array of filters (assoc arrays) that have keys  [type] = ("value" / "text") , ['control'] = the actual AcField being updated
 	function set_filtered_fields($filt)
 	{
 		$my_session_object = &$this->get_session_object();
@@ -315,25 +312,25 @@ abstract class AcField
 		return NULL;	
 	}
 
-	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// //////
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	function bind($html_element_id)
 	{	//spit out bound javascript	
 		$this->add_output( $this->get_js_fieldname() . ".initialize(\"#" . $html_element_id . "\"); ");
 	}
 		
-	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// //////
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////		
 	function get_js_fieldname()
 	{
 		return  "AcField" . $this->unique_id;
 	}
 
-	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// //////
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////	
 	function set_property($prop, $val)
 	{
 		$this->add_output($this->get_js_fieldname() . ".$prop = $val;");	
 	}
 		
-	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// //////
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////		
 	function &get_session_object()
 	{
 		global $PAGE_INSTANCE;		
@@ -343,10 +340,9 @@ abstract class AcField
 		return 	$_SESSION['_AcField'][$_SERVER['PHP_SELF'] . " " . $PAGE_INSTANCE  ][$this->unique_id];
 	}
 	
-	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// //////
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	function load_unchecked($key)
-	{ //Take a key that refers to a primary key value in the table, and store it in the session to prevent client-side
-	  // manipulation that would allow arbitrary load requests.
+	{ //Take a key that refers to a primary key value in the table, and store it in the session to prevent client-side manipulation that would allow arbitrary load requests.
 		$hardcoded_key_id = generate_unique_id();
 		
 		$tmp = &$this->get_session_object();
@@ -355,7 +351,7 @@ abstract class AcField
 		$this->add_output($this->get_js_fieldname() . ".loadField( $hardcoded_key_id, 'static'); ");
 	}
 	
-	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// 
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	function set_dependent_fields($arr)
 	{
 		$tmp = &$this->get_session_object();
@@ -368,7 +364,7 @@ abstract class AcField
 			}
  	}
 	
-	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// //////
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	function differentiate_options($field, $table, $pkey)
 	{
 		//set the session variable to load options for these fields. 
@@ -378,7 +374,7 @@ abstract class AcField
 		// but I do want savable and loadable to apply. Those make no sense before differentiate_options
 	}
 	
-	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// //////
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	function request_handler($request)
 	{		
 		if (!isset($request['AcFieldRequest']))
@@ -391,7 +387,7 @@ abstract class AcField
 		//no list handler in base class of AcFields
 	}
 	
-	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// //////
+	////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// ////// /////
 	static function include_js_file($file)
 	{
 		// These 6 lines ensure that includes don't accidentally double or omit the / for paths.
@@ -452,11 +448,9 @@ abstract class AcField
 		
 		//Generate useful error messages in the event that a new user declares things out of order.
 		if (AcField::$declaration_progress < .5)				
-			AcField::register_error("Please call handle-all-requests before any output and call flush_head_output in the head of the" 
-				. " document. Thus flush_head_output should not be called first. ");
+			AcField::register_error("Please call handle-all-requests before any output and call flush_head_output in the head of the document. Thus flush_head_output should not be called first. ");
 		elseif (AcField::$declaration_progress != .5)
-			AcField::register_error("Flush head output should be called one time, before flush output, after handle_all_requests, and " 
-				. "in the HEAD section of the HTML document");
+			AcField::register_error("Flush head output should be called one time, before flush output, after handle_all_requests, and in the HEAD section of the HTML document");
 		AcField::$declaration_progress=1;
 	}
 	
