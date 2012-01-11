@@ -82,8 +82,7 @@ if ($filtering)
 	else		
 		
 		{
-		$filters = apply_list_filters(/* byref */ $request, $table, $field_unique_id);
-		
+		$filters = apply_list_filters(/* byref */ $request, $table, $field_unique_id);		
 		$filters = $filters[0];
 		}	
 	}
