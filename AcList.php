@@ -1,11 +1,19 @@
 <?PHP
 // Requires AcField. Include AcField directly which will include this.
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+/**
+ *  AcList represents the backend controller for fields which have multiple simultaneous values (i.e. lists),
+ *  including dropdown comboboxes and SELECT boxes.
+ * 
+ */
 abstract class AcList extends AcField
 {	
 	public $options_field, $options_table, $options_pkey, $options_loadability;
 	
+	/**
+	 * Constructor follows much the same format as AcField
+	 *  more comments to come...
+	 */
 	function AcList($field, $table, $id, $loadable, $savable)
 	{
 		parent::__construct($field,$table,$id,(int)$loadable,(int)$savable);
@@ -16,10 +24,6 @@ abstract class AcList extends AcField
 		$this->type = $tmp['type'] = "multi";
 		$this->options_loadability = $tmp['options_loadability'] = $loadable;
 	}
-	
-	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//
-
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	//
@@ -40,7 +44,10 @@ abstract class AcList extends AcField
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	//
+	/* This is where the controller actually handles an ajax request. 
+	 * 
+	 * The method is so complicated that it has been moved to another file (ajax_list.php)
+	 */
 	function request_handler($request)
 	{		
 		if (!isset($request['AcFieldRequest']))
@@ -57,6 +64,9 @@ abstract class AcList extends AcField
 				}
 	}
 	
+	/* This function includes all the necessary javascript files for the javascript widget
+	 * in the view that that connects with this controller.
+	 */
 	function do_js_includes_for_this_control()
 	{  //Unique to AcField
 		AcField::include_js_file(AcField::$path_to_jquery);			
@@ -64,6 +74,10 @@ abstract class AcList extends AcField
 		AcField::include_js_file(Acfield::$path_to_controls . "/AcSelectbox/AcSelectbox.js");
 	}
 	
+	/*
+	 * Return the name of the (default) javascript widget (in the view) that sends request to
+	 * this object 
+	 */
 	function get_js_field_type()
 	{
 		return "AcSelectBox";	
@@ -99,7 +113,8 @@ class AcListSelect extends AcList
 }
 //////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// 
 /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// /////// 
-
+// These classes will be moved to separate files in the next version.
+ 
 class AcListJoin extends AcList // used for lists that represent join tables and thus pull from a join table on the backend but look like plain old (multi-select) lists on the front end
 {
 	public  $join_table, $join_to_right_field, $join_from_right_field;
@@ -148,7 +163,7 @@ class AcListJoin extends AcList // used for lists that represent join tables and
 				}
 		elseif ($request['AcFieldRequest'] == 'getlist')
 				{
-				//Ajax list has been enhanced to handle JoinTable type requests. It's not as OO as it could be, but the code is 95% the same, so it's the better solution.
+				//Ajax list has been enhanced to handle JoinTable type requests. 
 				require_once ("Controllers/ajax_list.php");
 				die();
 				}
@@ -167,7 +182,7 @@ class AcListJoin extends AcList // used for lists that represent join tables and
 		return true;
 	}	//////////////////////////////////////////////////////////////////////////////////////////////////
 	// 
-	function do_insert_validations(& $prev_value_assoc_array)
+	function do_insert_validations( $prev_value_assoc_array)
 	{
 		//NEED TO WRITE THIS . Maybe move it to AcField
 		foreach ($this->multi_validators as $validator_multi)

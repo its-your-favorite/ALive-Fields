@@ -212,7 +212,7 @@ AcField.prototype.saveField = function()
 	  type: "POST",
 	  data: {"request":  JSON.stringify(information)},
 	  context: this,
-	  error : function (a, b , c) { if (typeof(window_unloading) != "undefined") handleError(" Saving of field interrupted by leaving page."); }, 
+	  error : function (a, b , c) { if (typeof(window_unloading) == "undefined") handleError(" Saving of field interrupted by leaving page."); }, 
 	  success: function(data, b, c, d, e)
 	  {  
 	  if ((data.substr(0,1) != "[") && (data.substr(0,1) != "{"))
@@ -295,7 +295,7 @@ AcField.prototype.loadField = function(primaryKeyData, type, source)
   type: "POST",
   data: {"request": information},
   context: this.lastRequest,
-  error : function (a, b , c) { if (typeof(window_unloading) != "undefined") handleError(" field fetch failed "  ); }, 
+  error : function (a, b , c) { if (typeof(window_unloading) == "undefined") handleError(" field fetch failed "  ); }, 
   success: function (data, b, c) 
   		{   
 		var structure={};//crucial line.

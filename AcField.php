@@ -17,12 +17,12 @@
  * Date: November 24 2011 1:15PM
  */
 
+// To do: autoloader ?
+
 // To do:
 //  - Make sure validations work of both types on the new whatcha-ma-call-it list
 
-// to do: Think up some sample applications. 
-// 	which of these do or don't make sense, why?  Github in my app. Codility in my app. Job search program in my app. 
-//													registering for courses in my app, craigslist in my app, gmail in my app, 
+// to do: Consider connecting my app with ZF 
 
 // to do: differentiate options does nothing? 
 // to do: try two fields filtering one.
@@ -58,8 +58,8 @@
 
 // 
 // to do: turn off errors on most pages.
-// -- discuss limitations  cannot operate on tables that don't have 1 single primary key.
 // to do: test lock. Clean up 3 js files.
+
 @session_start();
 require_once("Controllers/query_wrapper.php");
 
@@ -72,7 +72,16 @@ function generate_unique_id()
 	return ++$x;	
 }
 
-abstract class AcField //You cannot declare an AcField. It's abstract. For a list of instantiable subclasses see the github wiki: https://github.com/anfurny/ALive-Fields/wiki
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*	AcField is the (PHP) heart of this project. It is the base class from which all other components derive (much in the way that AcControl is in the javascript portion). 
+*		
+*	All of these classes act as controllers, handling various ajax requests and connecting themselves to your view (which is pure HTML).
+*   Abstract. For a list of instantiable subclasses see the github wiki: https://github.com/anfurny/ALive-Fields/wiki
+*
+*/
+//////////////////////////
+
+abstract class AcField 
 {
 	var $unique_id;
 	protected $validators;
@@ -92,18 +101,40 @@ abstract class AcField //You cannot declare an AcField. It's abstract. For a lis
 	private static $declaration_progress = 0; //Help new users of the library avoid basic errors.
 	
 	protected static $all_instances;
-	public $bound_field, $bound_table, $bound_pkey, $loadable, $savable, $filtered_fields, $filters;
+
+	/* Enable soon: 
+	 * const NoRead = 0;
+	 * const ReadWhenFiltered = 1;
+	 * const YesRead = 1;
+	 * 
+	 * const NoChangeNoSave = ?
+	 * const NoSave = 0;
+	 * const YesSave = ?; 
+	 */
+	//Definitions to explain the following fields:
+	//
+	//	A control's internal value will be: SELECT $bound_pkey FROM $bound_table 
+	//  A control's displayed value will be: SELECT $bound_field FROM $bound_table WHERE $bound_pkey = (loaded_value) [AND $filters clauses here]
+	//
+	//
+	public $bound_field, $bound_table, $bound_pkey, $filters;
+	public $loadable, $savable; //whether this control can LOAD and or SAVE to the database
 	public $type_temp, $type;
-	
+
+	public $filtered_fields; //keep public!
+		
 	function AcField($field, $table, $id, $loadable, $savable)
 	{
 		$type_temp = 0;
 		$this->include_basics();
 		$this->validators = array();
+		$this->filtered_fields = array();
 		$this->type = "single"; //necessary? If not remove from here and AcList.php
-		$data["bound_field"] = $this->bound_field = $field;
-		$data["bound_table"] = $this->bound_table = $table;
-		$data["bound_pkey"] = $this->bound_pkey = $id;
+
+		$this->bound_field = $field;
+		$this->bound_table = $table;
+		$this->bound_pkey = $id;
+		
 		$data["loadable"] = $this->loadable = $loadable;
 		$data["savable"] = $this->savable = $savable;
 		$data["filters"] = $this->filters = array(); //Filters applied TO this AcField

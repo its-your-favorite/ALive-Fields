@@ -10,7 +10,7 @@
  * Last Revision: 
  * Date: Dec 5 2011 7:45PM
  *
- * Purpose:  This file houses the ajax handler for AcJoinSelect write operations.
+ * Purpose:  This file houses the ajax handler / controller for AcJoinSelect write operations.
  */
 
 
@@ -29,18 +29,7 @@
 //	Status: Not explored in depth
 
 function handle_multiple_field($request)
- {
-	////////////////////////////////////////////////////////////////
-	// Removes Magic Quotes (In the event your webserver has them enabled and doesn't give you the option to change it).
-	if (get_magic_quotes_gpc()) 
-		{
-		function stripslashes_gpc(&$value)
-			{
-			$value = stripslashes($value);
-			}
-		array_walk_recursive($_REQUEST, 'stripslashes_gpc');
-		}
-		
+ {	
 	header('Expires: Fri, 09 Jan 1981 05:00:00 GMT');
 	header('Cache-Control: no-store, no-cache, must-revalidate');
 	header('Cache-Control: post-check=0, pre-check=0', FALSE);
@@ -49,20 +38,21 @@ function handle_multiple_field($request)
 	
 	require_once "query_wrapper.php";
 	require_once "include.php";
-	
+	remove_magic_quotes(); // In the event your webserver has them enabled and doesn't give you the option to change it
 	
 	error_reporting(E_ERROR | E_PARSE | E_ALL ^ E_NOTICE);
 	set_error_handler ("auto_error", E_ERROR | E_PARSE | E_ALL ^ E_NOTICE );
 	
-	global $sql;
+	global $sql; // There's a very good reason for this... I just don't remember
+				// it at the second.
 	
+	/*
+	 *  Load the request information into more-readable variables.
+	*/
 	$dataRequest = $request;
 	$requester_page = $dataRequest['requesting_page'];
 	$fieldUniqueId = $dataRequest['request_field'];
-	$sourceUniqueId = $dataRequest['source_field'];
-	
-	//var_dump($dataRequest); echo "<BR><BR>";
-	$limitations = $_SESSION['_AcField'][$requester_page][$dataRequest['primaryInfo'][1]];
+	$sourceUniqueId = $dataRequest['source_field'];	
 	
 	$this_field_session =& $_SESSION['_AcField'][$requester_page][$fieldUniqueId];
 	$this_field = AcField::instance_from_id($fieldUniqueId);
@@ -70,27 +60,13 @@ function handle_multiple_field($request)
 	$table = $this_field->bound_table;
 	$values = $dataRequest["fieldInfo"];
 	
-	$post_val = NULL; // $x[1] is just a little too ambiguous.  Post Val represents the data from tho multi-select as an array of keys e.g. [1,3,5]
+	//Post Val represents the data from tho multi-select as an array of keys e.g. [1,3,5]
+	$post_val = NULL; 
 
 	if ($this_field->mode == "limited")
 		json_error("expectedError"); // No updating a limited field.
 		
-	/*if (($dataRequest['action'] === "addOrUpdate"))
-		{
-		 $where_clause_copy =  $where_clause;
-		 $where_clause_copy [] = '1=1';	
-		 $where_clause_copy  =  implode(" AND ", $where_clause_copy );
-		 
-		if (database_fetch_field("SELECT COUNT(*) FROM $table WHERE $where_clause_copy "))
-			$dataRequest['action'] = "save"; // there is a record to update so update it	
-		else
-			{
-			$dataRequest['action'] = "insert"; // there is not, so insert
-			$values = array_merge($values, $limitations); //instead of limiting to primary keys, we need to set primary keys
-			$limitations = array();
-			unset($where_clause); //important
-			}
-		}*/
+
 	//////////////////////////////////////////////////////////////////////////////////	
 					
 	if (($dataRequest['action'] === "save"))
@@ -107,7 +83,7 @@ function handle_multiple_field($request)
 		$post_val = json_decode($x[1], true);
 		// ** I need to analyze this more
 		// So we only save to a Select in the event that it has differentiateOptions (right?) 
-		 //probably eventually change this to an accessor? So it can be overloaded differently by subclasses?
+		// probably eventually change this to an accessor? So it can be overloaded differently by subclasses?
 		verify_control_could_contain_value_set($requester_page, $fieldUniqueId, $post_val /*don't escape. Checked outside of a query*/ /*, "optionValue"*/) or json_error("expectedError");
 		}
 	/*elseif (($dataRequest['action'] === "insert"))
@@ -137,6 +113,7 @@ function handle_multiple_field($request)
 	elseif (($dataRequest['action'] === "hardcoded_load") || ($dataRequest['action'] === "dynamic_load")	)
 		{
 		die(json_error("Cannot do load in this. Presumably unnecessary."));
+		// think about this more later.
 			/*
 		if (! $this_field->loadable)
 			die("Field not loadable"); //security violation
@@ -231,10 +208,9 @@ function handle_multiple_field($request)
 			$result = _AcField_call_query_read($query);
 			
 			if ($result[0]['res'] == 0)
-				{
-				//echo "not found";
+				{				//
 				// TWO : pass individual fields so that a validator can set fields for particular rows
-				$this_field->do_insert_validations (array_combine($insert_fields, $insert_values));
+				$this_field->do_insert_validations ($tmp = array_combine($insert_fields, $insert_values));
 				
 				// Code here to handle filters!
 				$sql = "INSERT INTO $join_table (" . join(",", $insert_fields) . ") VALUES (" . join(",", $insert_values) . ") ";
@@ -256,17 +232,6 @@ function handle_multiple_field($request)
 	echo json_encode($result);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Manual Error  -- Handles errors thrown by programmer.
-
-function manual_error($err, $sql) //specific to this file
-{
-	$callStack = print_r(debug_backtrace(), 1);	
-	$message = $err . " on " . $sql . " and " . $callStack;
-	
-	json_error($message);
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ?>

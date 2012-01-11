@@ -1,13 +1,40 @@
 <?PHP
 
-	session_start();
-	function ensure_logged_in() {/* hypothetical. In your app you would check the session to do this AT THIS POINT;*/}
-	ensure_logged_in(); //It is important to validate security at this point, before AcFields.
+/**	 Example.PHP
+ *  Copyright Alex Rohde Alive Fields V1.0
+ * 
+ *  This file serves as an example model of a page you might write to utilize
+ *   this library. It is a fully functional example, and a working demo can
+ *   be seen at 
+ *   
+ *   Any file that uses this library must include a few necessary parts:
+ * 		1	require_once( "AcField.php");
+ * 		2	the actual AcField declarations
+ * 		3	flushing of head output
+ * 		4   flushing of remaining output
+ * 
+ * 		Find examples below.
+ */
 
+	session_start();
+	
+	function ensure_logged_in() 
+		{
+		/* hypothetical. */
+		}
+		
+	/**
+	 * In your app you would check the user is authenticated this at this point.
+	 * It is important you do so *before* requiring AcField.
+	 */
+	ensure_logged_in(); 
+
+	// Piece 1. The necessary include
 	require_once( "AcField.php");
 
 	///////////////////// Main File //////////////////////////////////////////////////////////////////////////////	
 	
+	// Piece 2. The actual AcField Declarations 
 	$user_enabled = new AcCheckbox("enabled", "users", "userID", 1, 1);
 	$user_enabled->bind("user_enabled");
 	
@@ -17,12 +44,18 @@
 	$article_content = new AcTextbox("content", "articles", "articleID", 1, 1);
 	$article_content->bind("content");
 	
-	// This is also valid.
-	//$article_content->register_validator( array("unique" => true, "length" => ">0", "regex" => '/^[0-9]+ace/') );
-		$article_content->register_validator(	function ($new_value) 
-				{					
-					return (strpos($new_value, "fail") === false);
-				}); 
+	// Validators can also be declared as follows.	
+	/* $article_content->register_validator( array("unique" => true, 
+	 * 												"length" => ">0",
+	 * 											    "regex" => '/^[0-9]+ace/') );	
+	 */
+	
+	// Example Validator: disallow the word fail in "article content"
+	$article_content->register_validator(	
+											function ($new_value) 
+												{					
+													return (strpos($new_value, "fail") === false);
+												}); 
 	
 	$users_articles = new AcListSelect("title", "articles", "articleID", 1, 0);
 	$users_articles->bind("articles");
@@ -30,7 +63,7 @@
 
 	$users_departments_join = new AcListJoin("department_name", "departments", "departmentID", "join_users_departments", "department_id", "departmentID",  1, 1);
 	$users_departments_join->bind("departments_select");
-	$users_departments_join->mode = "limited";
+	//$users_departments_join->mode = "limited";
 	
 	$all_the_users = new AcListCombo("username", "users", "userID", 2, 0);
 	$all_the_users->bind("all_users");
@@ -38,17 +71,20 @@
 	$all_the_users->set_filtered_fields(array(array("control" => $users_articles, "field" => "author"), array("control" => $users_departments_join, "field" => "user_id" )) );
 
 
+	// Part 3. The Call to handle_all_requests()
 	AcField::handle_all_requests(); //In the event that this page is being called as an ajax call to load/save data (or return a list etc) handle appropriately.
 	
 	///// End Of PHP /////////////////////////////////////////////////////
 	// This is all the code a user of this library would need to write to make the page that you see. 
-	// EXCEPT the one call to AcField::flush_output(), which should come AFTER all the referenced html elements are defined.
+	// EXCEPT the one call to AcField::flush_head_output() (should appear in the head) and the one call to 
+	// AcField::flush_output(), which should come AFTER all the referenced HTML elements are defined.
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <?PHP
+// Part 4. Flush head output
 AcField::flush_head_output();
 
 /*  If you were to set include to manual, you would need to include these javascript files.
@@ -115,19 +151,13 @@ a:hover, a:active, a:focus { /* this group of selectors will give a keyboard nav
 
 /* ~~ the header is not given a width. It will extend the full width of your layout. It contains an image placeholder that should be replaced with your own linked logo ~~ */
 .header {
-	background: #6F7D94;
+	background: #DAE0E5;
+	text-align:center;
+	font-size: 40px;
+	padding: 20px;
 }
 
 /* ~~ These are the columns for the layout. ~~ 
-
-1) Padding is only placed on the top and/or bottom of the divs. The elements within these divs have padding on their sides. This saves you from any "box model math". Keep in mind, if you add any side padding or border to the div itself, it will be added to the width you define to create the *total* width. You may also choose to remove the padding on the element in the div and place a second div within it with no width and the padding necessary for your design.
-
-2) No margin has been given to the columns since they are all floated. If you must add margin, avoid placing it on the side you're floating toward (for example: a right margin on a div set to float right). Many times, padding can be used instead. For divs where this rule must be broken, you should add a "display:inline" declaration to the div's rule to tame a bug where some versions of Internet Explorer double the margin.
-
-3) Since classes can be used multiple times in a document (and an element can also have multiple classes applied), the columns have been assigned class names instead of IDs. For example, two sidebar divs could be stacked if necessary. These can very easily be changed to IDs if that's your preference, as long as you'll only be using them once per document.
-
-4) If you prefer your nav on the left instead of the right, simply float these columns the opposite direction (all left instead of all right) and they'll render in reverse order. There's no need to move the divs around in the HTML source.
-
 */
 .sidebar1 {
 	float: right;
@@ -201,7 +231,7 @@ ul.nav a { zoom: 1; }  /* the zoom property gives IE the hasLayout trigger it ne
 <body>
 
 <div class="container">
-  <div class="header"><a href="#"><img src="alexrohde.jpg" alt="Insert Logo Here" name="Insert_logo" width="50%" height="100" id="Insert_logo" style="background: #8090AB; display:block;" border="1"/></a> 
+  <div class="header">Some Example Page 
     <!-- end .header --></div>
   <div class="sidebar1">
     <ul class="nav">
@@ -212,21 +242,20 @@ ul.nav a { zoom: 1; }  /* the zoom property gives IE the hasLayout trigger it ne
     </ul>
     <p>Blah Blah this is just a right container that could contain anything and is pretty much irrelevant to this Alive Fields demonstration.</p>
     <p>Blah Blah this is just a right container that could contain anything and is pretty much irrelevant to this Alive Fields demonstration.<br />
-      <br />
-      <br />
-      <br />
-      <br />
-      <br />
+      <br /><br /><br /><br /><br /><br />   
+      <br /><br /><br /><br /><br /><br />    
     </p>
     <p></p>
     <!-- end .sidebar1 --></div>
   <div class="content">
-    <h1><a href="#">Basic Dreamweaver Layout</a></h1>
-    <p>This is a basic dreamweaver layout. My point in using it here is to illustrate that Alive Fields are independent of any HTML.</p>
+    <h1><a href="#">Example Alive Fields Page</a></h1>
+    <p>This page presents my application, dropped into a basic layout. My point using this layout is simply to illustrate that Alive Fields library is independent of any HTML, it communicates to the view through JS.</p>
+    <p>In about 15 lines of PHP I've set up a demo mini-web app that might be used for administrators to manage employees somehow with a rapid-deployment internal-use application.</p>
+    <p>The purpose of this library is to let you make your own application like this in about 20 minutes (once you learn how to use it).</p>
     <h2>Administrate Users:</h2>
     <table width="100%" border="1">
       <tr>
-        <td>Users<br />
+        <td>Users (combobox)<br />
 		<input name="all_users" id="all_users" style="width:150px">
 		</td>
         
@@ -261,11 +290,13 @@ ul.nav a { zoom: 1; }  /* the zoom property gives IE the hasLayout trigger it ne
 
   <!-- end .content --></div>
   <div class="footer">
-    <p>This is the footer.</p>
+    <p>Alive Fields 1.0 Copyright Alex Rohde 2012. </p>
     <!-- end .footer --></div>
   <!-- end .container --></div>
   <script language="javascript">
   <?PHP	
+  	//Part 4. Flush the main output. This is where the javascript that powers the front-end will
+  	// 	be passed to the page.
 	AcField::flush_output();
   ?>
    </script>

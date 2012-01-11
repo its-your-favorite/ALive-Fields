@@ -1,25 +1,29 @@
 <?PHP
 /*!
- * ALive Fields V 1.0
+ * ALive Fields V1.0
  * http://alexrohde.com/
  *
  * Copyright 2011, Alex Rohde
  * Licensed under the GPL Version 2 license.
  *
+ * ** You Must Customize This File To Make Alive Fields Work In your Project ** See line 45. 
  * 
- * This file needs to do is initialize a database connection and define a function call_query which takes SQL and returns an array (rows) of associative arrays (fieldname => fieldvalue). It also provides information on the database connection and database-specific sql-injection prevention.
- *
- *
+ * This file needs to do is initialize a database connection and define a function
+ *  call_query which takes SQL and returns an array (rows) of associative arrays
+ *  (fieldname => fieldvalue). It also provides information on the database 
+ *  connection and database-specific sql-injection prevention.
  *
  * Last Revision: 
- * Date: Oct 28 2011 1:45PM
+ * Date: January 2011 
  */
 
-// ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** 
-//connect to DB -- Change this to whatever SQL resource you are using. If you wish to adapt this to not rely on SQL, that can be done by altering ajax_field.php
+/**
+ * connect to DB -- Change this to whatever SQL resource you are using. If you 
+ * wish to adapt this to not rely on SQL, that can be done by altering ajax_field.php * 
+ */
 
-//     /* Prepend this line with // to alternate blocks
- global $conn_readonly;
+/* Prepend this line with // to alternate blocks
+global $conn_readonly;
 $conn_readonly = mysql_connect("localhost:3306", "newuser_readonly", "a") or handleError("could not connect to database. Please check settings in query_wrapper.php ");
 mysql_query("USE Test;", $conn_readonly);
 /*/ 
@@ -28,7 +32,7 @@ mysql_query("USE db387843467", $conn_readonly);
 /**/
 
 // ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
-//     /* Prepend this line with // to alternate blocks
+     /* Prepend this line with // to alternate blocks
  global $conn_readwrite;
 $conn_readwrite = mysql_connect("localhost:3306", "newuser_readwrit", "bligsby cheese") or handleError("could not connect to database. Please check settings in query_wrapper.php ");
 mysql_query("USE Test;", $conn_readwrite);
@@ -39,7 +43,7 @@ mysql_query("USE db387843467", $conn_readwrite);
 
 ////////////////////////////////////////////////////////////////////////
 /* 				SETTING UP QUERY WRAPPER 
-1. Lines you need to change regardless of your database:  23, 27, 28, 48
+1. Lines you need to change regardless of your database platform:  23, 27, 28, 48
 2. Lines you need to change if your database is not MySql: 59, 79, 89, 96
 3. You can test your output with 
 	- var_dump(call_query_read("SHOW TABLES;")); 
@@ -47,24 +51,36 @@ mysql_query("USE db387843467", $conn_readwrite);
 
 
 Other Notes:
- If you're using the obselete mssql driver for php (< 5.3 I believe) then you may want to: database_query('set textsize 65536');
+ -If you're using the obselete mssql driver for php (< 5.3 I believe) then you may want to: database_query('set textsize 65536');
+ -mysql_ is deprecated.
 */
 
+/**
+ * Handle Error, 
+ * @param $x str, the error message
+ * 
+ * This function will be called by Alive Fields in the event a library error occurs. 
+ * You can adapt it to handle errors in whichever way you want.
+ */
 function _AcField_handleError($x)
 {
-	die ($x); //You can customize this if you wish to store your errors in a database rather than displaying them, a good security practice for deployment mode.
+	die ($x); 
 }
 
-////////////////////////////////////////////////////////////////
 
+/*
+ *  Execute a SELECT query.
+ * 
+ */
 function _AcField_call_query_read ($query, $limit_rows_returned = 0) // allows read access only. Useful in minimizing sql injection possibilities.
 {
  global $conn_readonly;
  $DEBUG = false;
  $result = NULL;
  
- // ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
- if ($limit_rows_returned > 0) //In mysql (default) we limit updates by appending the string LIMIT X to them. Change this line according to your database
+ // YOU MUST CHANGE THE FOLLOWING LINE IF YOU ARE NOT USING MYSQL ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
+ //In mysql (default) we limit selects by appending the string LIMIT X to them. Change this line according to your database
+ if ($limit_rows_returned > 0) 
   	$query .= " LIMIT " . (int)$limit_rows_returned;
 	
  $rs = mysql_query($query, $conn_readonly) or _AcField_handleError(($DEBUG ? "Failed on query $query": "") . mysql_error());	
@@ -75,16 +91,20 @@ function _AcField_call_query_read ($query, $limit_rows_returned = 0) // allows r
  return $result;
 }
 
-////////////////////////////////////////////////////////////////
-
+/**
+ * Execute an UPDATE, INSERT, or DELETE query
+ * 
+ * 
+ */
 function _AcField_call_query_write ($query, $limit_rows_affected = 0) 
 // allows write access.
 // Limit rows affected is a safety precaution which isn't strictly necessary if this tool is used properly, but certainly is recommended. Customize its use to your database (e.g. Set rowcount for mssql)
 {
   global $conn_readwrite;
   
-// ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !   ** ! ** !
-  if ($limit_rows_affected > 0) //In mysql (default) we limit selects by appending the string LIMIT X to them. Change this line according to your database
+// YOU MUST CHANGE THE FOLLOWING LINE IF NOT MYSQL ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !   ** ! ** !
+  //In mysql (default) we updates selects by appending the string LIMIT X to them. Change this line according to your database
+  if ($limit_rows_affected > 0) 
   	$query .= " LIMIT " . (int)$limit_rows_affected;
 	
  	$rs = mysql_query($query, $conn_readwrite) or _AcField_handleError(($DEBUG ? "Failed on query $query" : "") . mysql_error());	
@@ -94,7 +114,7 @@ function _AcField_call_query_write ($query, $limit_rows_affected = 0)
 
 function _AcField_escape_field_name ($field, $add_quotes = true)
 {
-	// ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
+	// YOU MUST CHANGE THE FOLLOWING LINE IF NOT MYSQL  ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
 	return _AcField_escape_field_name_mysql($field, $add_quotes);
 }
 
@@ -102,7 +122,7 @@ function _AcField_escape_field_name ($field, $add_quotes = true)
 
 function _AcField_escape_table_name ($field, $add_quotes = true)
 {
-	// ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
+	// YOU MUST CHANGE THE FOLLOWING LINE IF NOT MYSQL  ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
 	return _AcField_escape_field_name_mysql($field, $add_quotes); //happens to be the same for mysql
 }
 
@@ -110,7 +130,7 @@ function _AcField_escape_table_name ($field, $add_quotes = true)
 
 function _AcField_escape_field_value ($field,  $add_quotes = true)
 {
-	// ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
+	// YOU MUST CHANGE THE FOLLOWING LINE IF NOT MYSQL  ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
 	return _AcField_escape_field_value_mysql($field, $add_quotes);
 }
 

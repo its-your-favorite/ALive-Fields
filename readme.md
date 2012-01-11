@@ -1,7 +1,7 @@
 #AcControls
 Copyright Alex Rohde 2011. Released under GPL v2
 * * *
-AcControls is a php library for binding database fields to html input elements. This is done in a live way with ajax and provides a level of immediate interactivity usually only seen in offline database applications like MS Access.
+AcControls is a PHP library for binding database fields to HTML input elements. This is done in a live way with AJAX and provides a level of immediate interactivity usually only seen in offline database applications like MS Access.
 
 The library is designed to allow database applications to be made online with only a handful of code.
 
@@ -47,7 +47,7 @@ This library operates with a client-side javascript set of controls and a server
 
 COPYRIGHT
 ----------------------------------------------------------------
- * ALive Fields V.45
+ * ALive Fields V.46
  * http://alexrohde.com/
  *
  * Includes jquery.js, jqueryUI.js[optional]
