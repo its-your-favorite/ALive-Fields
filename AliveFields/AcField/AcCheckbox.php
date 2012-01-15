@@ -1,5 +1,9 @@
 <?PHP
-
+/**
+ * The subclass of AcField that connects with the AcCheckbox javascript class.
+ * It thus can be used with <input type="checkbox"> html element.
+ *
+ */
 class AcCheckbox extends AcField 
 {
 function get_field_type_for_javascript()

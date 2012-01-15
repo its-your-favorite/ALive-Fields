@@ -1,11 +1,11 @@
 <?PHP
 
-// Requires AcField. Include AcField directly which will include this.
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- *  AcList represents the backend controller for fields which have multiple simultaneous values (i.e. lists),
- *  including dropdown comboboxes and SELECT boxes.
+ *  AcList represents the backend controller for fields which have multiple
+ *  simultaneous values (i.e. lists), including dropdown comboboxes and 
+ *  SELECT boxes.  
  * 
+ * @abstract
  */
 abstract class AcList extends AcField
 {	

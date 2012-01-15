@@ -1,5 +1,10 @@
 <?PHP
-
+/**
+ * The subclass of AcField that connects with the AcDatebox javascript class.
+ * It thus can be used with <input type="text"> html elements and can load
+ * 		date fields from a database or save them.
+ *
+ */
 class AcDatebox extends AcField
 {
 function get_field_type_for_javascript()

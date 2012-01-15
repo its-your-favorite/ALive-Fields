@@ -1,5 +1,10 @@
 <?PHP
 
+/**
+ * The subclass of AcField that connects with the AcTextbox javascript class. 
+ * It thus can be used with <input type="text"> or <textarea> html elements.
+ * 
+ */
 class AcTextbox extends AcField
 {
 function get_field_type_for_javascript()
