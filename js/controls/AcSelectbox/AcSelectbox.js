@@ -164,7 +164,7 @@ AcSelectbox.prototype.loadOptions = function(source)
 	this.previousValue = this.getValue();
 	this.previousText = this.getText();	
 	this.status = "loading";
-	this.lastLoadOptions = url + "?request=" + encodeURIComponent(data);
+	this.lastLoadOptions = addParam(url, "request", (data)); //for debugging
 	//this.loadJson(str, function () {} );
 	this.clearDependentFields();
 	$.post(url,{request:  data},function(a,b,c) {

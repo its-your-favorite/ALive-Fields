@@ -30,7 +30,7 @@
 	ensure_logged_in(); 
 
 	// Piece 1. The necessary include
-	require_once( "AcField.php");
+	require_once("AliveFields/start.php");
 	
 	///////////////////// Main File //////////////////////////////////////////////////////////////////////////////	
 	
@@ -249,7 +249,7 @@ ul.nav a { zoom: 1; }  /* the zoom property gives IE the hasLayout trigger it ne
     <!-- end .sidebar1 --></div>
   <div class="content">
     <h1><a href="#">Example Alive Fields Page</a></h1>
-    <p>This page presents my application, dropped into a basic layout. My point using this layout is simply to illustrate that Alive Fields library is independent of any HTML, it communicates to the view through JS.</p>
+    <p>This page presents my application, dropped into a basic layout. My point using this layout is simply to illustrate that Alive Fields library is independent of any HTML, it communicates to the view (i.e. what you see here) through JS.</p>
     <p>In about 30 lines of PHP I've set up a demo mini-web app that might be used for administrators to manage employees somehow with a rapid-deployment internal-use application.</p>
     <p>The purpose of this library is to let you make your own application like this in about 20 minutes (once you learn how to use it).</p>
     <h2>Administrate Users:</h2>

@@ -33,11 +33,9 @@ function handle_multiple_field($request)
 	header('Expires: Fri, 09 Jan 1981 05:00:00 GMT');
 	header('Cache-Control: no-store, no-cache, must-revalidate');
 	header('Cache-Control: post-check=0, pre-check=0', FALSE);
-	header('Content-Type: text/html; charset=iso-8859-1');
+	header('Content-Type: text/html; charset=iso-8859-1'); //not application_json for complicated reasons
 	header('Pragma: no-cache');
 	
-	require_once "query_wrapper.php";
-	require_once "include.php";
 	remove_magic_quotes(); // In the event your webserver has them enabled and doesn't give you the option to change it
 	
 	error_reporting(E_ERROR | E_PARSE | E_ALL ^ E_NOTICE);
