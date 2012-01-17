@@ -27,17 +27,17 @@
 * @param ajaxMode This is the only parameter not in the standard AcField constructor. If this is set to true [default], then this control uses live value as most AcControls do. If set to false, the control must be populated manually by custom javascript.
 */
 if (typeof(handleError) == "undefined")
-	handleError = alert;
-	
+    handleError = alert;
+    
 if (typeof(AcField) == "undefined")
-	handleError("Must include AcControls before AcSelectbox");
-		
+    handleError("Must include AcControls before AcSelectbox");
+        
 AcSelectbox = function (a,b,c,d,e,dependentFields, ajaxMode)
 {
  if (ajaxMode == undefined)
-	 this.ajaxMode = true; // default to true
+     this.ajaxMode = true; // default to true
  else
- 	this.ajaxMode = ajaxMode;
+     this.ajaxMode = ajaxMode;
 
  AcField.call(this, a,b,c,d,e,dependentFields); //call parent constructor. Must be done this way-ish
  this.controlType = "AcSelect";
@@ -55,9 +55,9 @@ AcSelectbox = function (a,b,c,d,e,dependentFields, ajaxMode)
  
  this.statusLoading = 0;
  
-	this.optionsTable = this.correspondingTable; 
-	this.optionsKeys = this.pkeyField; ///represents the values that are stored in each dropdown choice
-	this.optionsTexts = this.correspondingField;//these values cannot be overriden in the constructor / initializer.
+    this.optionsTable = this.correspondingTable; 
+    this.optionsKeys = this.pkeyField; ///represents the values that are stored in each dropdown choice
+    this.optionsTexts = this.correspondingField;//these values cannot be overriden in the constructor / initializer.
  }
 
 
@@ -75,46 +75,46 @@ AcSelectbox.prototype.initialize = function(jqElementStr, filteredFields, autolo
 {
  jqElement = $(jqElementStr);
  if (autoload === undefined)
- 	autoload = true; 
+     autoload = true; 
 
  if (filteredFields)
-	 this.filteredFields = filteredFields;
+     this.filteredFields = filteredFields;
  if (typeof(this.filteredFields) == "undefined")
- 	this.filteredFields = [];
+     this.filteredFields = [];
 
   if (jqElement.size() == 0)
-  	return handleError("Error: Cannot find HTML element to bind to");
-	
+      return handleError("Error: Cannot find HTML element to bind to");
+    
  oldId = jqElement[0].id;
  if (jqElement[0].nodeName.toLowerCase() != "select")
- 	handleError("Error: Please be sure that all AcSelectboxes are bound to SELECT tags. ");
+     handleError("Error: Please be sure that all AcSelectboxes are bound to SELECT tags. ");
 
  this.defaultValue = defaultValue;
   
- AcField.prototype.initialize.call(this, jqElement);	
+ AcField.prototype.initialize.call(this, jqElement);    
  jqElement.unbind("change");
  
 
  var myObject = this;
  
  jqElement.bind("change", function() 
-  		{
-	    if (myObject.oldValue != myObject.getValue()) 
-	   		myObject.handleDropdownChange();	
-	    myObject.oldValue = myObject.getValue();
-		myObject.loadedKey = myObject.getKey();	
-	    } );
-		 
+          {
+        if (myObject.oldValue != myObject.getValue()) 
+               myObject.handleDropdownChange();    
+        myObject.oldValue = myObject.getValue();
+        myObject.loadedKey = myObject.getKey();    
+        } );
+         
   if (autoload && (this.loadable > 1)) 
-	  url = this.loadOptions(); 
+      url = this.loadOptions(); 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 AcSelectbox.prototype.loadField = function(primaryKeyData, type, source) 
 {
-	this.ensureLoading(source);
-	this.parent.loadField.call(this, primaryKeyData, type, source);
+    this.ensureLoading(source);
+    this.parent.loadField.call(this, primaryKeyData, type, source);
 
 }
 /////////////////////////////////////////////////////////////////////////////////
@@ -123,79 +123,79 @@ AcSelectbox.prototype.loadField = function(primaryKeyData, type, source)
 */ 
 AcSelectbox.prototype.loadOptions = function(source)
 {
-	if (!this.ajaxMode)	
-		return;
-	
-	this.statusLoading++;
-	// disabled because it doesn't seem that useful AND it causes problems with AcJoinSelectbox which wants to load rows even if savable == -1
-	//if ((this.savable == -1) && (this.defaultValue == null))
-	//	return; ///*if savable is -1 then the field is read only and should only be populated with 1 value. */
-		
-	this.loadingOptions = true;
- 	//clear all ?
-	 this.setColor("#DDDDFF");
+    if (!this.ajaxMode)    
+        return;
+    
+    this.statusLoading++;
+    // disabled because it doesn't seem that useful AND it causes problems with AcJoinSelectbox which wants to load rows even if savable == -1
+    //if ((this.savable == -1) && (this.defaultValue == null))
+    //    return; ///*if savable is -1 then the field is read only and should only be populated with 1 value. */
+        
+    this.loadingOptions = true;
+     //clear all ?
+     this.setColor("#DDDDFF");
 
-	if (this.requestDistinct && (this.optionsTexts != this.optionsKeys))
-		handleError("Request distinct doesn't work when the values and options fields are different");
-			
-	var obj = {"AcFieldRequest": "getlist", "labels": this.optionsTexts, "table": this.optionsTable, "values": this.optionsKeys, "filters": this.filters, "distinct": this.requestDistinct,
-		"requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId, "filters": this.filters };
-	if (typeof(source) != "undefined" )
-		{
-		obj.requester = source.uniqueId;
-		obj.requester_text = source.getText();
-		obj.requester_key = source.getValue();
-		}
-	if (this.defaultValue > 0)
-		obj['default'] = this.defaultValue;
+    if (this.requestDistinct && (this.optionsTexts != this.optionsKeys))
+        handleError("Request distinct doesn't work when the values and options fields are different");
+            
+    var obj = {"AcFieldRequest": "getlist", "labels": this.optionsTexts, "table": this.optionsTable, "values": this.optionsKeys, "filters": this.filters, "distinct": this.requestDistinct,
+        "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId, "filters": this.filters };
+    if (typeof(source) != "undefined" )
+        {
+        obj.requester = source.uniqueId;
+        obj.requester_text = source.getText();
+        obj.requester_key = source.getValue();
+        }
+    if (this.defaultValue > 0)
+        obj['default'] = this.defaultValue;
 
-	var data = JSON.stringify(obj);
-	var url = document.location.toString(); //Current location
+    var data = JSON.stringify(obj);
+    var url = document.location.toString(); //Current location
 
-	if (this.overrideURL)
-		url = this.overrideURL; // for cases where the default code just won't work.
-		
-	url = addParam(url, "_", new Date().getTime()); //prevent caching, since jquery seems to have trouble with this.
-			
-	if (DEBUG)
-		window.open(url);
-	
-	var copy = this;
-	this.previousValue = this.getValue();
-	this.previousText = this.getText();	
-	this.status = "loading";
-	this.lastLoadOptions = addParam(url, "request", (data)); //for debugging
-	//this.loadJson(str, function () {} );
-	this.clearDependentFields();
-	$.post(url,{request:  data},function(a,b,c) {
-		 	copy.setColor("");
-			return copy.loadJson_callback(copy, a,b,c); 
-			} );
+    if (this.overrideURL)
+        url = this.overrideURL; // for cases where the default code just won't work.
+        
+    url = addParam(url, "_", new Date().getTime()); //prevent caching, since jquery seems to have trouble with this.
+            
+    if (DEBUG)
+        window.open(url);
+    
+    var copy = this;
+    this.previousValue = this.getValue();
+    this.previousText = this.getText();    
+    this.status = "loading";
+    this.lastLoadOptions = addParam(url, "request", (data)); //for debugging
+    //this.loadJson(str, function () {} );
+    this.clearDependentFields();
+    $.post(url,{request:  data},function(a,b,c) {
+             copy.setColor("");
+            return copy.loadJson_callback(copy, a,b,c); 
+            } );
 
-	return url;
+    return url;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 AcSelectbox.prototype.loadJson_callback = function(copy,response,isSuccess, d)
-{	
-	if ((response.length == 0) || ( (response.charAt(0) != "{" ) && (response.charAt(0) != "[")) )
-		return handleError("Not Json in loaded Selectbox: " + response);
-	
-	response = JSON.parse(response);
-	if (typeof(response.criticalError) != "undefined")
-		return handleError("Critical Error: " + response.criticalError);
-		
-	copy.correspondingElement.empty();
-//	var copy = this.jqElement;
-	$.each(response, function(key, value)
-	{
-		//alert(JSON.stringify(value));
-    	copy.correspondingElement.append($("<option/>").val(value.id).text(value.label));
-	});
-	
-	copy.afterLoadOptions(); 
-	
+{    
+    if ((response.length == 0) || ( (response.charAt(0) != "{" ) && (response.charAt(0) != "[")) )
+        return handleError("Not Json in loaded Selectbox: " + response);
+    
+    response = JSON.parse(response);
+    if (typeof(response.criticalError) != "undefined")
+        return handleError("Critical Error: " + response.criticalError);
+        
+    copy.correspondingElement.empty();
+//    var copy = this.jqElement;
+    $.each(response, function(key, value)
+    {
+        //alert(JSON.stringify(value));
+        copy.correspondingElement.append($("<option/>").val(value.id).text(value.label));
+    });
+    
+    copy.afterLoadOptions(); 
+    
 }
 ////////////////////////////////////////////////////////////////////////////////
 /** A callback function that is internally used after the select options are loaded from the server
@@ -204,40 +204,40 @@ AcSelectbox.prototype.loadJson_callback = function(copy,response,isSuccess, d)
 
 AcSelectbox.prototype.afterLoadOptions = function()
 {
-	if (--this.statusLoading > 0)	// don't do after-load for loads when a subsequent load request has already been issued.
-		return  ;
-		
-	this._doAfterLoading = false;	
-	this.status="ready";
-	
-	if (this.defaultValue)
-		this.setValue(this.defaultValue, this.defaultType);
-		
-	else if (false) //a value is selected, perhaps it's the only choice
-		{
-		//except this IS necessary... so
-		if (this.correspondingElement[0] === document.activeElement && ( this.correspondingElement[0].type || this.correspondingElement[0].href ))
-			;//on blur will already do this. So disabled.
-		else
-			{
-			this.updateDependentFields();
-			this.updateFilteredFields();	
-			}
-		}
-	this.defaultValue = null;
+    if (--this.statusLoading > 0)    // don't do after-load for loads when a subsequent load request has already been issued.
+        return  ;
+        
+    this._doAfterLoading = false;    
+    this.status="ready";
+    
+    if (this.defaultValue)
+        this.setValue(this.defaultValue, this.defaultType);
+        
+    else if (false) //a value is selected, perhaps it's the only choice
+        {
+        //except this IS necessary... so
+        if (this.correspondingElement[0] === document.activeElement && ( this.correspondingElement[0].type || this.correspondingElement[0].href ))
+            ;//on blur will already do this. So disabled.
+        else
+            {
+            this.updateDependentFields();
+            this.updateFilteredFields();    
+            }
+        }
+    this.defaultValue = null;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 AcSelectbox.prototype.lock = function()
 {
-	this.disabled = true; 
-	this.getElement()[0].locked = true;
+    this.disabled = true; 
+    this.getElement()[0].locked = true;
 }
 ////////////////////////////////////////////////////////////////////////////////
 AcSelectbox.prototype.unlock = function()
 {
-	this.disabled = false;
-	this.getElement()[0].locked = false;
+    this.disabled = false;
+    this.getElement()[0].locked = false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -246,97 +246,97 @@ AcSelectbox.prototype.unlock = function()
 */ 
 AcSelectbox.prototype.getValue = function()  //Value in this case means key. I wouldn't use a function name that's so ambiguous except this is an overload.
 {
-	if (this.getElement()[0].selectedIndex == -1)
-		return null;
-	return this.getElement()[0].options[this.getElement()[0].selectedIndex].value ;
+    if (this.getElement()[0].selectedIndex == -1)
+        return null;
+    return this.getElement()[0].options[this.getElement()[0].selectedIndex].value ;
 }
 /////////////////////////////////////////////////////////////////////////////
 /** By definition, should always return what the user sees in a control.
 */
 AcSelectbox.prototype.getText = function(key)
 {
-	if (this.getElement()[0].selectedIndex == -1)
-		return null;
-	return this.getElement()[0].options[this.getElement()[0].selectedIndex].text ;
+    if (this.getElement()[0].selectedIndex == -1)
+        return null;
+    return this.getElement()[0].options[this.getElement()[0].selectedIndex].text ;
 }
 /////////////////////////////////////////////////////////////////////////////
 /** By definition, should always return what key represents the value in this field
 */
 AcSelectbox.prototype.getKey = function()
 {
-	return this.getValue();
+    return this.getValue();
 }
 
 /////////////////////////////////////////////////////////////////////////////////
 
 AcSelectbox.prototype.getValueForSave = function() 
 {
-	return this.getValue();
+    return this.getValue();
 }
 /////////////////////////////////////////////////////////////////////////////
 /** By definition, should always return the value that will normally be used for updates and filters */
 
 AcSelectbox.prototype.getUpdateKey = function()
 {
-	return 	this.getKey();
+    return     this.getKey();
 }
 /////////////////////////////////////////////////////////////////////////////////
 /** Use this to prevent multiple simultaneous calls to loadOptions.
 */ 
  AcSelectbox.prototype.ensureLoading = function(source) 
  {
-	 if (this.loadingOptions != true)
-	 	this.loadOptions(source);	 
+     if (this.loadingOptions != true)
+         this.loadOptions(source);     
  }
 /////////////////////////////////////////////////////////////////////////////////
 /** Selects a choice, from the dropdown list, will show up in the control.
 @param key The value / key of the desired option (not the text).
 */
 AcSelectbox.prototype.setValue = function(key, isKey) 
-{			
-		
-	if (this.status == "ready" ) //Options loaded, proceed as normal
-		{	/*	Determined there is no way to automatically decide if a value is a key or not. Must be specified by the user in future versions, perhaps
-			on creation of the combo box (by making functions like UseKeyForSetAndGet or UseValueForSetAndGet);		*/
-		this.defaultValue = null;
-		
-		if (key === null)
-			{ //simply clearing the dropdown
-			this.loadedKey = null;
-			this.getElement()[0].selectedIndex = -1;	
-			}
-		else 
-			{
-			this.getElement()[0].selectedIndex = -1;
-			this.loadedKey = null;
-			var copy = this;
-			$.each(this.getElement()[0].options, function (ind, val)
-				{
-				if (val.value == key)
-					{
-					copy.getElement()[0].selectedIndex = ind;
-					copy.loadedKey = key;
-					}
-				});
-			}
-		
-		this.handleDropdownChange(0, 1);
-		this.previousValue = this.getValue();
-		this.previousText = this.getText();	
-		}
-	else	//Options still populating... but load what we can anyways.
-		{
-		//this.ensureLoading();
-		this.defaultValue = key;
-		if (this.pkeyField == this.optionsKeys) //If we didn't use differentiate options... 
-			this.updateDependentFields(); 
-		else if (this.defaultValue)
-			this.updateDependentFields(this.defaultValue);	//Yes. We CAN preload dependent fields based on our -KEY-, because combos are opposite of most controls. 
-	 		
-		// KEEP COMMENTED: this.updateFilteredFields(); //do not put key in here...
-		// Though in theory it's nice to filter early, sometimes we filter by text, which isn't retrieved at this point...
-		// also there's no easy-enough way to to tell here which filters will be text.
-		}
+{            
+        
+    if (this.status == "ready" ) //Options loaded, proceed as normal
+        {    /*    Determined there is no way to automatically decide if a value is a key or not. Must be specified by the user in future versions, perhaps
+            on creation of the combo box (by making functions like UseKeyForSetAndGet or UseValueForSetAndGet);        */
+        this.defaultValue = null;
+        
+        if (key === null)
+            { //simply clearing the dropdown
+            this.loadedKey = null;
+            this.getElement()[0].selectedIndex = -1;    
+            }
+        else 
+            {
+            this.getElement()[0].selectedIndex = -1;
+            this.loadedKey = null;
+            var copy = this;
+            $.each(this.getElement()[0].options, function (ind, val)
+                {
+                if (val.value == key)
+                    {
+                    copy.getElement()[0].selectedIndex = ind;
+                    copy.loadedKey = key;
+                    }
+                });
+            }
+        
+        this.handleDropdownChange(0, 1);
+        this.previousValue = this.getValue();
+        this.previousText = this.getText();    
+        }
+    else    //Options still populating... but load what we can anyways.
+        {
+        //this.ensureLoading();
+        this.defaultValue = key;
+        if (this.pkeyField == this.optionsKeys) //If we didn't use differentiate options... 
+            this.updateDependentFields(); 
+        else if (this.defaultValue)
+            this.updateDependentFields(this.defaultValue);    //Yes. We CAN preload dependent fields based on our -KEY-, because combos are opposite of most controls. 
+             
+        // KEEP COMMENTED: this.updateFilteredFields(); //do not put key in here...
+        // Though in theory it's nice to filter early, sometimes we filter by text, which isn't retrieved at this point...
+        // also there's no easy-enough way to to tell here which filters will be text.
+        }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -346,33 +346,33 @@ AcSelectbox.prototype.setValue = function(key, isKey)
 */
 AcSelectbox.prototype.handleDropdownChange = function(value, denySave)
 { 
-	if (this.correspondingElement != undefined)
-		us = this;
-		
-	if (us.ajaxMode) //how the box reacts depends fundamentally on which of the two distinct modes it's using
-		{		
-		if ((us.getValue() == "") || (us.getValue() == null)) //this value doesn't exist in the database
-			{
-				us.clearDependentFields();
-				us.flash("#FFBB99");
-			}
-		else
-			{
-				us.updateDependentFields();
-				us.updateFilteredFields();
-			}
-			
-		if ((this.savable > 0) && (! denySave))
-			this.saveField(this.loadedKey);
-		}
-	else
-		 AcField.prototype.handleChange.call(us, value);	
+    if (this.correspondingElement != undefined)
+        us = this;
+        
+    if (us.ajaxMode) //how the box reacts depends fundamentally on which of the two distinct modes it's using
+        {        
+        if ((us.getValue() == "") || (us.getValue() == null)) //this value doesn't exist in the database
+            {
+                us.clearDependentFields();
+                us.flash("#FFBB99");
+            }
+        else
+            {
+                us.updateDependentFields();
+                us.updateFilteredFields();
+            }
+            
+        if ((this.savable > 0) && (! denySave))
+            this.saveField(this.loadedKey);
+        }
+    else
+         AcField.prototype.handleChange.call(us, value);    
 
-	this.previousValue = this.getValue();
-	this.previousText = this.getText();	
-				 
-	if (us.onChange)
-		us.onChange();
+    this.previousValue = this.getValue();
+    this.previousText = this.getText();    
+                 
+    if (us.onChange)
+        us.onChange();
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -380,46 +380,46 @@ AcSelectbox.prototype.handleDropdownChange = function(value, denySave)
  AcSelectbox.prototype.setValueFromLoad = function(key)
  {
    if (((key == null) || (key == "NULL")) && this.dontLoadNull)
-  		return;
-		
-	this.setValue(key);		
+          return;
+        
+    this.setValue(key);        
  } 
 
 /////////////////////////////////////////////////////////////////////////////
 
 AcSelectbox.prototype.resetValue = function()
 {
-	//this.setText("");
-	this.loadedKey = null;
-	this.getElement()[0].selectedIndex = -1;
-	this.clearDependentFields();		
+    //this.setText("");
+    this.loadedKey = null;
+    this.getElement()[0].selectedIndex = -1;
+    this.clearDependentFields();        
 }
 
 AcSelectbox.prototype.clearDependentFields = function()
 {
-	var x;
-	for (x=0; x < this.dependentFields.length; x++)
-		{
-		this.dependentFields[x].resetValue();			
-		}
-	for (x=0; x < this.filteredFields.length; x++)
-		{
-		this.updateFilteredFields(null);			
-		}
+    var x;
+    for (x=0; x < this.dependentFields.length; x++)
+        {
+        this.dependentFields[x].resetValue();            
+        }
+    for (x=0; x < this.filteredFields.length; x++)
+        {
+        this.updateFilteredFields(null);            
+        }
 }
 
 /////////////////////////////////////////////////////////////////////////////
 
 AcSelectbox.prototype.setColor = function(val)
 {
-	this.getElement()[0].style.backgroundColor = val;
+    this.getElement()[0].style.backgroundColor = val;
 }
 
 /////////////////////////////////////////////////////////////////////////////
 
 AcSelectbox.prototype.setBorder = function(val)
 {
-	this.getElement()[0].style.borderColor = val;
+    this.getElement()[0].style.borderColor = val;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -433,11 +433,11 @@ AcSelectbox.prototype.setBorder = function(val)
 */
 AcSelectbox.prototype.differentiateOptions = function(texts, table, values) 
 {
-	if (this.initialized)
-		return handleError("Usually differentiate options should be called before initialization.");
-	this.optionsTable = table;
-	this.optionsKeys = values;
-	this.optionsTexts = texts;
+    if (this.initialized)
+        return handleError("Usually differentiate options should be called before initialization.");
+    this.optionsTable = table;
+    this.optionsKeys = values;
+    this.optionsTexts = texts;
 }
 
 

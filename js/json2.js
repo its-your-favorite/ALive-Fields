@@ -479,5 +479,5 @@ if (!JSON) {
             throw new SyntaxError('JSON.parse');
         };
     }
-}());	 
+}());     
 

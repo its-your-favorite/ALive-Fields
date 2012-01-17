@@ -19,15 +19,15 @@
 * @requires AcControls.js and its dependencies.
 */
 if (typeof(handleError) == "undefined")
-	handleError = alert;
-	
+    handleError = alert;
+    
 if (typeof(AcField) == "undefined")
-	handleError("Must include AcControls before AcCheckbox.");
+    handleError("Must include AcControls before AcCheckbox.");
 
 AcCheckbox =  function (field,table,pkey,loadable,savable,dependentFields)
 {  // the reason we cannot use "this.prototype" here, is because extending classes will call this 
 //function with the parent object, who's constructor is this function, causing an infinite loop.
-  AcField.call(this, field,table,pkey,loadable,savable,dependentFields); //call parent constructor			
+  AcField.call(this, field,table,pkey,loadable,savable,dependentFields); //call parent constructor            
 }
 AcCheckbox.prototype = new AcField();  // Here's where the inheritance occurs
 AcCheckbox.prototype.constructor=AcCheckbox; // Otherwise this would have a constructor of AcField
@@ -37,16 +37,16 @@ AcCheckbox.prototype.parent = AcField.prototype;
 
 AcCheckbox.prototype.initialize=function(jqElementStr)
 {
-	jqElement = $(jqElementStr);
-	AcField.prototype.initialize.call(this, jqElement);
-	
-  	this.correspondingElement.bind("click", this, function(myEvent)
-	 	{
-			if (myEvent.data.oldValue != myEvent.data.getValue()) 
-	   			myEvent.data.handleChange();
-		    myEvent.data.oldValue = myEvent.data.getValue();
-		} );		
-	
+    jqElement = $(jqElementStr);
+    AcField.prototype.initialize.call(this, jqElement);
+    
+      this.correspondingElement.bind("click", this, function(myEvent)
+         {
+            if (myEvent.data.oldValue != myEvent.data.getValue()) 
+                   myEvent.data.handleChange();
+            myEvent.data.oldValue = myEvent.data.getValue();
+        } );        
+    
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ return this.correspondingElement[0].checked * 1; //convert to numeric
 AcCheckbox.prototype.setValue=function(param)
 {
  if (param && (param != "0")) 
-	this.correspondingElement[0].checked = true;
+    this.correspondingElement[0].checked = true;
  else
- 	this.correspondingElement[0].checked = false;
+     this.correspondingElement[0].checked = false;
 }

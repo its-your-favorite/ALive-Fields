@@ -19,10 +19,10 @@
 * @requires AcControls.js and its dependencies
 */
 if (typeof(handleError) == "undefined")
-	handleError = alert;
-	
+    handleError = alert;
+    
 if (typeof(AcField) == "undefined")
-	handleError("Must include AcControls before AcTextbox");
+    handleError("Must include AcControls before AcTextbox");
 
 AcTextbox = function (field,table,pkey,loadable,savable,dependentFields)
 {
@@ -31,7 +31,7 @@ AcTextbox = function (field,table,pkey,loadable,savable,dependentFields)
 
 AcTextbox.prototype.initialize = function(pkey)
 {
- AcField.prototype.initialize.call(this, pkey);	
+ AcField.prototype.initialize.call(this, pkey);    
 }
 
 AcTextbox.prototype = new AcField();  // Here's where the inheritance occurs
