@@ -30,19 +30,11 @@
 
 function handle_multiple_field($request)
  {    
-    header('Expires: Fri, 09 Jan 1981 05:00:00 GMT');
-    header('Cache-Control: no-store, no-cache, must-revalidate');
-    header('Cache-Control: post-check=0, pre-check=0', FALSE);
-    header('Content-Type: text/html; charset=iso-8859-1'); //not application_json for complicated reasons
-    header('Pragma: no-cache');
-    
+
     remove_magic_quotes(); // In the event your webserver has them enabled and doesn't give you the option to change it
     
     error_reporting(E_ERROR | E_PARSE | E_ALL ^ E_NOTICE);
     set_error_handler ("auto_error", E_ERROR | E_PARSE | E_ALL ^ E_NOTICE );
-    
-    global $sql; // There's a very good reason for this... I just don't remember
-                // it at the second.
     
     /*
      *  Load the request information into more-readable variables.
@@ -54,6 +46,7 @@ function handle_multiple_field($request)
     
     $this_field_session =& $_SESSION['_AcField'][$requester_page][$fieldUniqueId];
     $this_field = AcField::instance_from_id($fieldUniqueId);
+    $this_field->generate_controller_header();
     
     $table = $this_field->bound_table;
     $values = $dataRequest["fieldInfo"];
@@ -84,34 +77,10 @@ function handle_multiple_field($request)
         // probably eventually change this to an accessor? So it can be overloaded differently by subclasses?
         verify_control_could_contain_value_set($requester_page, $fieldUniqueId, $post_val /*don't escape. Checked outside of a query*/ /*, "optionValue"*/) or json_error("expectedError");
         }
-    /*elseif (($dataRequest['action'] === "insert"))
-        {
-        foreach ($values as $x)
-            {
-            $values_clause1[] = cleanFieldName($x[0]);
-            $values_clause2[] = cleanFieldValue($x[1]);
-            $values_clause = " (" . join(",", $values_clause1) . ") VALUES (" . join(",", $values_clause2) . ") " ;
-            
-            if (isset($where_clause))
-                trigger_error("Cannot use limiting conditions in an insert", E_USER_ERROR );
-                
-            if (strpos($SECURITY_PERMISSIONS["normal"][$table], "W") === false)
-                trigger_error("Insufficient Permissions to write to table -$table-", E_USER_ERROR );
-            }        
-        }
-    /* Disabled. This method of doing this is just begging for errors.
-    */
-    /*elseif (($dataRequest['action'] == "append"))
-        foreach ($values as $x)
-            {
-            $values_clause[] = "[" . cleanFieldName($x[0]) . "]" . " =  " . "[" . cleanFieldName($x[0]) . "] + " . cleanFieldValue($x[1], 1) . " ";
-            if (strpos($SECURITY_PERMISSIONS["normal"][$table], "R") === false)
-                trigger_error("Insufficient Permissions to read from table $table");
-            }        */
     elseif (($dataRequest['action'] === "hardcoded_load") || ($dataRequest['action'] === "dynamic_load")    )
         {
         die(json_error("Cannot do load in this. Presumably unnecessary."));
-        // think about this more later.
+        // Actually, I think we can do this. But I should do it gracefully
             /*
         if (! $this_field->loadable)
             die("Field not loadable"); //security violation

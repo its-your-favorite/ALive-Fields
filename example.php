@@ -78,7 +78,6 @@
                                          array("control" => $users_departments_join, 
                                                 "field" => "user_id" )) );
 
-
     // Part 3. The Call to handle_all_requests()
     AcField::handle_all_requests(); //In the event that this page is being called as an ajax call to load/save data (or return a list etc) handle appropriately.
     

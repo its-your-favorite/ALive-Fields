@@ -22,7 +22,6 @@ class AcListJoin extends AcList
         $this->join_to_right_field = $join_to_right_field;
         $this->join_from_right_field = $join_from_right_field;
         $this->join_table = $join_table;
-        $this->type_temp = 1;
         $this->multi_validators = array();
         $this->mode = "default";
     }    
