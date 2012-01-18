@@ -10,28 +10,22 @@
  *
  *  @author Alex Rohde
  */
-function acList_Controller(& $fake_this) {
-
+function acList_Controller(& $fake_this, $request) {
     
-    $request = json_decode($_REQUEST['request'], 1);
-
-    error_reporting(E_ERROR | E_PARSE | E_ALL ^ E_NOTICE);
-    set_error_handler("auto_error", E_ERROR | E_PARSE | E_USER_ERROR);
-
-    session_start();
-
     /////////////////////////////
     // Shorthand variables 
+    if (!isset($request['term']))
+            $request['term'] = '';
     $requester_page = & $request['requesting_page'];
     $field_unique_id = $request['request_field'];
-    $term = strtoupper(_AcField_escape_field_value($request['term'], false));
+    $term = strtoupper($fake_this->adapter->escape_field_value($request['term'], false));
     $this_field_session = & $_SESSION['_AcField'][$requester_page][$field_unique_id];
     $this_field = AcField::instance_from_id($field_unique_id);
     $this_field->generate_controller_header();
 
-    $field1 = _AcField_escape_field_name($this_field_session['options_pkey']);
-    $field2 = _AcField_escape_field_name($this_field_session['options_field']);
-    $table = _AcField_escape_field_name($this_field_session['options_table']);
+    $field1 = $fake_this->adapter->escape_field_name($this_field_session['options_pkey']);
+    $field2 = $fake_this->adapter->escape_field_name($this_field_session['options_field']);
+    $table = $fake_this->adapter->escape_field_name($this_field_session['options_table']);
 
     $filtering = false;
 
@@ -72,9 +66,9 @@ function acList_Controller(& $fake_this) {
     if ($filtering) {
         if ($this_field instanceof AcListJoin) { //If we have a join table, then the filters apply to that table.
             list($filters, $this_field_session['filter_fields'], $this_field_session['filter_values'] ) =
-                    apply_list_filters(/* byref */ $request, _AcField_escape_table_name($this_field->join_table), $field_unique_id);
+                    apply_list_filters($fake_this, /* byref */ $request, $fake_this->adapter->escape_table_name($this_field->join_table), $field_unique_id);
         } else {
-            $filters = apply_list_filters(/* byref */ $request, $table, $field_unique_id);
+            $filters = apply_list_filters($fake_this, /* byref */ $request, $table, $field_unique_id);
             $filters = $filters[0];
         }
     }
@@ -112,9 +106,9 @@ function acList_Controller(& $fake_this) {
     } elseif ($this_field instanceOf AcListJoin) {
         // In the event of no filtering, use a complicated join
 
-        $join_table = _AcField_escape_table_name($this_field->join_table);
-        $join_to_right_field = _AcField_escape_field_name($this_field->join_to_right_field);
-        $join_from_right_field = _AcField_escape_field_name($this_field->join_from_right_field);
+        $join_table = $fake_this->adapter->escape_table_name($this_field->join_table);
+        $join_to_right_field = $fake_this->adapter->escape_field_name($this_field->join_to_right_field);
+        $join_from_right_field = $fake_this->adapter->escape_field_name($this_field->join_from_right_field);
 
 
         if ($this_field->mode == 'limited') {//In the event that we wish the table to show only records in the right-table that have a join-table record.
@@ -138,7 +132,7 @@ function acList_Controller(& $fake_this) {
 
     $this_field_session["last_used_query"] = $query;
     $query .= "  ORDER BY $field2 ";
-    $result = _AcField_call_query_read($query, (int) $request['max_rows']);
+    $result = $fake_this->adapter->call_query_read($query, (int) $request['max_rows']);
 
     if (is_null($result))
         echo "[]";

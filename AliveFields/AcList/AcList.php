@@ -71,11 +71,12 @@ abstract class AcList extends AcField {
             return;
         elseif (($request['AcFieldRequest'] == 'getfield') || ($request['AcFieldRequest'] == 'savefield')) {
             require_once (Acfield::$path_to_start_php . "/_internalInclude/ajax_field.php");
-            acField_Controller($this);
+            acField_Controller($this, $request);
             die();
         } elseif ($request['AcFieldRequest'] == 'getlist') {
+
             require_once (Acfield::$path_to_start_php . "/_internalInclude/ajax_list.php");
-            acList_Controller($this);
+                acList_Controller($this, $request);
             die();
         }
     }

@@ -130,10 +130,15 @@ AcField.prototype.initialize = function(jqElementStr)
     // from a pointer to the actual element to a boolean.
     ///*
 
+    /**
+     *On blur, determine if the values have changed. If so call, change handler.
+     */
     this.correspondingElement.bind("blur", this, function(myEvent)
-             {
-            if (myEvent.data.oldValue != myEvent.data.getValue()) 
-                   myEvent.data.handleChange();
+             {                 
+            if (myEvent.data.oldValue == myEvent.data.getValue()) 
+                return;
+               
+            myEvent.data.handleChange();
             myEvent.data.oldValue = myEvent.data.getValue();
             } );    
     

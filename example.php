@@ -33,6 +33,10 @@
     require_once("AliveFields/start.php");
     
     ///////////////////// Main File ////////////////////////////////////////////
+    $ini = parse_ini_file(".ini");
+    $db_adapter = new AcAdapterMysql($ini['host'], $ini['user_read'], $ini['pass_read'],
+                                    $ini['db'], $ini['user_write'], $ini['pass_write']);
+    AcField::set_default_adapter($db_adapter);
     
     // Piece 2. The actual AcField Declarations 
     $user_enabled = new AcCheckbox("enabled", "users", "userID", AcField::ReadWhenFiltered, AcField::SaveYes);
@@ -46,8 +50,8 @@
     
     // Validators can also be declared as follows.    
     /* $article_content->register_validator( array("unique" => true, 
-     *                                                 "length" => ">0",
-     *                                                 "regex" => '/^[0-9]+ace/') );    
+     *                                             "length" => ">0",
+     *                                             "regex" => '/^[0-9]+ace/') );    
      */
     
     // Example Validator: disallow the word fail in "article content"

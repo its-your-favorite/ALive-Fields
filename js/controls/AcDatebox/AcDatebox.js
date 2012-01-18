@@ -1,16 +1,12 @@
 /*!
- * ALive Fields V 1.0
+ *
+ *A control to handle dates, utilizing jQueryUI datepicker
+ *
+ * ALive Fields
  * http://alexrohde.com/
  *
- * Copyright 2011, Alex Rohde
- * Licensed under the GPL Version 2 license.
  *
- * Includes jquery.js, jqueryUI.js
- * http://jquery.com/ , http://jqueryui.com
- * Copyright 2011, John Resig
- *
- * Last Revision: 
- * Date: Oct 11 2011 2:00PM
+ * @author Alex Rohde
  */
 
 /* 
@@ -47,29 +43,29 @@ if (typeof(jQuery.ui) == "undefined")
 if (typeof(strToDate) == "undefined")
 {
     strToDate = function (str)
-        {
-         if (str instanceof Date)
+    {
+        if (str instanceof Date)
             return str;
         if (str == null)
             return new Date();
             
-         str = (str.toLowerCase().replace("pm", " pm").replace("am", " am")); //fix for chrome    
+        str = (str.toLowerCase().replace("pm", " pm").replace("am", " am")); //fix for chrome    
         
-         if (str.indexOf('-') == 4) //year-first format
-            {
-                str += ' ';//necessary to prevent undefined in case of date with no time.
-                pieces = str.split("-");
-                halves = pieces[2].split(" ");
-                return new Date(pieces[1] + "-" + halves[0] + "-" + pieces[0] + " " + halves[1]); 
-            }
-         else
-            return new Date(str);
+        if (str.indexOf('-') == 4) //year-first format
+        {
+            str += ' ';//necessary to prevent undefined in case of date with no time.
+            pieces = str.split("-");
+            halves = pieces[2].split(" ");
+            return new Date(pieces[1] + "-" + halves[0] + "-" + pieces[0] + " " + halves[1]); 
         }
+        else
+            return new Date(str);
+    }
 }
 
 AcDatebox = function (field,table,pkey,loadable,savable,dependentFields)
 {
- AcTextbox.call(this, field,table,pkey,loadable,savable,dependentFields); //call parent constructor
+    AcTextbox.call(this, field,table,pkey,loadable,savable,dependentFields); //call parent constructor
 }
 
 AcDatebox.prototype = new AcTextbox();  // Here's where the inheritance occurs
@@ -79,23 +75,28 @@ AcDatebox.prototype.parent = AcTextbox.prototype;
 
 AcDatebox.prototype.initialize = function(jqElementStr) //paramater only exists to be passed on
 {
-  AcTextbox.prototype.initialize.call (this,  jqElementStr); //call parent constructor 
-  $(jqElementStr).addClass("acDate"); //enables jquery ui date-picker to theme this
+    AcTextbox.prototype.initialize.call (this,  jqElementStr); //call parent constructor 
+    $(jqElementStr).addClass("acDate"); //enables jquery ui date-picker to theme this
 
-  this.getElement().keydown(this, function (param) { return param.data.handleKeydown(param);} ) ; 
- //blur already bound through AcControl
- this.correspondingElement.unbind("blur");
+    this.getElement().keydown(this, function (param) 
+                        {
+                            return param.data.handleKeydown(param);
+                        } ) ; 
+    //blur already bound through AcControl
+    this.correspondingElement.unbind("blur");
  
-  this.correspondingElement.bind("change", this, function(myEvent)
-             {
-            if (myEvent.data.oldValue != myEvent.data.getValue()) 
-                   myEvent.data.handleChange();
-            myEvent.data.oldValue = myEvent.data.getValue();
-            } );    
-  //call the parent constructor first... it's okay that it will be called twice
-  $(jqElementStr).datepicker();
+    this.correspondingElement.bind("change", this, function(myEvent)
+    {
+        if (strToDate(myEvent.data.getValue()).toString() != 
+            strToDate(myEvent.data.oldValue).toString())
+
+            myEvent.data.handleChange();
+        myEvent.data.oldValue = myEvent.data.getValue();
+    } );    
+    //call the parent constructor first... it's okay that it will be called twice
+    $(jqElementStr).datepicker();
 //  nada.datepicker("hide");
-  //this.setValue(new Date());    
+//this.setValue(new Date());    
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +129,7 @@ AcDatebox.prototype.setValue = function (param)
     else
         handleError("Tried to set datebox to unknown value: " + param);
         
-//    if (param.getYear() < 1950)
+    //    if (param.getYear() < 1950)
     //    param.setYear(param.getYear() + 100); //translate dates ending with /05 from 1905 to 2005
 
     result = param.getYear() % 100;

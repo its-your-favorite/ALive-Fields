@@ -77,7 +77,7 @@ class AcListJoin extends AcList
         if (($request['AcFieldRequest'] == 'getfield') || ($request['AcFieldRequest'] == 'savefield'))
                 {
                 require_once (Acfield::$path_to_start_php . "/_internalInclude/ajax_field_multiple.php");
-                handle_multiple_field($request); //sole function in above file.
+                handle_multiple_field($this, $request); //sole function in above file.
                 die();
                 }
     

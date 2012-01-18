@@ -34,9 +34,9 @@ if (typeof(AcSelectbox) == "undefined")
         
 AcJoinSelectbox = function (a,b,c,d,e,dependentFields, ajaxMode)
 {
- AcSelectbox.call(this, a,b,c,d,e,dependentFields); //call parent constructor. Must be done this way-ish
- this.controlType = "AcJoinSelect";
- }
+    AcSelectbox.call(this, a,b,c,d,e,dependentFields); //call parent constructor. Must be done this way-ish
+    this.controlType = "AcJoinSelect";
+}
 
 
 AcJoinSelectbox.prototype = new AcSelectbox();  // Here's where the inheritance occurs
@@ -56,24 +56,26 @@ AcJoinSelectbox.prototype.loadField = function(primaryKeyData, type, source)
 
 AcJoinSelectbox.prototype.initialize = function(jqElementStr, filteredFields, autoload, defaultValue)
 {
-   this.parent.initialize.call(this,    jqElementStr, filteredFields, autoload, defaultValue);
-   jqElement.unbind("change"); // Since multiple clicks (which each would trigger a change) are required to update a select multiple...
-   jqElement.unbind("blur"); // it is bound, inappropriately, by AcField
+    this.parent.initialize.call(this,    jqElementStr, filteredFields, autoload, defaultValue);
+    jqElement.unbind("change"); // Since multiple clicks (which each would trigger a change) are required to update a select multiple...
+    jqElement.unbind("blur"); // it is bound, inappropriately, by AcField
    
-   if (this.getElement()[0].locked) 
-           this.lock();  //we need to refresh this since change handlers are unbound (which are used in the lock mechanism)
+    if (this.getElement()[0].locked) 
+        this.lock();  //we need to refresh this since change handlers are unbound (which are used in the lock mechanism)
         
-   myObject = this;
+    myObject = this;
       
-   jqElement.bind("blur" , function() 
-          {
-        if (myObject.oldValue != myObject.getValue()) 
-            {
-               myObject.handleDropdownChange();    
-            }
+    jqElement.bind("blur" , function() 
+    {
+        if ($(myObject.oldValue).not(myObject.getValue()).get().length == 0 && 
+                $(myObject.getValue()).not(myObject.oldValue).get().length == 0) 
+            return ; //arrays are identical
+
+        myObject.handleDropdownChange();    
+
         myObject.oldValue = myObject.getValue();
         myObject.loadedKey = myObject.getKey();    
-        } );
+    } );
         
     if (!$(jqElementStr)[0].multiple)
         return handleError("A Join Select control must be bound to a select *multiple* input element.");
@@ -186,19 +188,19 @@ AcJoinSelectbox.prototype.afterLoadOptions = function()
 ////////////////////////////////////////////////////////////////////////////////
 AcJoinSelectbox.prototype.lock = function()
 {
-      // simulate readonly
-   this.getElement().change( function(ev)
-   {
+    // simulate readonly
+    this.getElement().change( function(ev)
+    {
         myObject.setValue( myObject.oldValue, true);
-   });
+    });
 
     this.getElement()[0].locked = true;
 }
 ////////////////////////////////////////////////////////////////////////////////
 AcJoinSelectbox.prototype.unlock = function()
 {
-  // simulate readonly
-   jqElement.unbind("change");
+    // simulate readonly
+    jqElement.unbind("change");
     this.getElement()[0].locked = false;
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,8 +219,8 @@ AcJoinSelectbox.prototype.getValue = function()  //Value in this case means key.
     $.each(    this.getElement()[0].options, 
         function (key, option)
         {
-         if (option.selected)
-             result.push(option.value);                      
+            if (option.selected)
+                result.push(option.value);                      
         } );
     return (result);    
 }
@@ -227,12 +229,12 @@ AcJoinSelectbox.prototype.getValue = function()  //Value in this case means key.
 */
 AcJoinSelectbox.prototype.getText = function(key)
 {
-     result = [];
+    result = [];
     $.each(    this.getElement()[0].options, 
         function (key, option)
         {
-         if (option.selected)
-             result.push(option.text);                      
+            if (option.selected)
+                result.push(option.text);                      
         } );
     return (result);    
 }
@@ -258,48 +260,48 @@ AcJoinSelectbox.prototype.setValue = function(key, isKey)
     $.each(    this.getElement()[0].options, 
         function (loop_key, option)
         {
-         if (isKey)
-             option.selected = ($.inArray(option.value, key) >= 0);
-        else
-             option.selected = ($.inArray(option.text, key) >= 0);
-//             result.push(option.value);                      
+            if (isKey)
+                option.selected = ($.inArray(option.value, key) >= 0);
+            else
+                option.selected = ($.inArray(option.text, key) >= 0);
+        //             result.push(option.value);                      
         } );
     return;    
 
-// Leaving this code here, despite it not being used right now, in case upon reflection it has necessary considerations for future complications [inherited from parent].
+    // Leaving this code here, despite it not being used right now, in case upon reflection it has necessary considerations for future complications [inherited from parent].
 
 
     if (this.status == "ready" ) //Options loaded, proceed as normal
-        {    /*    Determined there is no way to automatically decide if a value is a key or not. Must be specified by the user in future versions, perhaps
+    {    /*    Determined there is no way to automatically decide if a value is a key or not. Must be specified by the user in future versions, perhaps
             on creation of the combo box (by making functions like UseKeyForSetAndGet or UseValueForSetAndGet);        */
         this.defaultValue = null;
         
         if (key === null)
-            { //simply clearing the dropdown
+        { //simply clearing the dropdown
             this.loadedKey = null;
             this.getElement()[0].selectedIndex = -1;    
-            }
+        }
         else 
-            {
+        {
             this.getElement()[0].selectedIndex = -1;
             this.loadedKey = null;
             var copy = this;
             $.each(this.getElement()[0].options, function (ind, val)
-                {
+            {
                 if (val.value == key)
-                    {
+                {
                     copy.getElement()[0].selectedIndex = ind;
                     copy.loadedKey = key;
-                    }
-                });
-            }
+                }
+            });
+        }
         
         this.handleDropdownChange(0, 1);
         this.previousValue = this.getValue();
         this.previousText = this.getText();    
-        }
+    }
     else    //Options still populating... but load what we can anyways.
-        {
+    {
         //this.ensureLoading();
         this.defaultValue = key;
         if (this.pkeyField == this.optionsKeys) //If we didn't use differentiate options... 
@@ -307,10 +309,10 @@ AcJoinSelectbox.prototype.setValue = function(key, isKey)
         else if (this.defaultValue)
             this.updateDependentFields(this.defaultValue);    //Yes. We CAN preload dependent fields based on our -KEY-, because combos are opposite of most controls. 
              
-        // KEEP COMMENTED: this.updateFilteredFields(); //do not put key in here...
-        // Though in theory it's nice to filter early, sometimes we filter by text, which isn't retrieved at this point...
-        // also there's no easy-enough way to to tell here which filters will be text.
-        }
+    // KEEP COMMENTED: this.updateFilteredFields(); //do not put key in here...
+    // Though in theory it's nice to filter early, sometimes we filter by text, which isn't retrieved at this point...
+    // also there's no easy-enough way to to tell here which filters will be text.
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -324,23 +326,23 @@ AcJoinSelectbox.prototype.handleDropdownChange = function(value, denySave)
         us = this;
         
     if (us.ajaxMode) //how the box reacts depends fundamentally on which of the two distinct modes it's using
-        {        
+    {        
         if ((us.getValue() == "") || (us.getValue() == null)) //this value doesn't exist in the database
-            {
-                us.clearDependentFields();
-                us.flash("#FFBB99");
-            }
+        {
+            us.clearDependentFields();
+            us.flash("#FFBB99");
+        }
         else
-            {
-                us.updateDependentFields();
-                us.updateFilteredFields();
-            }
+        {
+            us.updateDependentFields();
+            us.updateFilteredFields();
+        }
             
         if ((this.savable > 0) && (! denySave))
             this.saveField(this.loadedKey);
-        }
+    }
     else
-         AcField.prototype.handleChange.call(us, value);    
+        AcField.prototype.handleChange.call(us, value);    
 
     this.previousValue = this.getValue();
     this.previousText = this.getText();    
@@ -351,13 +353,13 @@ AcJoinSelectbox.prototype.handleDropdownChange = function(value, denySave)
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // /** Intelligent  */
- AcJoinSelectbox.prototype.setValueFromLoad = function(key)
- {
-   if (((key == null) || (key == "NULL")) && this.dontLoadNull)
-          return;
+AcJoinSelectbox.prototype.setValueFromLoad = function(key)
+{
+    if (((key == null) || (key == "NULL")) && this.dontLoadNull)
+        return;
         
     this.setValue(key);        
- } 
+} 
 
 /////////////////////////////////////////////////////////////////////////////
 

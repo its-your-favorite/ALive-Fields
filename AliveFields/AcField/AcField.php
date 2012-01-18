@@ -11,11 +11,12 @@
  *  - passing client side requests to validators.
  *  - tl;dr : this class does everything except the html view, which you do by hand.
  * 
- * @todo allow dependency injection by making query thingies into object apdapters. 
- * @todo put php docs EVERYWHERE. WITH PARAMETERS.
- *         THen auto-generate some documentation
+ * @todo clean up query_wrapper
  * @todo cleanup: make a couple unit tests.
- * 
+ * @todo put php docs EVERYWHERE. WITH PARAMETERS.
+ *         THen auto-generate some documentation 
+ * @todo deal with: 'Definitions to explain the following fields:'
+ * @todo consolidate error reporting, turn off deprecated on release mode. (alexrohde.com server)
  * @todo continue to prune out session reliance
  * @todo Make sure validations work of both types on the new whatcha-ma-call-it list
  * @todo to do: turn off errors on most pages. 
@@ -92,18 +93,18 @@ abstract class AcField {
     public static $cached_head_output;
     public static $basics_included;
     public static $include_directory_js = "/js";
-    public static $path_to_start_php = "/AliveFields";
+    public static $path_to_start_php = "AliveFields";
     public static $path_to_jquery = "/jquery.js";
     public static $path_to_jqueryui = "/jquery-ui.js";
     public static $path_to_controls = "/controls";
     public static $include_js_manually = false; //by default, handle including JS files for the user
     private static $declaration_progress = 0; //Help new users of the library avoid basic errors.
+    private static $default_adapter;
     protected static $all_instances;
 
     /*
-     * Written this way because it'll be easier when using autocomplete.
+     * Consts are written this way because it'll be easier when using autocomplete.
      */
-
     const ReadNot = 0;
     const ReadWhenFiltered = 1;
     const ReadYes = 2;
@@ -112,7 +113,8 @@ abstract class AcField {
     const SaveYes = 1;
 
     //Definitions to explain the following fields:
-
+    public $adapter;
+            
     public $bound_field, $bound_table, $bound_pkey, $filters;
     public $loadable, $savable; //whether this control can LOAD and or SAVE to the database
     public $type_temp, $type;
@@ -157,6 +159,9 @@ abstract class AcField {
 
         if (!AcField::$include_js_manually)
             $this->do_js_includes_for_this_control();
+        
+        if (AcField::$default_adapter !== null)
+            $this->adapter = AcField::$default_adapter;
         //JS needs the unique id so that when saving, it can determine what the originating field is.
     }
 
@@ -164,6 +169,8 @@ abstract class AcField {
      * Destructor. Provide useful error message in event of newbie mistake.
      */
     function __destruct() {
+        if ($this->adapter === null)
+            AcField::register_error("Please make sure all fields have an adapter.");
         if (AcField::$declaration_progress < 2)
             AcField::register_error("Flush output should be called somewhere in the document.");
     }
@@ -299,12 +306,17 @@ abstract class AcField {
     /**
      *    Outputs the decided headers for a controller's ajax response to the view.
      */
-    public function generate_controller_header() { //ideally make private at some point
+    public function generate_controller_header() { //ideally make private at some point        
         header('Expires: Fri, 09 Jan 1981 05:00:00 GMT');
         header('Cache-Control: no-store, no-cache, must-revalidate');
         header('Cache-Control: post-check=0, pre-check=0', FALSE);
-        header('Content-Type: text/html; charset=iso-8859-1'); //not application/json for many good complicated reasons.
+        header('Content-Type: text/html; charset=iso-8859-1'); 
+        ////not application/json for good complicated reasons.
         header('Pragma: no-cache');
+        
+        remove_magic_quotes(); // In the event your webserver has them enabled and doesn't give you the option to change it    
+        error_reporting(E_ERROR | E_PARSE | E_ALL ^ E_NOTICE);
+        set_error_handler ("auto_error", E_ERROR | E_PARSE | E_ALL ^ E_NOTICE );
     }
 
     /**
@@ -335,7 +347,8 @@ abstract class AcField {
     }
 
     /**
-     * Provides the instance name of the javascript object that this class communicates with.
+     * Provides the instance name of the javascript object that 
+     * this class communicates with.
      * 
      * @return string
      */
@@ -486,13 +499,18 @@ abstract class AcField {
             return;
         elseif (($request['AcFieldRequest'] == 'getfield') || ($request['AcFieldRequest'] == 'savefield')) {
             require_once (Acfield::$path_to_start_php . "/_internalInclude/ajax_field.php");
-            acField_Controller($this);
+            acField_Controller($this, $request);
             die(); //important, otherwise the view would be included in the controller response.            
         }
         else
             ; //Probably called by a subclass, continue execution normally            
     }
 
+    
+    static public function set_default_adapter($adapter)
+    {
+        AcField::$default_adapter = $adapter;
+    }
     /**
      * Set the list of fields that this field will call load upon when this field changes value.
      *
@@ -537,6 +555,15 @@ abstract class AcField {
      */
     function set_property($prop, $val) {
         $this->add_output($this->get_js_fieldname() . ".$prop = $val;");
+    }
+    
+    /**
+     * Sets the backend adapter for this Ajax control Field
+     */
+    function set_adapter($adapter)
+    {
+        $this->adapter = $adapter;
+        
     }
 
 }
