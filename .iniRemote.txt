@@ -1,0 +1,6 @@
+host=db387843467.db.1and1.com
+user_read=dbo387843467
+pass_read=horsebatterymagnet
+user_write=dbo387843467
+pass_write=horsebatterymagnet
+db=db387843467

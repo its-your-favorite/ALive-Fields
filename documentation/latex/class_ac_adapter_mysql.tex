@@ -1,0 +1,171 @@
+\hypertarget{class_ac_adapter_mysql}{\section{\-Ac\-Adapter\-Mysql \-Class \-Reference}
+\label{class_ac_adapter_mysql}\index{\-Ac\-Adapter\-Mysql@{\-Ac\-Adapter\-Mysql}}
+}
+\-Inheritance diagram for \-Ac\-Adapter\-Mysql\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_ac_adapter_mysql}
+\end{center}
+\end{figure}
+\subsection*{\-Public \-Member \-Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_ac_adapter_mysql_a37b4bc93c9c272f5445684bde4dbc146}{{\bfseries \-\_\-\-\_\-construct} (\$host, \$user\-\_\-readonly, \$pass\-\_\-readonly, \$db, \$user\-\_\-readwrite=null, \$pass\-\_\-readwrite=null)}\label{class_ac_adapter_mysql_a37b4bc93c9c272f5445684bde4dbc146}
+
+\item 
+\hyperlink{class_ac_adapter_mysql_aeeee23d0e38616ec3b791724797a7ec3}{handle\-Error} (\$x)
+\item 
+\hypertarget{class_ac_adapter_mysql_a15017b3c0d06c7835f53d80d1120c6d8}{{\bfseries query\-\_\-read} (\$query, \$limit\-\_\-rows\-\_\-returned=0)}\label{class_ac_adapter_mysql_a15017b3c0d06c7835f53d80d1120c6d8}
+
+\item 
+\hyperlink{class_ac_adapter_mysql_a88b72551fdaca2b723311529f7ba8f3e}{query\-\_\-write} (\$query, \$limit\-\_\-rows\-\_\-affected=0)
+\item 
+\hyperlink{class_ac_adapter_mysql_a507156ce9b650fc46643590b2e779742}{escape\-\_\-field\-\_\-name} (\$field, \$add\-\_\-quotes=true)
+\item 
+\hyperlink{class_ac_adapter_mysql_aa8dffaf4018c2981010b9f9cdf66fd0d}{escape\-\_\-table\-\_\-name} (\$field, \$add\-\_\-quotes=true)
+\item 
+\hyperlink{class_ac_adapter_mysql_a0c6e0af397fa013d20122f6ed136f8da}{escape\-\_\-field\-\_\-value} (\$field, \$add\-\_\-quotes=true)
+\item 
+\hyperlink{class_ac_adapter_mysql_abf0fe85a87fbbed006220c4cbe5d24d8}{escape\-\_\-field\-\_\-value\-\_\-mysql} (\$val, \$add\-\_\-quotes=true)
+\end{DoxyCompactItemize}
+
+
+\subsection{\-Detailed \-Description}
+\-An adapter for a \-Mysql database
+
+$\ast$ \-This file needs to do is initialize a database connection and define a function call\-\_\-query which takes \-S\-Q\-L and returns an array (rows) of associative arrays (fieldname =$>$ fieldvalue). \-It also provides information on the database connection and database-\/specific sql-\/injection prevention.
+
+\-Last \-Revision\-: \-Date\-: \-January 2011
+
+\begin{DoxyAuthor}{\-Author}
+\-Alex \-Rohde 
+\end{DoxyAuthor}
+
+
+\subsection{\-Member \-Function \-Documentation}
+\hypertarget{class_ac_adapter_mysql_a507156ce9b650fc46643590b2e779742}{\index{\-Ac\-Adapter\-Mysql@{\-Ac\-Adapter\-Mysql}!escape\-\_\-field\-\_\-name@{escape\-\_\-field\-\_\-name}}
+\index{escape\-\_\-field\-\_\-name@{escape\-\_\-field\-\_\-name}!AcAdapterMysql@{\-Ac\-Adapter\-Mysql}}
+\subsubsection[{escape\-\_\-field\-\_\-name}]{\setlength{\rightskip}{0pt plus 5cm}{\bf escape\-\_\-field\-\_\-name} (
+\begin{DoxyParamCaption}
+\item[{\$}]{field, }
+\item[{\$}]{add\-\_\-quotes = {\ttfamily true}}
+\end{DoxyParamCaption}
+)}}\label{class_ac_adapter_mysql_a507156ce9b650fc46643590b2e779742}
+\-Escape a field name in a way to prevent \-S\-Q\-L injection
+
+
+\begin{DoxyParams}{\-Parameters}
+{\em type} & \-The field to escape \\
+\hline
+{\em type} & \-Whether or not to add quotes \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{\-Returns}
+\-Escaped field name 
+\end{DoxyReturn}
+
+
+\-Implements \hyperlink{interface_ac_adapter___interface}{\-Ac\-Adapter\-\_\-\-Interface}.
+
+\hypertarget{class_ac_adapter_mysql_a0c6e0af397fa013d20122f6ed136f8da}{\index{\-Ac\-Adapter\-Mysql@{\-Ac\-Adapter\-Mysql}!escape\-\_\-field\-\_\-value@{escape\-\_\-field\-\_\-value}}
+\index{escape\-\_\-field\-\_\-value@{escape\-\_\-field\-\_\-value}!AcAdapterMysql@{\-Ac\-Adapter\-Mysql}}
+\subsubsection[{escape\-\_\-field\-\_\-value}]{\setlength{\rightskip}{0pt plus 5cm}{\bf escape\-\_\-field\-\_\-value} (
+\begin{DoxyParamCaption}
+\item[{\$}]{field, }
+\item[{\$}]{add\-\_\-quotes = {\ttfamily true}}
+\end{DoxyParamCaption}
+)}}\label{class_ac_adapter_mysql_a0c6e0af397fa013d20122f6ed136f8da}
+\-Escape a field value in a way to prevent \-S\-Q\-L injection
+
+
+\begin{DoxyParams}{\-Parameters}
+{\em type} & \-The value to escape \\
+\hline
+{\em type} & \-Whether or not to add quotes \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{\-Returns}
+\-Escaped field value 
+\end{DoxyReturn}
+
+
+\-Implements \hyperlink{interface_ac_adapter___interface}{\-Ac\-Adapter\-\_\-\-Interface}.
+
+\hypertarget{class_ac_adapter_mysql_abf0fe85a87fbbed006220c4cbe5d24d8}{\index{\-Ac\-Adapter\-Mysql@{\-Ac\-Adapter\-Mysql}!escape\-\_\-field\-\_\-value\-\_\-mysql@{escape\-\_\-field\-\_\-value\-\_\-mysql}}
+\index{escape\-\_\-field\-\_\-value\-\_\-mysql@{escape\-\_\-field\-\_\-value\-\_\-mysql}!AcAdapterMysql@{\-Ac\-Adapter\-Mysql}}
+\subsubsection[{escape\-\_\-field\-\_\-value\-\_\-mysql}]{\setlength{\rightskip}{0pt plus 5cm}{\bf escape\-\_\-field\-\_\-value\-\_\-mysql} (
+\begin{DoxyParamCaption}
+\item[{\$}]{val, }
+\item[{\$}]{add\-\_\-quotes = {\ttfamily true}}
+\end{DoxyParamCaption}
+)}}\label{class_ac_adapter_mysql_abf0fe85a87fbbed006220c4cbe5d24d8}
+\-Escape a field value in a way appropriate for a mysql database 
+\begin{DoxyParams}[1]{\-Parameters}
+type & {\em \$field} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{\-Returns}
+type 
+\end{DoxyReturn}
+\hypertarget{class_ac_adapter_mysql_aa8dffaf4018c2981010b9f9cdf66fd0d}{\index{\-Ac\-Adapter\-Mysql@{\-Ac\-Adapter\-Mysql}!escape\-\_\-table\-\_\-name@{escape\-\_\-table\-\_\-name}}
+\index{escape\-\_\-table\-\_\-name@{escape\-\_\-table\-\_\-name}!AcAdapterMysql@{\-Ac\-Adapter\-Mysql}}
+\subsubsection[{escape\-\_\-table\-\_\-name}]{\setlength{\rightskip}{0pt plus 5cm}{\bf escape\-\_\-table\-\_\-name} (
+\begin{DoxyParamCaption}
+\item[{\$}]{field, }
+\item[{\$}]{add\-\_\-quotes = {\ttfamily true}}
+\end{DoxyParamCaption}
+)}}\label{class_ac_adapter_mysql_aa8dffaf4018c2981010b9f9cdf66fd0d}
+\-Escape a table name in a way to prevent \-S\-Q\-L injection
+
+
+\begin{DoxyParams}{\-Parameters}
+{\em type} & \-The table to escape \\
+\hline
+{\em type} & \-Whether or not to add quotes \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{\-Returns}
+\-Escaped table name 
+\end{DoxyReturn}
+
+
+\-Implements \hyperlink{interface_ac_adapter___interface}{\-Ac\-Adapter\-\_\-\-Interface}.
+
+\hypertarget{class_ac_adapter_mysql_aeeee23d0e38616ec3b791724797a7ec3}{\index{\-Ac\-Adapter\-Mysql@{\-Ac\-Adapter\-Mysql}!handle\-Error@{handle\-Error}}
+\index{handle\-Error@{handle\-Error}!AcAdapterMysql@{\-Ac\-Adapter\-Mysql}}
+\subsubsection[{handle\-Error}]{\setlength{\rightskip}{0pt plus 5cm}{\bf handle\-Error} (
+\begin{DoxyParamCaption}
+\item[{\$}]{x}
+\end{DoxyParamCaption}
+)}}\label{class_ac_adapter_mysql_aeeee23d0e38616ec3b791724797a7ec3}
+\-Handle \-Error, 
+\begin{DoxyParams}{\-Parameters}
+{\em \$x} & str, the error message\\
+\hline
+\end{DoxyParams}
+\-This function will be called by \-Alive \-Fields in the event a library error occurs. \-You can adapt it to handle errors in whichever way you want. \hypertarget{class_ac_adapter_mysql_a88b72551fdaca2b723311529f7ba8f3e}{\index{\-Ac\-Adapter\-Mysql@{\-Ac\-Adapter\-Mysql}!query\-\_\-write@{query\-\_\-write}}
+\index{query\-\_\-write@{query\-\_\-write}!AcAdapterMysql@{\-Ac\-Adapter\-Mysql}}
+\subsubsection[{query\-\_\-write}]{\setlength{\rightskip}{0pt plus 5cm}{\bf query\-\_\-write} (
+\begin{DoxyParamCaption}
+\item[{\$}]{query, }
+\item[{\$}]{limit\-\_\-rows\-\_\-affected = {\ttfamily 0}}
+\end{DoxyParamCaption}
+)}}\label{class_ac_adapter_mysql_a88b72551fdaca2b723311529f7ba8f3e}
+\-Execute an \-U\-P\-D\-A\-T\-E, \-I\-N\-S\-E\-R\-T, or \-D\-E\-L\-E\-T\-E query allows write access.
+
+
+\begin{DoxyParams}[1]{\-Parameters}
+string & {\em \$query} & \-The \-S\-Q\-L query that communicates how we want this adapter to change its data. \\
+\hline
+type & {\em \$limit\-\_\-rows\-\_\-affected} & a safety precaution which isn't strictly necessary if this tool is used properly, but certainly is recommended. \\
+\hline
+\end{DoxyParams}
+
+
+\-Implements \hyperlink{interface_ac_adapter___interface}{\-Ac\-Adapter\-\_\-\-Interface}.
+
+
+
+\-The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+\-Alive\-Fields/\-Ac\-Adapter/\-Ac\-Adapter\-Mysql/\-Ac\-Adapter\-Mysql.\-php\end{DoxyCompactItemize}

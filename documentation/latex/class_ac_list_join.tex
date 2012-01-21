@@ -1,0 +1,170 @@
+\hypertarget{class_ac_list_join}{\section{\-Ac\-List\-Join \-Class \-Reference}
+\label{class_ac_list_join}\index{\-Ac\-List\-Join@{\-Ac\-List\-Join}}
+}
+\-Inheritance diagram for \-Ac\-List\-Join\-:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=3.000000cm]{class_ac_list_join}
+\end{center}
+\end{figure}
+\subsection*{\-Public \-Member \-Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hyperlink{class_ac_list_join_af52f9ac707c7bf77e4433ec0429de4bc}{\-\_\-\-\_\-construct} (\$field, \$table, \$id, \$join\-\_\-table, \$join\-\_\-to\-\_\-right\-\_\-field, \$join\-\_\-from\-\_\-right\-\_\-field, \$loadable, \$savable)
+\item 
+\hyperlink{class_ac_list_join_a562a3fd3d3f6e97f556e7547c3ba0534}{do\-\_\-insert\-\_\-validations} (\$prev\-\_\-value\-\_\-assoc\-\_\-array)
+\item 
+\hyperlink{class_ac_list_join_afe52ff2e5403fdb103f85ddf4da6def8}{do\-\_\-js\-\_\-includes\-\_\-for\-\_\-this\-\_\-control} ()
+\item 
+\hyperlink{class_ac_list_join_a72e097dcd60de3beb18babea17188184}{do\-\_\-multi\-\_\-validations} (\&\$prev\-\_\-value, \$key\-\_\-val)
+\item 
+\hyperlink{class_ac_list_join_a4bffcad348a63a2825136b2fa39fe849}{get\-\_\-field\-\_\-type\-\_\-for\-\_\-javascript} ()
+\item 
+\hyperlink{class_ac_list_join_abde3fea649f4e1db70a5f2bcf45e42db}{request\-\_\-handler} (\$request)
+\end{DoxyCompactItemize}
+\subsection*{\-Data \-Fields}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_ac_list_join_a3aaf40baac36e278c7d7c9139df1750c}{{\bfseries \$mode}}\label{class_ac_list_join_a3aaf40baac36e278c7d7c9139df1750c}
+
+\item 
+\hypertarget{class_ac_list_join_a22580c10f61d67a5ca65053fed97243b}{{\bfseries \$join\-\_\-table}}\label{class_ac_list_join_a22580c10f61d67a5ca65053fed97243b}
+
+\item 
+\hypertarget{class_ac_list_join_a96331f416277efdc0680b0c7efa00816}{{\bfseries \$join\-\_\-to\-\_\-right\-\_\-field}}\label{class_ac_list_join_a96331f416277efdc0680b0c7efa00816}
+
+\item 
+\hypertarget{class_ac_list_join_a7166a2effac8ba211eb77962a0fbce08}{{\bfseries \$join\-\_\-from\-\_\-right\-\_\-field}}\label{class_ac_list_join_a7166a2effac8ba211eb77962a0fbce08}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{\-Detailed \-Description}
+\-Used for lists that represent join tables and thus pull from a join table on the backend but look like plain old (multi-\/select) lists on the front end
+
+\-This is used more many-\/to-\/many relationships and allows both read and write (inserting and deleting records from the join table).
+
+\begin{DoxyAuthor}{\-Author}
+\-Alex \-Rohde 
+\end{DoxyAuthor}
+
+
+\subsection{\-Constructor \& \-Destructor \-Documentation}
+\hypertarget{class_ac_list_join_af52f9ac707c7bf77e4433ec0429de4bc}{\index{\-Ac\-List\-Join@{\-Ac\-List\-Join}!\-\_\-\-\_\-construct@{\-\_\-\-\_\-construct}}
+\index{\-\_\-\-\_\-construct@{\-\_\-\-\_\-construct}!AcListJoin@{\-Ac\-List\-Join}}
+\subsubsection[{\-\_\-\-\_\-construct}]{\setlength{\rightskip}{0pt plus 5cm}{\bf \-\_\-\-\_\-construct} (
+\begin{DoxyParamCaption}
+\item[{\$}]{field, }
+\item[{\$}]{table, }
+\item[{\$}]{id, }
+\item[{\$}]{join\-\_\-table, }
+\item[{\$}]{join\-\_\-to\-\_\-right\-\_\-field, }
+\item[{\$}]{join\-\_\-from\-\_\-right\-\_\-field, }
+\item[{\$}]{loadable, }
+\item[{\$}]{savable}
+\end{DoxyParamCaption}
+)}}\label{class_ac_list_join_af52f9ac707c7bf77e4433ec0429de4bc}
+\-Constructor
+
+
+\begin{DoxyParams}[1]{\-Parameters}
+string & {\em \$field} & \-Same as in \hyperlink{class_ac_field}{\-Ac\-Field} \\
+\hline
+string & {\em \$table} & \-Same as in \hyperlink{class_ac_field}{\-Ac\-Field} \\
+\hline
+string & {\em \$id} & \-Same as in \hyperlink{class_ac_field}{\-Ac\-Field} \\
+\hline
+string & {\em \$join\-\_\-table} & \-Table name \\
+\hline
+string & {\em \$join\-\_\-to\-\_\-right\-\_\-field} & \-Field name \\
+\hline
+string & {\em \$join\-\_\-from\-\_\-right\-\_\-field} & \-Field name \\
+\hline
+\-C\-O\-N\-S\-T & {\em \$loadable} & \-Same as in \hyperlink{class_ac_field}{\-Ac\-Field} \\
+\hline
+\-C\-O\-N\-S\-T & {\em \$savable} & \-Same as in \hyperlink{class_ac_field}{\-Ac\-Field} \\
+\hline
+\end{DoxyParams}
+
+
+\subsection{\-Member \-Function \-Documentation}
+\hypertarget{class_ac_list_join_a562a3fd3d3f6e97f556e7547c3ba0534}{\index{\-Ac\-List\-Join@{\-Ac\-List\-Join}!do\-\_\-insert\-\_\-validations@{do\-\_\-insert\-\_\-validations}}
+\index{do\-\_\-insert\-\_\-validations@{do\-\_\-insert\-\_\-validations}!AcListJoin@{\-Ac\-List\-Join}}
+\subsubsection[{do\-\_\-insert\-\_\-validations}]{\setlength{\rightskip}{0pt plus 5cm}{\bf do\-\_\-insert\-\_\-validations} (
+\begin{DoxyParamCaption}
+\item[{\$}]{prev\-\_\-value\-\_\-assoc\-\_\-array}
+\end{DoxyParamCaption}
+)}}\label{class_ac_list_join_a562a3fd3d3f6e97f556e7547c3ba0534}
+\-Serves to let the programmer easily restrict which values can be added to a \hyperlink{class_ac_list_join}{\-Ac\-List\-Join} (because it's a many to many, values are \-I\-N\-S\-E\-R\-T\-S)
+
+
+\begin{DoxyParams}[1]{\-Parameters}
+array & {\em \$prev\-\_\-value\-\_\-assoc\-\_\-array} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{\-Returns}
+boolean 
+\end{DoxyReturn}
+\hypertarget{class_ac_list_join_afe52ff2e5403fdb103f85ddf4da6def8}{\index{\-Ac\-List\-Join@{\-Ac\-List\-Join}!do\-\_\-js\-\_\-includes\-\_\-for\-\_\-this\-\_\-control@{do\-\_\-js\-\_\-includes\-\_\-for\-\_\-this\-\_\-control}}
+\index{do\-\_\-js\-\_\-includes\-\_\-for\-\_\-this\-\_\-control@{do\-\_\-js\-\_\-includes\-\_\-for\-\_\-this\-\_\-control}!AcListJoin@{\-Ac\-List\-Join}}
+\subsubsection[{do\-\_\-js\-\_\-includes\-\_\-for\-\_\-this\-\_\-control}]{\setlength{\rightskip}{0pt plus 5cm}{\bf do\-\_\-js\-\_\-includes\-\_\-for\-\_\-this\-\_\-control} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_ac_list_join_afe52ff2e5403fdb103f85ddf4da6def8}
+\{ \-This function includes all the necessary javascript files for the javascript widget in the view that that connects with this controller.\} 
+
+\-Reimplemented from \hyperlink{class_ac_list_afe52ff2e5403fdb103f85ddf4da6def8}{\-Ac\-List}.
+
+\hypertarget{class_ac_list_join_a72e097dcd60de3beb18babea17188184}{\index{\-Ac\-List\-Join@{\-Ac\-List\-Join}!do\-\_\-multi\-\_\-validations@{do\-\_\-multi\-\_\-validations}}
+\index{do\-\_\-multi\-\_\-validations@{do\-\_\-multi\-\_\-validations}!AcListJoin@{\-Ac\-List\-Join}}
+\subsubsection[{do\-\_\-multi\-\_\-validations}]{\setlength{\rightskip}{0pt plus 5cm}{\bf do\-\_\-multi\-\_\-validations} (
+\begin{DoxyParamCaption}
+\item[{\&\$}]{prev\-\_\-value, }
+\item[{\$}]{key\-\_\-val}
+\end{DoxyParamCaption}
+)}}\label{class_ac_list_join_a72e097dcd60de3beb18babea17188184}
+\-Validations
+
+
+\begin{DoxyParams}[1]{\-Parameters}
+type & {\em \$prev\-\_\-value} & \\
+\hline
+type & {\em \$key\-\_\-val} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{\-Returns}
+boolean 
+\end{DoxyReturn}
+\hypertarget{class_ac_list_join_a4bffcad348a63a2825136b2fa39fe849}{\index{\-Ac\-List\-Join@{\-Ac\-List\-Join}!get\-\_\-field\-\_\-type\-\_\-for\-\_\-javascript@{get\-\_\-field\-\_\-type\-\_\-for\-\_\-javascript}}
+\index{get\-\_\-field\-\_\-type\-\_\-for\-\_\-javascript@{get\-\_\-field\-\_\-type\-\_\-for\-\_\-javascript}!AcListJoin@{\-Ac\-List\-Join}}
+\subsubsection[{get\-\_\-field\-\_\-type\-\_\-for\-\_\-javascript}]{\setlength{\rightskip}{0pt plus 5cm}{\bf get\-\_\-field\-\_\-type\-\_\-for\-\_\-javascript} (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}}\label{class_ac_list_join_a4bffcad348a63a2825136b2fa39fe849}
+\begin{DoxyReturn}{\-Returns}
+string 
+\end{DoxyReturn}
+
+
+\-Reimplemented from \hyperlink{class_ac_field_a4bffcad348a63a2825136b2fa39fe849}{\-Ac\-Field}.
+
+\hypertarget{class_ac_list_join_abde3fea649f4e1db70a5f2bcf45e42db}{\index{\-Ac\-List\-Join@{\-Ac\-List\-Join}!request\-\_\-handler@{request\-\_\-handler}}
+\index{request\-\_\-handler@{request\-\_\-handler}!AcListJoin@{\-Ac\-List\-Join}}
+\subsubsection[{request\-\_\-handler}]{\setlength{\rightskip}{0pt plus 5cm}{\bf request\-\_\-handler} (
+\begin{DoxyParamCaption}
+\item[{\$}]{request}
+\end{DoxyParamCaption}
+)}}\label{class_ac_list_join_abde3fea649f4e1db70a5f2bcf45e42db}
+\-This is where the controller actually handles an ajax request.
+
+\-The method is so complicated that it has been moved to another file (ajax\-\_\-list.\-php) 
+
+\-Reimplemented from \hyperlink{class_ac_list_abde3fea649f4e1db70a5f2bcf45e42db}{\-Ac\-List}.
+
+
+
+\-The documentation for this class was generated from the following file\-:\begin{DoxyCompactItemize}
+\item 
+\-Alive\-Fields/\-Ac\-List/\-Ac\-List\-Join/\-Ac\-List\-Join.\-php\end{DoxyCompactItemize}
