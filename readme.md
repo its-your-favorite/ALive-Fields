@@ -1,5 +1,6 @@
 #AcControls
 Copyright Alex Rohde 2011. Released under GPL v2
+Version 1.01
 * * *
 AcControls is a PHP library for binding database fields to HTML input elements. This is done in a live way with AJAX and provides a level of immediate interactivity usually only seen in offline database applications like MS Access.
 

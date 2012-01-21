@@ -12,13 +12,9 @@
  *  - tl;dr : this class does everything except the html view, which you do by hand.
  * 
  * 
- *  -ajax_list
- *  -general functions
  * 
- * @todo Make code function
- * @todo auto-generate some documentation 
- * @todo upload to github now that unit tests are in.
  * 
+ * @todo move unnecessary files out of root directory.
  * @todo drastically refactor ajax_field, ajax_list, ajax_field_multiple
  * 
  * @todo deal with: 'Definitions to explain the following fields:'
