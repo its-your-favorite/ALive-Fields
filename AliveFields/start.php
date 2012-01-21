@@ -1,6 +1,10 @@
 <?PHP
 
-//* Docblock here
+/**
+ * Serves as the one necessary include that handles all other includes.
+ *
+ *
+ */
 require_once("_internalInclude/general_functions.php");
 
 function internalAutoloader($name) {
@@ -9,19 +13,17 @@ function internalAutoloader($name) {
     $this_dir = end($dir);
 
     if ($name === "AcList")
-        require_once("$this_dir/AcList/$name.php");
+        require_once("AcList/$name.php");
     elseif (substr($name, 0, 6) === "AcList")
-        require_once("$this_dir/AcList/$name/$name.php");
+        require_once("AcList/$name/$name.php");
     elseif ($name === "AcField")
-        require_once("$this_dir/AcField/$name.php");
+        require_once("AcField/$name.php");
     elseif ($name === "AcAdapter_Interface")
         require_once("AcAdapter/AcAdapter_Interface.php");
     elseif (substr($name, 0, 9) === "AcAdapter")
         require_once("AcAdapter/$name/$name.php");
     elseif (substr($name, 0, 2) === "Ac")
-        require_once("$this_dir/AcField/$name/$name.php");
-
+        require_once("AcField/$name/$name.php");
 }
 
 spl_autoload_register("internalAutoloader");
-

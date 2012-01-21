@@ -281,7 +281,7 @@ AcField.prototype.loadField = function(primaryKeyData, type, source)
   if (this.correspondingField == "")
       return handleError("Cannot load a control that has no fieldname.");
     
-  information = {"AcFieldRequest": "savefield" ,"primaryInfo": [this.pkeyField , primaryKeyData] , "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId};
+  information = {"AcFieldRequest": "loadfield" ,"primaryInfo": [this.pkeyField , primaryKeyData] , "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId};
 
   if (type == "static")
       information.action = "hardcoded_load";

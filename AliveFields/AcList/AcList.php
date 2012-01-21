@@ -66,19 +66,17 @@ abstract class AcList extends AcField {
      * 
      * The method is so complicated that it has been moved to another file (ajax_list.php)
      */
-    function request_handler($request) {
-        if (!isset($request['AcFieldRequest']))
-            return;
-        elseif (($request['AcFieldRequest'] == 'getfield') || ($request['AcFieldRequest'] == 'savefield')) {
-            require_once (Acfield::$path_to_start_php . "/_internalInclude/ajax_field.php");
-            acField_Controller($this, $request);
-            die();
+    function request_handler($request) {        
+       if (($request['AcFieldRequest'] == 'loadfield') || ($request['AcFieldRequest'] == 'savefield')) {
+            require_once (__DIR__ . "/../_internalInclude/ajax_field.php");
+            return acField_Controller($this, $request);            
         } elseif ($request['AcFieldRequest'] == 'getlist') {
-
-            require_once (Acfield::$path_to_start_php . "/_internalInclude/ajax_list.php");
-                acList_Controller($this, $request);
-            die();
+            require_once (__DIR__ . "/../_internalInclude/ajax_list.php");
+            return acList_Controller($this, $request);            
+        } else {
+            return throw_error("Nonexistant Request");
         }
+        
     }
 
 }

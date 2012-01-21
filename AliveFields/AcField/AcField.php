@@ -11,22 +11,32 @@
  *  - passing client side requests to validators.
  *  - tl;dr : this class does everything except the html view, which you do by hand.
  * 
- * @todo clean up query_wrapper
- * @todo cleanup: make a couple unit tests.
- * @todo put php docs EVERYWHERE. WITH PARAMETERS.
- *         THen auto-generate some documentation 
+ * 
+ *  -ajax_list
+ *  -general functions
+ * 
+ * @todo Make code function
+ * @todo auto-generate some documentation 
+ * @todo upload to github now that unit tests are in.
+ * 
+ * @todo drastically refactor ajax_field, ajax_list, ajax_field_multiple
+ * 
  * @todo deal with: 'Definitions to explain the following fields:'
  * @todo consolidate error reporting, turn off deprecated on release mode. (alexrohde.com server)
- * @todo continue to prune out session reliance
+ * @todo make unit tests for multi fields.
+ * @todo refactor ajax_field (it should be two separate methods for save and load). Check the other controllers too.
+ * @todo move to mysqli 
  * @todo Make sure validations work of both types on the new whatcha-ma-call-it list
- * @todo to do: turn off errors on most pages. 
+ * @todo to do: make new superior error handler thingies.
  * @todo to do: differentiate options does nothing?
  * @todo to do: try two fields filtering one, to be sure it works
+ * @todo security tests listed in ajax_field_multiple
  * @todo add validations for join table multi
  * @todo clean up javascript by using parent instead of AcWHATEVER (if possible)
  *      and use the type of call that automatically passes params as an array.
  * @todo To do: ReMake a date-time control.
  * @todo Testing -- locking on all types of fields
+ * @todo make unit testing on every subclass of AcField.
  * 
  * @todo make sure my jsDoc is up to date
  * @todo C) A way to instead of making things auto-save, allow them to be 
@@ -71,9 +81,7 @@
  */
 
 @session_start();
-
-global $PAGE_INSTANCE;
-$PAGE_INSTANCE = md5(time());
+AcField::$unique_session_token = md5($_SERVER['PHP_SELF'] . microtime());
 
 /**    AcField is the PHP heart of this project. 
  * 
@@ -86,6 +94,31 @@ $PAGE_INSTANCE = md5(time());
  *  
  */
 abstract class AcField {
+    /*
+     * Consts are written this way because it'll be easier when using autocomplete.
+     */
+
+    const LOAD_NO = 0;
+    const LOAD_WHEN_FILTERED = 1;
+    const LOAD_YES = 2;
+
+    /**
+     * Additionally tells the client-side control to act as read-only / locked. 
+     */
+    const SAVE_NO_CHANGE_NO = -1;
+    const SAVE_NO = 0;
+    const SAVE_YES = 1;
+
+    /**
+     * The coder has stipulated that this field should not be loadable likely by using READ_NO. 
+     */
+    const ERROR_LOAD_DISALLOWED = "Field not loadable";
+
+    /**
+     * The coder has stipulated that this field should not be savable likely by using SAVE_NO.
+     */
+    const ERROR_SAVE_DISALLOWED = "Field not savable";
+    const ERROR_INVALID_TOKEN = "Invalid Token In Session";
 
     public static $included_js_files; // to prevent double-inclusion of controls
     public static $output_mode = "postponed";
@@ -98,23 +131,13 @@ abstract class AcField {
     public static $path_to_jqueryui = "/jquery-ui.js";
     public static $path_to_controls = "/controls";
     public static $include_js_manually = false; //by default, handle including JS files for the user
+    public static $silence_errors = false;
+    public static $unique_session_token; //unique to each request
     private static $declaration_progress = 0; //Help new users of the library avoid basic errors.
     private static $default_adapter;
     protected static $all_instances;
-
-    /*
-     * Consts are written this way because it'll be easier when using autocomplete.
-     */
-    const ReadNot = 0;
-    const ReadWhenFiltered = 1;
-    const ReadYes = 2;
-    const SaveNoChangeNo = -1;
-    const SaveNo = 0;
-    const SaveYes = 1;
-
     //Definitions to explain the following fields:
     public $adapter;
-            
     public $bound_field, $bound_table, $bound_pkey, $filters;
     public $loadable, $savable; //whether this control can LOAD and or SAVE to the database
     public $type_temp, $type;
@@ -125,18 +148,20 @@ abstract class AcField {
 
     /**
      * 
-     * A control's internal value will be: SELECT $bound_pkey FROM $bound_table 
-     * A control's displayed value will be: SELECT $bound_field FROM $bound_table
-     *       WHERE $bound_pkey = (loaded_value) [AND $filters clauses here]
-     * 
+     * A control's internal value will be: SELECT $id FROM $table 
+     * A control's displayed value will be: SELECT $field FROM $table
+     *       WHERE $id = (loaded_value)      
+     *
+     * @param string $field The fieldname of the field which this control should represent
+     * @param string $table The table in which $field is stored
+     * @param string $id Fieldname that acts as the primary key in $table.
+     * @param CONST $loadable Expects Ac_Field::LOAD_NO, ::LOAD_YES, or ::LOAD_WHEN_FILTERED
+     * @param CONST $savable Expects Ac_Field::SAVE_NO, ::SAVE_YES, or ::SAVE_NO_CHANGE_NO
      */
     function __construct($field, $table, $id, $loadable, $savable) {
-        $type_temp = 0;
         $this->include_basics();
         $this->validators = array();
         $this->filtered_fields = array();
-        $this->type = "single"; //necessary? If not remove from here and AcList.php
-
         $this->bound_field = $field;
         $this->bound_table = $table;
         $this->bound_pkey = $id;
@@ -159,10 +184,18 @@ abstract class AcField {
 
         if (!AcField::$include_js_manually)
             $this->do_js_includes_for_this_control();
-        
+
         if (AcField::$default_adapter !== null)
             $this->adapter = AcField::$default_adapter;
-        //JS needs the unique id so that when saving, it can determine what the originating field is.
+
+        $sess = & $this->get_session_object();
+
+        /*
+         * This serves to let the controller action verify at least that
+         * the request has visited the client side and gotten the token
+         * PAGE_INSTANCE. 
+         */
+        $sess['enabled'] = true;
     }
 
     /**
@@ -176,10 +209,10 @@ abstract class AcField {
     }
 
     /**
-     * @todo enhance
+     * 
      */
     function __toString() {
-        return "This is an AcField";
+        return "An AcField (" . get_class($this) . ") ID #" . $this->unique_id;
     }
 
     /**
@@ -229,6 +262,8 @@ abstract class AcField {
 
     /**
      * Inform the javascript class which HTML element id it should connect with.
+     *
+     * @param string $html_element_id The id of the html element to connect this control to.
      */
     function bind($html_element_id) {    //spit out bound javascript    
         $this->add_output($this->get_js_fieldname() .
@@ -237,6 +272,9 @@ abstract class AcField {
 
     /**
      * Determine if this field meets all validator criteria
+     *      
+     * @param variant $prev_value Unvalidate value
+     * @param variant $key_val ID of unvalidate value's row (primary key)
      * @return boolean 
      */
     function do_validations(& $prev_value, $key_val) {
@@ -310,13 +348,13 @@ abstract class AcField {
         header('Expires: Fri, 09 Jan 1981 05:00:00 GMT');
         header('Cache-Control: no-store, no-cache, must-revalidate');
         header('Cache-Control: post-check=0, pre-check=0', FALSE);
-        header('Content-Type: text/html; charset=iso-8859-1'); 
+        header('Content-Type: text/html; charset=iso-8859-1');
         ////not application/json for good complicated reasons.
         header('Pragma: no-cache');
-        
+
         remove_magic_quotes(); // In the event your webserver has them enabled and doesn't give you the option to change it    
         error_reporting(E_ERROR | E_PARSE | E_ALL ^ E_NOTICE);
-        set_error_handler ("auto_error", E_ERROR | E_PARSE | E_ALL ^ E_NOTICE );
+        set_error_handler("auto_error", E_ERROR | E_PARSE | E_ALL ^ E_NOTICE);
     }
 
     /**
@@ -325,14 +363,14 @@ abstract class AcField {
     abstract function get_field_type_for_javascript();
 
     /**
-     *    This function returns a particular instance from an ID (useful for passing IDs through session)
+     * This function returns a particular instance from an ID (useful for passing IDs through session)
      *
      * Every instance of AcField is generated a unique id (integer). This allows us to have one unique 
      *     number that acts as an identifier *across requests* to show us where to direct controller requests to.
      * 
      * This function convers such a unique id back into the relevant instance of AcField
-     * 
-     * @return AcField
+     * @param int $id The id for which you seek the corresponding AcField.
+     * @return AcField The correspondin AcField
      */
     static function instance_from_id($id) {
         if (!isset(static::$all_instances[$id]))
@@ -341,6 +379,12 @@ abstract class AcField {
         return $tmp;
     }
 
+    /**
+     * Create a unique id for each AcField control
+     * 
+     * @staticvar int $x The total number of controls instantiated
+     * @return int 
+     */
     private static function generate_unique_id() {
         static $x;
         return++$x;
@@ -357,14 +401,24 @@ abstract class AcField {
     }
 
     /**
-     * 
+     * Return a unique session spot for this control to store relevant security
+     * information that can't be trusted to the client.
      */
     function &get_session_object() {
         global $PAGE_INSTANCE;
-        if (!isset($_SESSION['_AcField'][$_SERVER['PHP_SELF'] . " " . $PAGE_INSTANCE][$this->unique_id]))
-            $_SESSION['_AcField'][$_SERVER['PHP_SELF'] . " " . $PAGE_INSTANCE][$this->unique_id] = array();
+        $unique_key = AcField::$unique_session_token;
 
-        return $_SESSION['_AcField'][$_SERVER['PHP_SELF'] . " " . $PAGE_INSTANCE][$this->unique_id];
+        if (!isset($_SESSION['_AcField'][$unique_key][$this->unique_id]))
+            $_SESSION['_AcField'][$unique_key][$this->unique_id] = array();
+
+        return $_SESSION['_AcField'][$unique_key][$this->unique_id];
+    }
+
+    /**
+     * accessor 
+     */
+    public function get_unique_id() {
+        return $this->unique_id;
     }
 
     /**
@@ -382,7 +436,17 @@ abstract class AcField {
             AcField::$declaration_progress = 100; //Don't monitor declaration progress in ajax 
             // request mode, we obviously don't want javascript declared.
             $request = json_decode($_REQUEST['request'], true);
-            AcField::instance_from_id($request['request_field'])->request_handler($request);
+
+            if (isset($request['AcFieldRequest'])) {
+                try {
+                    AcField::instance_from_id($request['request_field'])->generate_controller_header();
+                    echo json_encode(AcField::instance_from_id($request['request_field'])->request_handler($request));
+                    die();
+                } catch (Exception $e) {
+                    echo json_encode(array("criticalError" => $e->getMessage()));
+                    die();
+                }
+            }
         }
     }
 
@@ -395,7 +459,7 @@ abstract class AcField {
             AcField::$basics_included = true;
             AcField::$output_mode = "postponed";
             AcField::add_output("function AcFieldGetThisPage() { "
-                    . " return '" . $_SERVER['PHP_SELF'] . " " . $PAGE_INSTANCE . "'; }");
+                    . " return '" . AcField::$unique_session_token . "'; }");
         }
     }
 
@@ -436,9 +500,11 @@ abstract class AcField {
      * 
      * Alter this function as appropriate for your level of experience, error reporting system, and development/release systems.
      */
-    static function register_error($string) {    // 
-        trigger_error("Error: $string. <br>\n You may find the wiki useful: https://github.com/anfurny/ALive-Fields/wiki/Using-the-Library");
-        die();
+    static function register_error($string) {
+        if (!AcField::$silence_errors) {
+            trigger_error("Error: $string. <br>\n You may find the wiki useful: https://github.com/anfurny/ALive-Fields/wiki/Using-the-Library");
+            die();
+        }
     }
 
     /**
@@ -463,23 +529,24 @@ abstract class AcField {
                             try {
                                 $res = preg_match($callback['regex'], $val);
                             } catch (Exception $e) {
-                                json_error("Error in Regex Validator");
+                                throw_error("Error in Regex Validator");
                             }
                             if ($res === false)
-                                json_error("error in regex validator");
+                                throw_error("error in regex validator");
                             return $res;
                         });
             }
 
             if (isset($callback['uniqueness']) || isset($callback['unique'])) {
-                if (isset($callback['uniqueness']))
+                if (isset($callback['uniqueness'])) {
                     $callback['unique'] = $callback['uniqueness'];
+                }
                 $copy = $this;
                 $this->register_validator(function($val, $pkey) use ($callback, $copy) {
-                            $query = "SELECT count(*) as res from " . _AcField_escape_table_name($copy->bound_table) . " WHERE  "
-                                    . _AcField_escape_field_name($copy->bound_field) . " = " . _AcField_escape_field_value($val)
-                                    . " AND " . _AcField_escape_field_name($copy->bound_pkey) . " != " . _AcField_escape_field_value($pkey);
-                            $result = _AcField_call_query_read($query);
+                            $query = "SELECT count(*) as res from " . $this->adapter->escape_table_name($copy->bound_table) . " WHERE  "
+                                    . $this->adapter->escape_field_name($copy->bound_field) . " = " . $this->adapter->escape_field_value($val)
+                                    . " AND " . $this->adapter->escape_field_name($copy->bound_pkey) . " != " . $this->adapter->escape_field_value($pkey);
+                            $result = $this->adapter->query_read($query);
                             return (($result[0]['res'] == 0) == (bool) ($callback['unique']));
                         });
             }
@@ -495,22 +562,18 @@ abstract class AcField {
      *  This acts as the controller to the view request.
      */
     function request_handler($request) {
-        if (!isset($request['AcFieldRequest']))
-            return;
-        elseif (($request['AcFieldRequest'] == 'getfield') || ($request['AcFieldRequest'] == 'savefield')) {
-            require_once (Acfield::$path_to_start_php . "/_internalInclude/ajax_field.php");
-            acField_Controller($this, $request);
-            die(); //important, otherwise the view would be included in the controller response.            
+        if (($request['AcFieldRequest'] == 'loadfield') || ($request['AcFieldRequest'] == 'savefield')) {
+            require_once (__DIR__ . "/../_internalInclude/ajax_field.php");
+            return acField_Controller($this, $request);
+        } else {
+            return throw_error("Nonexistant Request");
         }
-        else
-            ; //Probably called by a subclass, continue execution normally            
     }
 
-    
-    static public function set_default_adapter($adapter)
-    {
+    static public function set_default_adapter($adapter) {
         AcField::$default_adapter = $adapter;
     }
+
     /**
      * Set the list of fields that this field will call load upon when this field changes value.
      *
@@ -556,14 +619,15 @@ abstract class AcField {
     function set_property($prop, $val) {
         $this->add_output($this->get_js_fieldname() . ".$prop = $val;");
     }
-    
+
     /**
      * Sets the backend adapter for this Ajax control Field
+     *
+     * @param (implements AcAadpter_Interface) $adapter The backed adapter to 
+     *      retrieve/retain AcField values.
      */
-    function set_adapter($adapter)
-    {
+    function set_adapter($adapter) {
         $this->adapter = $adapter;
-        
     }
 
 }

@@ -11,10 +11,25 @@
  */
 class AcListJoin extends AcList 
 {
+     /**     
+     * @var string "default" or "limited" Determines if control shows all possible values
+     */
+    public $mode; 
     public  $join_table, $join_to_right_field, $join_from_right_field;
     private $multi_validators;
-    public $mode; //"default" or "limited"
-    
+
+    /**
+     * Constructor
+     *  
+     * @param string $field Same as in AcField
+     * @param string $table Same as in AcField
+     * @param string $id Same as in AcField
+     * @param string $join_table Table name 
+     * @param string $join_to_right_field Field name
+     * @param string $join_from_right_field Field name
+     * @param CONST $loadable  Same as in AcField
+     * @param CONST $savable  Same as in AcField
+     */
     function __construct($field, $table, $id, $join_table, $join_to_right_field, 
                                     $join_from_right_field, $loadable, $savable)
     {
@@ -26,8 +41,15 @@ class AcListJoin extends AcList
         $this->mode = "default";
     }    
 
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    // 
+   /**
+    * Serves to let the programmer easily restrict which values can be added to
+    * a AcListJoin (because it's a many to many, values are INSERTS)
+    * 
+    * @INCOMPLETE
+    * @param array $prev_value_assoc_array
+    * @return boolean 
+    */
+    
     function do_insert_validations( $prev_value_assoc_array)
     {
         //NEED TO WRITE THIS . Maybe move it to AcField
@@ -39,8 +61,9 @@ class AcListJoin extends AcList
         return true;
     }        
     
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //
+   /**
+    *  { @inheritdoc}
+    */
     function do_js_includes_for_this_control()
     {  //Unique to AcField
         AcField::include_js_file(AcField::$path_to_jquery);            
@@ -50,8 +73,14 @@ class AcListJoin extends AcList
     }    
     
     
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    // 
+   /**
+    * Validations
+    * 
+    * @INCOPMLETE
+    * @param type $prev_value
+    * @param type $key_val
+    * @return boolean 
+    */
     function do_multi_validations(& $prev_value, $key_val)
     {
         //NEED TO WRITE AN INSERT HANDLER FOR THIS.
@@ -63,24 +92,23 @@ class AcListJoin extends AcList
         return true;
     }
  
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //    
+    // See parent docblock
     function get_field_type_for_javascript()
     { 
         return "AcJoinSelectbox";
     }
         
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //
+    
+    //see parent docblock
     function request_handler($request)
      {
-        if (($request['AcFieldRequest'] == 'getfield') || ($request['AcFieldRequest'] == 'savefield'))
+        if (($request['AcFieldRequest'] == 'loadfield') || ($request['AcFieldRequest'] == 'savefield'))
                 {
-                require_once (Acfield::$path_to_start_php . "/_internalInclude/ajax_field_multiple.php");
-                handle_multiple_field($this, $request); //sole function in above file.
+                require_once (__DIR__ . "/../../_internalInclude/ajax_field_multiple.php");
+                return handle_multiple_field($this, $request); //sole function in above file.
                 die();
                 }
     
-        parent::request_handler($request);
+        return parent::request_handler($request);
     }
 }

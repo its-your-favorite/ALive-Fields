@@ -4,10 +4,10 @@
  * 
  * A combo box is both a SELECT dropdown and a TEXT box at the same time. 
  * 
+ * It applies to input type = text which is then enhanced by jqueryUI.
+ * 
  * @requires jQueryUI
- * @author Alex Rohde 
  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class AcListCombo extends AcList
 {

@@ -5,6 +5,9 @@
 
 class AcListSelect extends AcList
 {
+    /**
+     * { @inheritDoc }
+     */
     function get_field_type_for_javascript()
     { 
         return "AcSelectbox";

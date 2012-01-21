@@ -1,4 +1,6 @@
 /nbproject/private/
 /nbproject
 .ini
+.iniRemote
+.iniUnitTesting
 .gitignore

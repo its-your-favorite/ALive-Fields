@@ -23,7 +23,7 @@ function apply_list_filters($fake_this, & $request, $table, $field_unique_id)
     foreach ($request["filters"] as $filt) // Only apply filters that are by asked for by the client-side request. 
         foreach ($filt as $source_fieldUniqueId) //for each client-picked filterING control...
            {                
-                $source_field = AcField::instance_from_id($source_fieldUniqueId) or json_error("Library Error #3"); 
+                $source_field = AcField::instance_from_id($source_fieldUniqueId) or throw_error("Library Error #3"); 
                 //In event of a nonexistent source_fieldUniqueId passed, terminate.
                 //Remember $source_field->filtered_fields  represents all of the OTHER fields that this given AcList FILTERS.
 
@@ -56,7 +56,7 @@ function apply_list_filters($fake_this, & $request, $table, $field_unique_id)
  */
 function auto_error($err,$b="",$c="",$d="",$e="")
 {
-    json_error( " " . implode(",", func_get_args()));
+    throw_error( " " . implode(",", func_get_args()));
 }
 
 /*
@@ -64,9 +64,9 @@ function auto_error($err,$b="",$c="",$d="",$e="")
  * displays them in a message box. You may wish to instead log them in production mode.
 *
 */
-function json_error($x)
+function throw_error($x)
 {
-    die (json_encode(array("criticalError" => $x)));    
+    throw new ErrorException ($x);    
 } 
 /*
  * Manual Error  -- Handles debug errors thrown by programmer.
@@ -76,7 +76,7 @@ function manual_error($err, $sql) //specific to this file
     $callStack = print_r(debug_backtrace(), 1);
     $message = $err . " on " . $sql . " and " . $callStack;
 
-    json_error($message);
+    throw_error($message);
 }
 
 /**
@@ -122,7 +122,7 @@ function verify_control_could_contain_value($fake_this, $page, $fieldUniqueId, $
   //WHat about stuff? which queries are active which filters I mean? All will be used in its last query... Cool.
   $query = $test_field["last_used_query"] . " AND " . $fake_this->adapter->escape_field_name($fieldname) . " = " . $fake_this->adapter->escape_field_value($value);
   
-  $result = ($fake_this->adapter->call_query_read($query, 1));
+  $result = ($fake_this->adapter->query_read($query, 1));
 
   return $result;
 }
@@ -141,7 +141,7 @@ function verify_control_could_contain_value_set($fake_this, $page, $fieldUniqueI
           return false;
 
   $query = $test_field["last_used_query"]; 
-  $result = ($fake_this->adapter->call_query_read($query, 1));
+  $result = ($fake_this->adapter->query_read($query, 1));
   
   foreach ($result as $this_row)
       $valid_values[] = $this_row['value'];
