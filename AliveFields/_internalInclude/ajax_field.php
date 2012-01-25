@@ -134,7 +134,7 @@ function save_action(& $fake_this, $request) {
     return $result;
 }
 
-function load_action(& $fake_this, $request) {
+function load_action(& $fake_this, $request) {    
     $requestingPage = $request['requesting_page'];
     $fieldUniqueId = $request['request_field'];
     $this_field_session = & $_SESSION['_AcField'][$requestingPage][$fieldUniqueId];
@@ -174,6 +174,7 @@ function load_action(& $fake_this, $request) {
                     throw_error(AcField::ERROR_LOAD_DISALLOWED); //This indicates attempted hacking.
                 }
 
+                
                 $join_clause[] = $source_field['bound_table'] . ' ON ' .
                         $fake_this->adapter->escape_table_name($this_field->bound_table)
                         . "." . $fake_this->adapter->escape_field_name($this_field->bound_pkey)

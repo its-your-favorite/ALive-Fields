@@ -13,11 +13,13 @@
  * 
  * 
  * 
- * 
+ * @ What's this 'data' on line 164?
  * @todo drastically refactor ajax_field_multiple
  * 
  * @todo deal with: 'Definitions to explain the following fields:'
  * @todo consolidate error reporting, turn off deprecated on release mode. (alexrohde.com server)
+ * @todo unit test for acField loads that operate through a join for test-criteria
+ * 
  * @todo make unit tests for multi fields.
  * @todo refactor Check the other controllers too.
  * @todo move to mysqli 

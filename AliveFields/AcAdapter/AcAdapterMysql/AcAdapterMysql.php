@@ -60,7 +60,7 @@ class AcAdapterMysql implements AcAdapter_Interface {
 
         $rs = mysql_query($query, $this->conn_readonly);
         if (!$rs) {
-            throw new ErrorException("Failed on query $query. " . mysql_error());
+            throw new ErrorException("Failed on query $query. = " . mysql_error());
         }
 
         while ($row = mysql_fetch_assoc($rs))

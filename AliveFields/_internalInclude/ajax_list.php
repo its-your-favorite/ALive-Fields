@@ -23,9 +23,8 @@ function acList_Controller(& $fake_this, $request) {
     if (!isset($request['term']))
         $request['term'] = '';
 
-
     $requester_page = & $request['requesting_page'];
-    $field_unique_id = $request['request_field'];
+    $field_unique_id = $request['request_field'];    
     $this_field_session = & $_SESSION['_AcField'][$requester_page][$field_unique_id];
 
     $term = strtoupper($fake_this->adapter->escape_field_value($request['term'], false));
@@ -69,7 +68,7 @@ function acList_Controller(& $fake_this, $request) {
     
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     // Apply Filtering
-    if ($filtering) {
+    if ($filtering) {        
         if ($this_field instanceof AcListJoin) { //If we have a join table, then the filters apply to that table.
             list($filters, $this_field_session['filter_fields'], $this_field_session['filter_values'] ) =
                     apply_list_filters($fake_this, /* byref */ $request, $fake_this->adapter->escape_table_name($this_field->join_table), $field_unique_id);
@@ -134,6 +133,7 @@ function acList_Controller(& $fake_this, $request) {
     else
         throw_error("Unrecognized field type requesting");
 
+    //echo "Setting field session for $field_unique_id to $query";
     $this_field_session["last_used_query"] = $query;
     $query .= "  ORDER BY $field2 ";
     if (!isset($request['max_rows']))

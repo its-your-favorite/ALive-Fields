@@ -14,7 +14,7 @@ https://github.com/anfurny/ALive-Fields/wiki
 
 Example snippet of code plz?
 ----------------------------------------------------------------
-	$users_articles = new AcListSelect("title", "articles", "articleID", 1, 0);
+	$users_articles = new AcListSelect("title", "articles", "articleID", AcField::LoadYes, AcField::SaveNo);
 	$users_articles->bind("articles");
 	$users_articles->set_dependent_fields(array($article_content));
 
