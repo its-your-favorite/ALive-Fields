@@ -125,10 +125,8 @@ AcField.prototype.initialize = function(jqElementStr)
       return handleError("Control already bound:" + jqElement.selector, jqElement[0]);
  
   this.correspondingElement = jqElement;
-  jqElement[0].boundAcControl = this; //not an infinite loop since these are merely pointers.
-      //however, this may prevent them from being json Encoded. If this becomes an issue, change it
-    // from a pointer to the actual element to a boolean.
-    ///*
+  jqElement[0].boundAcControl = this; //Give the HTML ELEMENT a pointer back to this.
+  
 
     /**
      *On blur, determine if the values have changed. If so call, change handler.
@@ -198,6 +196,9 @@ AcField.prototype.handleKeydown = function()
 
 ////////////////////////////////////////////////////////
 /** @description This function saves the given field to the database.
+ *  on Success flash box green, then call dependent fields
+ *  on Failure flash box red, then submit an error to log.
+ *  
 * @param primaryKeyData This value is used to determine which row in table this value will be saved to.
 */
 AcField.prototype.saveField = function()
@@ -217,7 +218,11 @@ AcField.prototype.saveField = function()
       type: "POST",
       data: {"request":  JSON.stringify(information)},
       context: this,
-      error : function (a, b , c) { if (typeof(window_unloading) == "undefined") handleError(" Saving of field interrupted by leaving page."); }, 
+      error : function (a, b , c) 
+      {
+          if (typeof(window_unloading) == "undefined") 
+              handleError(" Saving of field interrupted by leaving page."); 
+      }, 
       success: function(data, b, c, d, e)
       {  
       if ((data.substr(0,1) != "[") && (data.substr(0,1) != "{"))
@@ -241,8 +246,7 @@ AcField.prototype.saveField = function()
        
       });    
  // make ajax request.
- // on Success flash box green, then call dependent fields
- // on Failure flash box red, then submit an error to log.
+
 }
 
 
@@ -277,9 +281,6 @@ AcField.prototype.loadField = function(primaryKeyData, type, source)
   this.setColor("");
   this.setBorder("#9999DD");    
   var theObject = this; // "VAR" is CRUCIAL in this line!
-  
-  if (this.correspondingField == "")
-      return handleError("Cannot load a control that has no fieldname.");
     
   information = {"AcFieldRequest": "loadfield" ,"primaryInfo": [this.pkeyField , primaryKeyData] , "requesting_page" : AcFieldGetThisPage(), "request_field" : this.uniqueId};
 

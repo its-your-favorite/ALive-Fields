@@ -110,7 +110,6 @@ AcField::flush_head_output();
   <script src="js/controls/AcSelectbox/AcJoinSelectbox.js"></script>
  */
 ?>
-
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <link link rel="stylesheet" type="text/css" href="css/custom-theme/jquery-ui-1.8.16.custom.css"  />
         <title>ALive Fields Demo App</title>

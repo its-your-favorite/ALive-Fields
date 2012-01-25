@@ -61,7 +61,7 @@ function acList_Controller(& $fake_this, $request) {
     elseif ($this_field->options_loadability == AcField::LOAD_YES)
         ; // okay, we can load without filters
     else {        
-        throw_error("Field ($field_unique_id) not loadable.. ");
+        throw_error(AcField::ERROR_LOAD_DISALLOWED);
     }
 
     // </ Check Security >
@@ -136,6 +136,9 @@ function acList_Controller(& $fake_this, $request) {
 
     $this_field_session["last_used_query"] = $query;
     $query .= "  ORDER BY $field2 ";
+    if (!isset($request['max_rows']))
+        $request['max_rows'] = null;
+    
     $result = $fake_this->adapter->query_read($query, (int) $request['max_rows']);
 
     if (is_null($result))

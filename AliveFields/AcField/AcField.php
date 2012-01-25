@@ -14,13 +14,12 @@
  * 
  * 
  * 
- * @todo move unnecessary files out of root directory.
- * @todo drastically refactor ajax_field, ajax_list, ajax_field_multiple
+ * @todo drastically refactor ajax_field_multiple
  * 
  * @todo deal with: 'Definitions to explain the following fields:'
  * @todo consolidate error reporting, turn off deprecated on release mode. (alexrohde.com server)
  * @todo make unit tests for multi fields.
- * @todo refactor ajax_field (it should be two separate methods for save and load). Check the other controllers too.
+ * @todo refactor Check the other controllers too.
  * @todo move to mysqli 
  * @todo Make sure validations work of both types on the new whatcha-ma-call-it list
  * @todo to do: make new superior error handler thingies.
@@ -281,17 +280,6 @@ abstract class AcField {
         return true;
     }
 
-    /**
-     * 
-     */
-    function differentiate_options($field, $table, $pkey) {
-        throw Exception("Not implemented");
-        // Notes to self:
-        //set the session variable to load options for these fields. 
-        //?? Set the session variable to load/save previous field, not load options from them.
-        //since no columns are used in javascript, javascript doesn't have to be updated?
-        // but I do want savable and loadable to apply. Those make no sense before differentiate_options
-    }
 
     /**
      * Include the relevant javascript files necessary to power the view.
@@ -560,7 +548,7 @@ abstract class AcField {
     function request_handler($request) {
         if (($request['AcFieldRequest'] == 'loadfield') || ($request['AcFieldRequest'] == 'savefield')) {
             require_once (__DIR__ . "/../_internalInclude/ajax_field.php");
-            return acField_Controller($this, $request);
+            return acField_Controller($this, $request);            
         } else {
             return throw_error("Nonexistant Request");
         }

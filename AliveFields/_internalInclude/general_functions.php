@@ -106,24 +106,28 @@ function remove_magic_quotes()
 function verify_control_could_contain_value($fake_this, $page, $fieldUniqueId, $value, $field)
 {
   $test_field = $_SESSION['_AcField'][$page][$fieldUniqueId];
-  $this_field = AcField::instance_from_id($fieldUniqueId);
 
-  if (! isset($test_field["last_used_query"]) )
-          return false;
-  
+  if (! isset($test_field["last_used_query"]) ) {
+      return false;
+  }
   if ($field == "pkey")
-      $fieldname = $this_field->bound_pkey;
+      $fieldname = $fake_this->bound_pkey;
   elseif ($field == "text")
-      $fieldname = $this_field->bound_field;
+      $fieldname = $fake_this->bound_field;
   elseif ($field == "optionValue")
-       $fieldname = $this_field->options_pkey;
+       $fieldname = $fake_this->options_pkey;
   else
       die("unknown verify type: $field");
   //WHat about stuff? which queries are active which filters I mean? All will be used in its last query... Cool.
-  $query = $test_field["last_used_query"] . " AND " . $fake_this->adapter->escape_field_name($fieldname) . " = " . $fake_this->adapter->escape_field_value($value);
-  
+  $query = $test_field["last_used_query"] . " AND " . $fake_this->adapter->escape_field_name($fieldname) . " = " . $fake_this->adapter->escape_field_value($value);    
   $result = ($fake_this->adapter->query_read($query, 1));
-
+  
+  if (!$result)
+  {
+      echo ($query);
+      die("k");
+      
+  }
   return $result;
 }
 
