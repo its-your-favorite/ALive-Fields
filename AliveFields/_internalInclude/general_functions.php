@@ -14,7 +14,7 @@
  * @param string $field_unique_id
  * @return array of "Filters" (restrictions) to be applied to the query 
  */
-function apply_list_filters($fake_this, & $request, $table, $field_unique_id)
+function apply_list_filters($fakeThis, & $request, $table, $field_unique_id)
     {
     $filters = array();
     $fieldnames = array();
@@ -36,10 +36,10 @@ function apply_list_filters($fake_this, & $request, $table, $field_unique_id)
                               
                             verify_control_could_contain_value($source_field, $request['requesting_page'], $request["requester_key"], "pkey") or die("security issue 1"); 
                        
-                            $filters[] = ($table) . "." . $fake_this->adapter->escape_field_name($filtering_type[1]) . " = " 
-                                                  . $fake_this->adapter->escape_field_value($request["requester_key"]);
-                            $fieldnames[] =  $fake_this->adapter->escape_field_name($filtering_type[1]);
-                            $fieldvals[]  =  $fake_this->adapter->escape_field_value($request["requester_key"]);                            
+                            $filters[] = ($table) . "." . $fakeThis->adapter->escape_field_name($filtering_type[1]) . " = " 
+                                                  . $fakeThis->adapter->escape_field_value($request["requester_key"]);
+                            $fieldnames[] =  $fakeThis->adapter->escape_field_name($filtering_type[1]);
+                            $fieldvals[]  =  $fakeThis->adapter->escape_field_value($request["requester_key"]);                            
                             }
                         else
                             { //Filtering by Text
@@ -109,36 +109,36 @@ function remove_magic_quotes()
  *  for list controls this is a necessary security precaution.
  *
  *
- * @param AcField $fake_this - The given control that we are ensuring contains $value
+ * @param AcField $fakeThis - The given control that we are ensuring contains $value
  * @param AcField $page - A unique token to this page request
- * @param type $value - The value we want to be sure that $fake_this contains
- * @param type $field - Where $fake_this should contain the value 
+ * @param type $value - The value we want to be sure that $fakeThis contains
+ * @param type $field - Where $fakeThis should contain the value 
  * @return boolean 
  */
-function verify_control_could_contain_value($fake_this, $page, $value, $field)
+function verify_control_could_contain_value($fakeThis, $page, $value, $field)
 {
  /* echo "<BR><BR>";
-  var_dump($fake_this);
+  var_dump($fakeThis);
   echo "<BR><BR>";
   echo $fieldUniqueId;*/
   
-  $this_sess = $_SESSION['_AcField'][$page][$fake_this->get_unique_id()];
+  $this_sess = $_SESSION['_AcField'][$page][$fakeThis->get_unique_id()];
 
   if (! isset($this_sess["last_used_query"]) ) {
       return false;
   }
   if ($field == "pkey")
-      $fieldname = $fake_this->bound_pkey;
+      $fieldname = $fakeThis->bound_pkey;
   elseif ($field == "text")
-      $fieldname = $fake_this->bound_field;
+      $fieldname = $fakeThis->bound_field;
   elseif ($field == "optionValue")
-       $fieldname = $fake_this->options_pkey;
+       $fieldname = $fakeThis->options_pkey;
   else
       die("unknown verify type: $field");
   //WHat about stuff? which queries are active which filters I mean? All will be used in its last query... Cool.
-  $query = $this_sess["last_used_query"] . " AND " . $fake_this->adapter->escape_field_name($fieldname) . " = " . $fake_this->adapter->escape_field_value($value);    
+  $query = $this_sess["last_used_query"] . " AND " . $fakeThis->adapter->escape_field_name($fieldname) . " = " . $fakeThis->adapter->escape_field_value($value);    
   
-  $result = ($fake_this->adapter->query_read($query, 1));
+  $result = ($fakeThis->adapter->query_read($query, 1));
   
   if (!$result)
   {      
@@ -153,7 +153,7 @@ function verify_control_could_contain_value($fake_this, $page, $value, $field)
  * 
  *  Used for AcJoinSelectboxes
  */
-function verify_control_could_contain_value_set($fake_this, $page, $fieldUniqueId, $value_array /*, $field*/)
+function verify_control_could_contain_value_set($fakeThis, $page, $fieldUniqueId, $value_array /*, $field*/)
 {
   $test_field = $_SESSION['_AcField'][$page][$fieldUniqueId];
   $this_field = AcField::instance_from_id($fieldUniqueId);
@@ -162,7 +162,7 @@ function verify_control_could_contain_value_set($fake_this, $page, $fieldUniqueI
           return false;
 
   $query = $test_field["last_used_query"]; 
-  $result = ($fake_this->adapter->query_read($query, 1));
+  $result = ($fakeThis->adapter->query_read($query, 1));
   
   foreach ($result as $this_row)
       $valid_values[] = $this_row['value'];

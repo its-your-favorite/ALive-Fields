@@ -12,27 +12,27 @@
  * This function is the controller for the ajax request to retrieve a list
  *  (used by AcList controls). It has been moved from AcList for readability
  *
- * @param AcList $fake_this The context for the controller
+ * @param AcList $fakeThis The context for the controller
  * @param Associative Array $request The specific load request
  * @return Associative Array
  */
-function acList_Controller(& $fake_this, $request) {
+function acList_Controller(& $fakeThis, $request) {
 
     /////////////////////////////
     // Shorthand variables
     if (!isset($request['term']))
         $request['term'] = '';
 
-    $requester_page = & $request['requesting_page'];
+    $requesterPage = & $request['requesting_page'];
     $field_unique_id = $request['request_field'];    
-    $this_field_session = & $_SESSION['_AcField'][$requester_page][$field_unique_id];
+    $thisFieldSession = & $_SESSION['_AcField'][$requesterPage][$field_unique_id];
 
-    $term = strtoupper($fake_this->adapter->escape_field_value($request['term'], false));
+    $term = strtoupper($fakeThis->adapter->escape_field_value($request['term'], false));
     $this_field = AcField::instance_from_id($field_unique_id);
 
-    $field1 = $fake_this->adapter->escape_field_name($this_field_session['options_pkey']);
-    $field2 = $fake_this->adapter->escape_field_name($this_field_session['options_field']);
-    $table = $fake_this->adapter->escape_field_name($this_field_session['options_table']);
+    $field1 = $fakeThis->adapter->escape_field_name($thisFieldSession['options_pkey']);
+    $field2 = $fakeThis->adapter->escape_field_name($thisFieldSession['options_field']);
+    $table = $fakeThis->adapter->escape_field_name($thisFieldSession['options_table']);
 
     $filtering = false;
     $filter_fields = array();
@@ -70,10 +70,10 @@ function acList_Controller(& $fake_this, $request) {
     // Apply Filtering
     if ($filtering) {        
         if ($this_field instanceof AcListJoin) { //If we have a join table, then the filters apply to that table.
-            list($filters, $this_field_session['filter_fields'], $this_field_session['filter_values'] ) =
-                    apply_list_filters($fake_this, /* byref */ $request, $fake_this->adapter->escape_table_name($this_field->join_table), $field_unique_id);
+            list($filters, $thisFieldSession['filter_fields'], $thisFieldSession['filter_values'] ) =
+                    apply_list_filters($fakeThis, /* byref */ $request, $fakeThis->adapter->escape_table_name($this_field->join_table), $field_unique_id);
         } else {
-            $filters = apply_list_filters($fake_this, /* byref */ $request, $table, $field_unique_id);
+            $filters = apply_list_filters($fakeThis, /* byref */ $request, $table, $field_unique_id);
             $filters = $filters[0]; //this needs an explaining comment
         }
     }
@@ -112,9 +112,9 @@ function acList_Controller(& $fake_this, $request) {
     } elseif ($this_field instanceOf AcListJoin) {
         // In the event of no filtering, use a complicated join
 
-        $join_table = $fake_this->adapter->escape_table_name($this_field->join_table);
-        $join_to_right_field = $fake_this->adapter->escape_field_name($this_field->join_to_right_field);
-        $join_from_right_field = $fake_this->adapter->escape_field_name($this_field->join_from_right_field);
+        $join_table = $fakeThis->adapter->escape_table_name($this_field->join_table);
+        $join_to_right_field = $fakeThis->adapter->escape_field_name($this_field->join_to_right_field);
+        $join_from_right_field = $fakeThis->adapter->escape_field_name($this_field->join_from_right_field);
 
 
         if ($this_field->mode == 'limited') {//In the event that we wish the table to show only records in the right-table that have a join-table record.
@@ -134,12 +134,12 @@ function acList_Controller(& $fake_this, $request) {
         throw_error("Unrecognized field type requesting");
 
     //echo "Setting field session for $field_unique_id to $query";
-    $this_field_session["last_used_query"] = $query;
+    $thisFieldSession["last_used_query"] = $query;
     $query .= "  ORDER BY $field2 ";
     if (!isset($request['max_rows']))
         $request['max_rows'] = null;
     
-    $result = $fake_this->adapter->query_read($query, (int) $request['max_rows']);
+    $result = $fakeThis->adapter->query_read($query, (int) $request['max_rows']);
 
     if (is_null($result))
         return array();

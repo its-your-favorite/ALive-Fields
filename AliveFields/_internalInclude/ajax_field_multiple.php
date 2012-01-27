@@ -1,17 +1,12 @@
 <?PHP
-/**
- * ajax_list_multiple.php
- * Copyright Alex Rohde 2011. Part of ALive Fields project.  https://github.com/anfurny/ALive-Fields
- * http://alexrohde.com/
- *
- * Copyright 2011, Alex Rohde
- * Licensed under the GPL Version 2 license.
- *
- *
- * Purpose:  This file houses the ajax handler / controller for AcJoinSelect write operations.
- */
 
-// Note to self: The structure of this file is unreadable. Fix that. 
+/**
+ * This file houses the ajax handler / controller for AcJoinSelect write operations.
+ *
+ *
+ *
+ * @author Alex Rohde
+ */
 // 
 // Security concerns and how/where they are protected against in this file
 // 
@@ -31,179 +26,136 @@
  * The normal saving and loading operations have been moved out to this file
  * to enhance readability of AcListJoin
  * 
- * @param AcListJoin $fake_this Context for the controller
+ * @param AcListJoin $fakeThis Context for the controller
  * @param Associative array $request Request from client.
  */
-function handle_multiple_field(& $fake_this, $request)
- {        
-    
-    $fieldUniqueId = $request['request_field']; 
-    $this_field = AcField::instance_from_id($fieldUniqueId);
-    /*
-     *  Load the request information into more-readable variables.
-    */
-    $requester_page = $request['requesting_page'];
-    $sourceUniqueId = $request['source_field'];        
-    $this_field_session =& $_SESSION['_AcField'][$requester_page][$fieldUniqueId];    
-    $table = $this_field->bound_table;
-    $values = $request["fieldInfo"];
-    
-    //Post Val represents the data from the multi-select as an array of keys e.g. [1,3,5]
-    $post_val = NULL; 
+function handle_multiple_field(& $fakeThis, $request) {
+    if (($request['action'] === "save")) {
+        $result = AcListJoin_controller_save($fakeThis, $request);
+    } elseif (($request['action'] === "hardcoded_load") || ($request['action'] === "dynamic_load")) {
+        throw_error("Cannot do load in this. Presumably unnecessary.");
+    } else {
+//Fatal Error
+        trigger_error("Unknown action type requested in ajax_field: " . $request['action'], E_USER_ERROR);
+    }
 
-    if ($this_field->mode == "limited")
-        throw_error("expectedError"); // No updating a limited field.
-        
-
-    //////////////////////////////////////////////////////////////////////////////////    
-                    
-    if (($request['action'] === "save"))
-        {        
-        if ($this_field->savable < 1) {
-            die(throw_error("Field not savable.")); //security violation
-        }
-        if (count($values) > 1) {
-            die(throw_error("Multiple values not implemented" ));
-        }
-        foreach ($values as $x) //so even though we are looping right here, as written controls can only update 1 field per ajax request. This loop is more for theoretical future use then?
-            {        
-            $fields_arr[] = $fake_this->adapter->escape_field_name($this_field->bound_field);
-            $values_arr[] = array( $fake_this->adapter->escape_field_value($x[1]) ) ;
-            }
-        $post_val = json_decode($x[1], true);
-        // ** I need to analyze this more
-        // So we only save to a Select in the event that it has differentiateOptions (right?) 
-        // probably eventually change this to an accessor? So it can be overloaded differently by subclasses?
-        verify_control_could_contain_value_set($fake_this, $requester_page, $fieldUniqueId, $post_val)
-                    or throw_error("expectedError");
-        }
-    elseif (($request['action'] === "hardcoded_load") || ($request['action'] === "dynamic_load")    )
-        {
-        die(throw_error("Cannot do load in this. Presumably unnecessary."));
-        // Actually, I think we can do this. But I should do it gracefully
-            /*
-        if (! $this_field->loadable)
-            die("Field not loadable"); //security violation
-            
-        $values_clause = $this_field->bound_field . " as answer ";
-    
-        if ($dataRequest['action'] === "dynamic_load")    
-            {
-            $where_clause['key_piece'] = $fake_this->adapter->escape_table_name($this_field->bound_table) . "." . $fake_this->adapter->escape_field_name( $this_field->bound_pkey ) . " = " . $fake_this->adapter->escape_field_value($dataRequest['primaryInfo'][1]);
-            if ( count($_SESSION['_AcField'][$requester_page][$sourceUniqueId]['filters']) )
-                {
-                $source_field = $_SESSION['_AcField'][$requester_page][$sourceUniqueId];
-                            
-                if (! in_array($this_field_session["unique_id"], $source_field['dependent_fields']) ) //verify that this control is indeed allowed to update the other control. Do this verification by looking at session records.
-                    die("NOT A MATCH");
-                    
-                $join_clause[] = $source_field['bound_table'] . " ON " . $fake_this->adapter->escape_table_name($this_field->bound_table) . "." . $fake_this->adapter->escape_field_name($this_field->bound_pkey) . " = " . $fake_this->adapter->escape_table_name($source_field['bound_table']) . "." . $fake_this->adapter->escape_field_value($source_field["bound_pkey"]);
-                if (count($join_clause))
-                    $join_clause = "INNER JOIN " . join($join_clause, " INNER JOIN ");
-                $this_field_session['loaded_join_clause'] = $join_clause;            
-                $where_clause['join_piece'] = join($_SESSION['_AcField'][$requester_page][$sourceUniqueId]['filters'], " AND ");
-                }
-            $this_field_session['loaded_pkey'] = $dataRequest['primaryInfo'][1] ;
-            }
-        else
-            {
-            $where_clause[] = $fake_this->adapter->escape_table_name($this_field->bound_table) . "." . $fake_this->adapter->escape_field_name($this_field->bound_pkey) . " = " . $fake_this->adapter->escape_field_value($this_field_session['hardcoded_loads'][$dataRequest['primaryInfo'][1]]);
-            $this_field_session['loaded_pkey'] = $this_field_session['hardcoded_loads'][$dataRequest['primaryInfo'][1]];
-            }
-        $this_field_session['loaded_where_clause'] = $where_clause;
-        */}
-    else
-        {
-        trigger_error("Unknown action type requested in ajax_field: " . $request['action'], E_USER_ERROR );
-        }
-    
-    /*if (($dataRequest['action'] === "hardcoded_load") || ($dataRequest['action'] === "dynamic_load"))
-        {
-        $sql = "SELECT count(*) as count_rec FROM $table $join_clause WHERE " . join(" AND ", $where_clause );
-        //echo $sql;
-        $security_check = $fake_this->adapter->call_query_read($sql);
-        if (! $security_check[0]['count_rec'])
-            json_error("Record not found.");
-                
-        $sql = "SELECT $values_clause FROM $table $join_clause WHERE " . join(" AND ", $where_clause );
-        $result = $fake_this->adapter->call_query_read($sql);
-        $result = array("value" => $result[0]['answer']);
-        }
-    else*/if ($request['action'] === "save")//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        {            
-        if (! isset($this_field_session['filter_fields']))
-            die(throw_error("This library isn't currently designed to handle a save before a load.")); //library isn't currently designed to securely handle a save before a load. 
-                    
-        if (! is_array($post_val))
-            throw_error("Invalid parameter #17");
-        //Two STEP VALIDATION PROCESS. ONE pass the list of fields to be updated (so a validator can verify/change which rows are inserted/deleted)
-        //    ??
-        if (! $this_field->do_multi_validations($post_val, $this_field_session['loaded_pkey']))
-            throw_error("Could not save field: Validation Failed");
-    
-        $join_table    = $fake_this->adapter->escape_table_name($this_field->join_table);    
-        $join_to_left  = $fake_this->adapter->escape_field_name($this_field->bound_pkey );
-        $join_to_right = $fake_this->adapter->escape_field_name($this_field->join_to_right_field );
-    
-        /**
-         * Does this need to go through session? ??? 
-         */
-        $insert_fields = $this_field_session['filter_fields'];
-        $insert_values = $this_field_session['filter_values'];
-        
-        foreach ($post_val as $i=>$pv) {
-            //since this comes from the client it MUST be escaped.           
-            $post_val[$i] = $fake_this->adapter->escape_field_value($post_val[$i]); 
-        }
-        
-        $where_condition = array();
-        
-        foreach ($insert_values as $i => $v)  {
-            $where_condition[] = ($insert_fields[$i] ) . " = " . ($insert_values[$i]);
-        }
-        $where_condition = join(" AND ", $where_condition);
-        
-        // remove all rows that weren't selected            
-        $sql = "DELETE FROM $join_table WHERE ($join_table.$join_to_right NOT IN (" . join(",", $post_val) . ") AND $where_condition)";        
-        $fake_this->adapter->query_write($sql);
-
-        $insert_fields[] = $join_to_right;
-        foreach ($post_val as $this_post_val)    // ensure all selected rows now have a table row
-            {
-            //Broaden $where_condition because we want to now individually focus on each item in post_val        
-            $insert_values[] = $this_post_val; //already escaped            
-            $where_condition = array();
-            foreach ($insert_values as $i => $v)
-                $where_condition[] = ($insert_fields[$i] ) . " = " . ($insert_values[$i]);
-            $where_condition = join(" AND ", $where_condition);
-    
-            $query = "SELECT COUNT(*) as res FROM $join_table WHERE $where_condition";
-            $result = $fake_this->adapter->query_read($query);
-            
-            /* This following line is unreadable... fix it*/
-            if ($result[0]['res'] == 0)
-                {
-                // TWO : pass individual fields so that a validator can set fields for particular rows
-                $this_field->do_insert_validations ($tmp = array_combine($insert_fields, $insert_values));
-                
-                // Code here to handle filters!
-                $sql = "INSERT INTO $join_table (" . join(",", $insert_fields) . ") VALUES (" . join(",", $insert_values) . ") ";
-                $fake_this->adapter->query_write($sql);
-                }
-            array_pop($insert_values);
-            }
-            
-        $result['value'] = "success";
-        }
-    else
-        {
-        trigger_error("Unknow Action:" . $request['action'], E_USER_ERROR);
-        die ();
-        }
-             
-    $result['value'] = true;            
     return $result;
 }
 
+/**
+ * 
+ */
+//SAVE:
+function AcListJoin_controller_save(& $fakeThis, $request) {
+
+    /*
+     *  Load the request information into more-readable variables.
+     */
+    $fieldUniqueId = $request['request_field'];
+    $requesterPage = $request['requesting_page'];
+    $sourceUniqueId = $request['source_field'];
+    $thisFieldSession = & $_SESSION['_AcField'][$requesterPage][$fieldUniqueId];
+    $table = $fakeThis->bound_table;
+    $values = $request["fieldInfo"];
+
+    if ($fakeThis->mode == "limited")
+        throw_error("expectedError"); // No updating a limited field.
+
+    if ($fakeThis->savable == AcField::SAVE_NO) {
+        throw_error("Field not savable."); //security violation
+    }
+    if (count($values) > 1) {
+        throw_error("Multiple values not implemented");
+    }
+
+    $unescapedValuesArr = json_decode($values[0][1]);
+    $valuesArr = array_map($fakeThis->adapter->escape_field_value, $unescapedValuesArr); //($oneValue[1]);                 
+// ** I need to analyze this more
+// So we only save to a Select in the event that it has differentiateOptions (right?) 
+// probably eventually change this to an accessor? So it can be overloaded differently by subclasses?
+    verify_control_could_contain_value_set($fakeThis, $requesterPage, $fieldUniqueId, $unescapedValuesArr)
+            or throw_error("expectedError");
+
+    if (!isset($thisFieldSession['filter_fields'])) {
+        throw_error("This library isn't currently designed to handle a save before a load.");
+    }
+
+    if (!is_array($unescapedValuesArr)) {
+        throw_error("Invalid parameter.");
+    }
+
+    /**
+     * Two STEP VALIDATION PROCESS:
+     *  ONE pass the list of fields to be updated (so a validator can verify/change which rows are inserted/deleted)
+     */
+    if (!$fakeThis->do_multi_validations($postVal, $thisFieldSession['loaded_pkey']))
+        throw_error("Could not save field: Validation Failed");
+
+    $join_table = $fakeThis->adapter->escape_table_name($fakeThis->join_table);
+    $join_to_left = $fakeThis->adapter->escape_field_name($fakeThis->bound_pkey);
+    $join_to_right = $fakeThis->adapter->escape_field_name($fakeThis->join_to_right_field);
+
+    /**
+     * Does this need to go through session? ??? 
+     */
+    $insertFieldNames = $thisFieldSession['filter_fields'];
+    $commonInsertValues = $thisFieldSession['filter_values'];
+
+    $whereCondition = array(" TRUE "); //this array must have one element
+
+    foreach ($commonInsertValues as $i => $v) {
+        $whereCondition[] = ($insertFieldNames[$i] ) . " = " . ($commonInsertValues[$i]);
+    }
+    $whereCondition = join(" AND ", $whereCondition);
+
+// remove all rows that weren't selected            
+    $sql = "DELETE FROM $join_table WHERE ($join_table.$join_to_right NOT IN (" . join(",", $valuesArr) . ") AND $whereCondition)";
+    $fakeThis->adapter->query_write($sql);
+
+    /*
+     *  Lastly, the primary key
+     */
+    $insertFieldNames[] = $join_to_right;
+
+    // ensure all client-selected values now have a join-table row
+    // Broaden $where_condition because we want to now individually focus on each item in post_val        
+
+    /**
+     *  get the list of already present appropriate keys
+     */   
+    $query = "SELECT $join_to_right as id FROM $join_table WHERE $whereCondition"; 
+    $result = $fakeThis->adapter->query_read($query);
+    if (!$result)
+       $result = array();
+
+    $existingIds = array_map(function($row){ return $row['id']; }, $result);
+    
+    $neededIds = array_diff($valuesArr, $existingIds);
+    
+    /**
+     * insertValues - Represent the 2-d array of values that are all of the necessary
+     *          inserts to the join table.
+     */
+    $insertValues = array_map(function($add) use ($commonInsertValues, $fakeThis)
+                                                { 
+                                                $cp = $commonInsertValues; 
+                                                $cp[] = $fakeThis->adapter->escape_field_value( $add);
+                                                return $cp;
+                                                } 
+                                 , $neededIds);
+                                 
+    if (count($insertValues)) {
+        // TWO : pass individual fields so that a validator can set fields for particular rows
+        foreach ($insertValues as $key => $valuesRow) {            
+            $fakeThis->do_insert_validations($tmp = array_combine($insertFieldNames, $valuesRow));
+            $insertValues[$key] = "(" . join(",", $valuesRow) . ")";
+            }
+        $sql = "INSERT INTO $join_table (" . join(",", $insertFieldNames) . ") VALUES " . join(",", $insertValues) . " ";        
+        $fakeThis->adapter->query_write($sql);
+    }
+
+    $result['value'] = true;
+    return $result;
+}
 
 ?>

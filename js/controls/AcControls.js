@@ -24,7 +24,9 @@ var DEBUG; //global variable
 
 if (typeof(handleError) == "undefined")
     {
-    handleError = function(err){alert(err);};//great place for a breakpoint. Change this code as appropriate.};
+    handleError = function(err){
+                    alert(err);
+                };//great place for a breakpoint. Change this code as appropriate.};
     }
     
 if (typeof(jQuery) == "undefined")

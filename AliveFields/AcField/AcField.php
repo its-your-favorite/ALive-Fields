@@ -12,11 +12,7 @@
  *  - tl;dr : this class does everything except the html view, which you do by hand.
  * 
  * 
- * 
- * @ What's this 'data' on line 164?
- * @todo drastically refactor ajax_field_multiple
- * 
- * @todo deal with: 'Definitions to explain the following fields:'
+ * @todo Make variables camelCase to be consistent with the zend coding standard.
  * @todo consolidate error reporting, turn off deprecated on release mode. (alexrohde.com server)
  * @todo unit test for acField loads that operate through a join for test-criteria
  * 
@@ -28,7 +24,7 @@
  * @todo to do: differentiate options does nothing?
  * @todo to do: try two fields filtering one, to be sure it works
  * @todo security tests listed in ajax_field_multiple
- * @todo add validations for join table multi
+ * @todo add validations for join table multi (right now I think they don't filter, do validate)
  * @todo clean up javascript by using parent instead of AcWHATEVER (if possible)
  *      and use the type of call that automatically passes params as an array.
  * @todo To do: ReMake a date-time control.
@@ -91,18 +87,22 @@ AcField::$unique_session_token = md5($_SERVER['PHP_SELF'] . microtime());
  *  
  */
 abstract class AcField {
-    /*
+    /**
      * Consts are written this way because it'll be easier when using autocomplete.
+     * You only need to recall the first word (Load) and then the remaining suffixes
+     * will all appear
      */
 
+    //
     const LOAD_NO = 0;
     const LOAD_WHEN_FILTERED = 1;
     const LOAD_YES = 2;
 
     /**
+     * SAVE_NO_CHANGE_NO -
      * Additionally tells the client-side control to act as read-only / locked. 
      */
-    const SAVE_NO_CHANGE_NO = -1;
+    const SAVE_NO_CHANGE_NO = -1;    
     const SAVE_NO = 0;
     const SAVE_YES = 1;
 
@@ -122,11 +122,17 @@ abstract class AcField {
     public static $cached_output;
     public static $cached_head_output;
     public static $basics_included;
+    
+    /**
+     *  These constants should reflect your directory structure. Adjust as
+     *  necessary.
+     */
     public static $include_directory_js = "/js";
     public static $path_to_start_php = "AliveFields";
     public static $path_to_jquery = "/jquery.js";
     public static $path_to_jqueryui = "/jquery-ui.js";
     public static $path_to_controls = "/controls";
+    
     public static $include_js_manually = false; //by default, handle including JS files for the user
     public static $silence_errors = false;
     public static $unique_session_token; //unique to each request
@@ -163,12 +169,11 @@ abstract class AcField {
         $this->bound_table = $table;
         $this->bound_pkey = $id;
 
-        $data["loadable"] = $this->loadable = $loadable;
-        $data["savable"] = $this->savable = $savable;
-        $data["filters"] = $this->filters = array(); //Filters applied TO this AcField
+        $this->loadable = $loadable;
+        $this->savable = $savable;
+        $this->filters = array(); //Filters applied TO this AcField
         $this->unique_id = $this->generate_unique_id();
         AcField::$all_instances[$this->unique_id] = &$this;
-        $data["unique_id"] = $this->unique_id;
 
         if (AcField::$declaration_progress > .25)
             AcField::register_error("Please declare all AcFields before proceeding to call handle_all_requests");
@@ -185,13 +190,12 @@ abstract class AcField {
         if (AcField::$default_adapter !== null)
             $this->adapter = AcField::$default_adapter;
 
-        $sess = & $this->get_session_object();
-
         /*
          * This serves to let the controller action verify at least that
          * the request has visited the client side and gotten the token
          * PAGE_INSTANCE. 
          */
+        $sess = & $this->get_session_object();
         $sess['enabled'] = true;
     }
 
@@ -206,7 +210,7 @@ abstract class AcField {
     }
 
     /**
-     * 
+     * Useful for var_dumps
      */
     function __toString() {
         return "An AcField (" . get_class($this) . ") ID #" . $this->unique_id;
@@ -281,7 +285,6 @@ abstract class AcField {
         }
         return true;
     }
-
 
     /**
      * Include the relevant javascript files necessary to power the view.
@@ -541,6 +544,17 @@ abstract class AcField {
             $this->validators[] = $callback;
     }
 
+     /**
+     * Sets the backend adapter for this Ajax control Field
+     *
+     * @param (implements AcAadpter_Interface) $adapter The backed adapter to 
+     *      retrieve/retain AcField values.
+     */
+    function set_adapter($adapter) {
+        $this->adapter = $adapter;
+    }
+    
+    
     /**
      * This function determine loads and executes the relevant controller for this request.
      * 
@@ -550,7 +564,7 @@ abstract class AcField {
     function request_handler($request) {
         if (($request['AcFieldRequest'] == 'loadfield') || ($request['AcFieldRequest'] == 'savefield')) {
             require_once (__DIR__ . "/../_internalInclude/ajax_field.php");
-            return acField_Controller($this, $request);            
+            return acField_Controller($this, $request);
         } else {
             return throw_error("Nonexistant Request");
         }
@@ -606,15 +620,6 @@ abstract class AcField {
         $this->add_output($this->get_js_fieldname() . ".$prop = $val;");
     }
 
-    /**
-     * Sets the backend adapter for this Ajax control Field
-     *
-     * @param (implements AcAadpter_Interface) $adapter The backed adapter to 
-     *      retrieve/retain AcField values.
-     */
-    function set_adapter($adapter) {
-        $this->adapter = $adapter;
-    }
 
 }
 
