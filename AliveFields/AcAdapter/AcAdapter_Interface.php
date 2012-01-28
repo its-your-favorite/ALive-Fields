@@ -10,9 +10,9 @@ interface AcAdapter_Interface {
 
     function query_write($query, $limit);
 
-    function escape_field_name($field, $add_quotes);
+    function escape_field_name($field, $addQuotes);
 
-    function escape_field_value($field, $add_quotes);
+    function escape_field_value($field, $addQuotes);
 
-    function escape_table_name($field, $add_quotes);
+    function escape_table_name($field, $addQuotes);
 }

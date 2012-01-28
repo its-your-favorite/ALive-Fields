@@ -34,15 +34,14 @@ class AcAdapterTest implements AcAdapter_Interface {
      *  Allows read access only. Useful in minimizing sql injection possibilities.
      */
 
-    function query_read($query, $limit_rows_returned = 0) {
-        global $conn_readonly;
+    function query_read($query, $limitRowsReturned = 0) {
         $DEBUG = false;
         $result = NULL;
 
         // YOU MUST CHANGE THE FOLLOWING LINE IF YOU ARE NOT USING MYSQL ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
         //In mysql (default) we limit selects by appending the string LIMIT X to them. Change this line according to your database
-        if ($limit_rows_returned > 0)
-            $query .= " LIMIT " . (int) $limit_rows_returned;
+        if ($limitRowsReturned > 0)
+            $query .= " LIMIT " . (int) $limitRowsReturned;
 
         $queries[] = $query;
         return array();
@@ -53,13 +52,12 @@ class AcAdapterTest implements AcAdapter_Interface {
      * allows write access.
      * 
      */
-    function query_write($query, $limit_rows_affected = 0) {
+    function query_write($query, $limitRowsAffected = 0) {
 // Limit rows affected is a safety precaution which isn't strictly necessary if this tool is used properly, but certainly is recommended. Customize its use to your database (e.g. Set rowcount for mssql)
-        global $conn_readwrite;
-
+ 
         //In mysql (default) we updates selects by appending the string LIMIT X to them. Change this line according to your database
-        if ($limit_rows_affected > 0)
-            $query .= " LIMIT " . (int) $limit_rows_affected;
+        if ($limitRowsAffected > 0)
+            $query .= " LIMIT " . (int) $limitRowsAffected;
 
         $queries[] = $query;
         return array();
@@ -67,23 +65,23 @@ class AcAdapterTest implements AcAdapter_Interface {
 
 ////////////////////////////////////////////////////////////////
 
-    function escape_field_name($field, $add_quotes = true) {
+    function escape_field_name($field, $addQuotes = true) {
         // YOU MUST CHANGE THE FOLLOWING LINE IF NOT MYSQL  ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
-        return $this->escape_field_name_mysql($field, $add_quotes);
+        return $this->escape_field_name_mysql($field, $addQuotes);
     }
 
 ////////////////////////////////////////////////////////////////
 
-    function escape_table_name($field, $add_quotes = true) {
+    function escape_table_name($field, $addQuotes = true) {
         // YOU MUST CHANGE THE FOLLOWING LINE IF NOT MYSQL  ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
-        return $this->escape_field_name_mysql($field, $add_quotes); //happens to be the same for mysql
+        return $this->escape_field_name_mysql($field, $addQuotes); //happens to be the same for mysql
     }
 
 ////////////////////////////////////////////////////////////////
 
-    function escape_field_value($field, $add_quotes = true) {
+    function escape_field_value($field, $addQuotes = true) {
         // YOU MUST CHANGE THE FOLLOWING LINE IF NOT MYSQL  ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** ! ** !
-        return $this->escape_field_value_mysql($field, $add_quotes);
+        return $this->escape_field_value_mysql($field, $addQuotes);
     }
 
 ////////////////////////////////////////////////////////////////
@@ -99,15 +97,15 @@ class AcAdapterTest implements AcAdapter_Interface {
 ////////////////////////////////////////////////////////////////
 
 
-    function escape_field_value_mysql($val, $add_quotes = true) {
-        if ($add_quotes)
+    function escape_field_value_mysql($val, $addQuotes = true) {
+        if ($addQuotes)
             return "'" . mysql_real_escape_string($val) . "'";
         else
             return mysql_real_escape_string($val);
     }
 
-    function escape_field_value_mssql($val, $add_quotes = true) {
-        if ($add_quotes)
+    function escape_field_value_mssql($val, $addQuotes = true) {
+        if ($addQuotes)
             return "'" . str_replace("'", "''", $val) . "'";
         else
             return str_replace("'", "''", $val);

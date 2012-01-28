@@ -35,52 +35,57 @@ require_once("AliveFields/start.php");
 ///////////////////// Main File ////////////////////////////////////////////
 // Piece 2. Instantiate a new adapter
 $ini = parse_ini_file(".ini");
-$db_adapter = new AcAdapterMysql($ini['host'], $ini['user_read'], $ini['pass_read'],
+$dbAdapter = new AcAdapterMysql($ini['host'], $ini['user_read'], $ini['pass_read'],
                 $ini['db'], $ini['user_write'], $ini['pass_write']);
 
 // Piece 3. Set it as the default adapter
-AcField::set_default_adapter($db_adapter);
+AcField::set_default_adapter($dbAdapter);
 
 // Piece 4. The actual AcField Declarations
-$user_enabled = new AcCheckbox("enabled", "users", "userID", AcField::LOAD_WHEN_FILTERED, AcField::SAVE_YES);
-$user_enabled->bind("user_enabled");
+$userEnabled = new AcCheckbox("enabled", "users", "userID", AcField::LOAD_WHEN_FILTERED, AcField::SAVE_YES);
+$userEnabled->bind("user_enabled");
 
-$join_date = new AcDatebox("join_date", "users", "userID", AcField::LOAD_WHEN_FILTERED, AcField::SAVE_YES);
-$join_date->bind("user_join_date");
+$joinDate = new AcDatebox("join_date", "users", "userID", AcField::LOAD_WHEN_FILTERED, AcField::SAVE_YES);
+$joinDate->bind("user_join_date");
 
-$article_content = new AcTextbox("content", "articles", "articleID", AcField::LOAD_WHEN_FILTERED, AcField::SAVE_YES);
-$article_content->bind("content");
+$articleContent = new AcTextbox("content", "articles", "articleID", AcField::LOAD_WHEN_FILTERED, AcField::SAVE_YES);
+$articleContent->bind("content");
 
 // Validators can also be declared as follows.
-/* $article_content->register_validator( array("unique" => true,
+/* $articleContent->register_validator( array("unique" => true,
  *                                             "length" => ">0",
  *                                             "regex" => '/^[0-9]+ace/') );
  */
 
 // Example Validator: disallow the word fail in "article content"
-$article_content->register_validator(
-        function ($new_value) {
-            return (strpos($new_value, "fail") === false);
+$articleContent->register_validator(
+        function ($newValue) {
+            return (strpos($newValue, "fail") === false);
         });
 
-$users_articles = new AcListSelect("title", "articles", "articleID", AcField::LOAD_WHEN_FILTERED, AcField::SAVE_NO);
-$users_articles->bind("articles");
-$users_articles->set_dependent_fields(array($article_content));
+$usersArticles = new AcListSelect("title", "articles", "articleID", AcField::LOAD_WHEN_FILTERED, AcField::SAVE_NO);
+$usersArticles->bind("articles");
+$usersArticles->set_dependent_fields(array($articleContent));
 
-$users_departments_join =
+$usersDepartmentsJoin =
         new AcListJoin("department_name", "departments", "departmentID",
                 "join_users_departments", "department_id", "departmentID", AcField::LOAD_WHEN_FILTERED, AcField::SAVE_YES);
 
-$users_departments_join->bind("departments_select");
-//$users_departments_join->mode = "limited";
+$usersDepartmentsJoin->bind("departments_select");
 
-$all_the_users = new AcListCombo("username", "users", "userID", AcField::LOAD_YES, AcField::SAVE_NO);
-$all_the_users->bind("all_users");
-$all_the_users->set_dependent_fields(array($user_enabled, $join_date));
-$all_the_users->set_filtered_fields(array(
-    array("control" => $users_articles,
+/**
+ *This option will instead set the join table to show rows for existing connections,
+ *  rather than showing all and highlighting the existing connections. 
+ */
+//$usersDepartmentsJoin->mode = "limited";
+
+$allTheUsers = new AcListCombo("username", "users", "userID", AcField::LOAD_YES, AcField::SAVE_NO);
+$allTheUsers->bind("all_users");
+$allTheUsers->set_dependent_fields(array($userEnabled, $joinDate));
+$allTheUsers->set_filtered_fields(array(
+    array("control" => $usersArticles,
         "field" => "author"),
-    array("control" => $users_departments_join,
+    array("control" => $usersDepartmentsJoin,
         "field" => "user_id")));
 
 // Piece 5. The Call to handle_all_requests()

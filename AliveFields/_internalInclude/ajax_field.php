@@ -14,17 +14,17 @@ function acField_Controller(& $fakeThis, $request) {
      */
     $requestingPage = $request['requesting_page'];
     $fieldUniqueId = $request['request_field'];
-    $this_field = AcField::instance_from_id($fieldUniqueId);
-    $table = $this_field->bound_table;
+    //$fakeThis = AcField::instance_from_id($fieldUniqueId);
+    $table = $fakeThis->boundTable;
     $thisFieldSession = & $_SESSION['_AcField'][$requestingPage][$fieldUniqueId];
 
     if (empty($thisFieldSession)) {
         throw_error(AcField::ERROR_INVALID_TOKEN);
     }
 
-    $this_field = AcField::instance_from_id($fieldUniqueId);
-    $table = $this_field->bound_table;
-    $join_clause = '';
+    $fakeThis = AcField::instance_from_id($fieldUniqueId);
+    $table = $fakeThis->boundTable;
+    $joinClause = '';
 
 
     if ($request['action'] === 'save') {
@@ -48,14 +48,14 @@ function save_action(& $fakeThis, $request) {
     $thisFieldSession = & $_SESSION['_AcField'][$requestingPage][$fieldUniqueId];
 
 // reconstruct theAcField based on the Id (no need to pass the whole field through session)
-    $this_field = AcField::instance_from_id($fieldUniqueId);
-    $table = $this_field->bound_table;
+    $thisField = AcField::instance_from_id($fieldUniqueId);
+    $table = $thisField->boundTable;
 
 
     ////////////////////////////////////////////////////////////////////////////////
     // Validity Checks
 
-    if ($this_field->savable != AcField::SAVE_YES)
+    if ($thisField->savable != AcField::SAVE_YES)
         throw_error(AcField::ERROR_SAVE_DISALLOWED);
 
     //library isn't currently designed to securely handle a save before a load.
@@ -76,12 +76,12 @@ function save_action(& $fakeThis, $request) {
      * The only case the outer array will have more than 1 element is if insert 
      *  is ever implemented in this library.
      */
-    $all_values = $request['fieldInfo'];
-    if (count($all_values) != 1)
+    $allValues = $request['fieldInfo'];
+    if (count($allValues) != 1)
         throw_error("Invalid Save Request");
-    $value = $all_values[0][1];
+    $value = $allValues[0][1];
 
-    $values_clause = $fakeThis->adapter->escape_field_name($this_field->bound_field)
+    $valuesClause = $fakeThis->adapter->escape_field_name($thisField->boundField)
             . " = " . $fakeThis->adapter->escape_field_value($value) . " ";
 
     /**
@@ -109,10 +109,10 @@ function save_action(& $fakeThis, $request) {
     $sql = "SELECT COUNT(*) as count_rec from $table " . $thisFieldSession['loaded_join_clause']
             . " WHERE " . join($thisFieldSession['loaded_where_clause'], " AND ");
 
-    $security_check = $fakeThis->adapter->query_read($sql);
-    if (!$security_check[0]['count_rec']) {
+    $securityCheck = $fakeThis->adapter->query_read($sql);
+    if (!$securityCheck[0]['count_rec']) {
         throw_error('Security issue');
-    } else if ($security_check[0]['count_rec'] > 1) {
+    } else if ($securityCheck[0]['count_rec'] > 1) {
 // You probably don't want to do something that affects multiple rows since you are usually operating on primary key.
 //However if you know what you are doing, you can disable this restriction by commenting the following line
         throw_error('Cancelled. Affects multiple rows.');
@@ -121,14 +121,14 @@ function save_action(& $fakeThis, $request) {
     /**
      * Apply save validations
      */
-    foreach ($all_values as $x)
-        if (!$this_field->do_validations($x[1], $thisFieldSession['loaded_pkey']))
+    foreach ($allValues as $x)
+        if (!$thisField->do_validations($x[1], $thisFieldSession['loaded_pkey']))
             throw_error('Could not save field: Validation Failed');
 
     /**
      * Perform the actual save
      */
-    $sql = "UPDATE $table SET  $values_clause  WHERE  " . join($thisFieldSession['loaded_where_clause'], " AND ");
+    $sql = "UPDATE $table SET  $valuesClause  WHERE  " . join($thisFieldSession['loaded_where_clause'], " AND ");
     $fakeThis->adapter->query_write($sql, 1);
     $result['value'] = "success";
     return $result;
@@ -145,18 +145,18 @@ function load_action(& $fakeThis, $request) {
      * field of SourceUniqueID) 
      */
     $sourceUniqueId = $request['source_field'];
-    $this_field = AcField::instance_from_id($fieldUniqueId);
-    $table = $this_field->bound_table;
-    $join_clause = '';
+    $thisField = AcField::instance_from_id($fieldUniqueId);
+    $table = $thisField->boundTable;
+    $joinClause = '';
 
-    if (!$this_field->loadable)
+    if (!$thisField->loadable)
         throw_error(AcField::ERROR_LOAD_DISALLOWED); //security violation
 
-    $values_clause = $this_field->bound_field . ' as answer ';
+    $valuesClause = $thisField->boundField . ' as answer ';
 
     if ($request['action'] === 'dynamic_load') {
-        $where_clause['key_piece'] = $fakeThis->adapter->escape_table_name($this_field->bound_table)
-                . "." . $fakeThis->adapter->escape_field_name($this_field->bound_pkey) . " = "
+        $whereClause['key_piece'] = $fakeThis->adapter->escape_table_name($thisField->boundTable)
+                . "." . $fakeThis->adapter->escape_field_name($thisField->boundPkey) . " = "
                 . $fakeThis->adapter->escape_field_value($request['primaryInfo'][1]);
 
 
@@ -164,49 +164,49 @@ function load_action(& $fakeThis, $request) {
             if (count($_SESSION['_AcField'][$requestingPage][$sourceUniqueId]['filters'])) {
                 
                 // Source_field = Field that told *this* to load
-                $source_field = $_SESSION['_AcField'][$requestingPage][$sourceUniqueId];
+                $sourceField = $_SESSION['_AcField'][$requestingPage][$sourceUniqueId];
 
                 /**
                  * verify that this control is indeed allowed to update the other control. 
                  * Do this verification by looking at session records.
                  */
-                if (!in_array($thisFieldSession["unique_id"], $source_field['dependent_fields'])) {
+                if (!in_array($thisFieldSession["unique_id"], $sourceField['dependent_fields'])) {
                     throw_error(AcField::ERROR_LOAD_DISALLOWED); //This indicates attempted hacking.
                 }
 
                 
-                $join_clause[] = $source_field['bound_table'] . ' ON ' .
-                        $fakeThis->adapter->escape_table_name($this_field->bound_table)
-                        . "." . $fakeThis->adapter->escape_field_name($this_field->bound_pkey)
-                        . " = " . $fakeThis->adapter->escape_table_name($source_field['bound_table'])
-                        . "." . $fakeThis->adapter->escape_field_value($source_field["bound_pkey"]);
+                $joinClause[] = $sourceField['bound_table'] . ' ON ' .
+                        $fakeThis->adapter->escape_table_name($thisField->boundTable)
+                        . "." . $fakeThis->adapter->escape_field_name($thisField->boundPkey)
+                        . " = " . $fakeThis->adapter->escape_table_name($sourceField['bound_table'])
+                        . "." . $fakeThis->adapter->escape_field_value($sourceField["bound_pkey"]);
 
                 //All join clauses need to have INNER JOINs between them
-                if (count($join_clause) > 0) {
-                    $join_clause = 'INNER JOIN ' . join($join_clause, ' INNER JOIN ');
+                if (count($joinClause) > 0) {
+                    $joinClause = 'INNER JOIN ' . join($joinClause, ' INNER JOIN ');
                 }            
                 
-            $thisFieldSession['loaded_join_clause'] = $join_clause;
-            $where_clause['join_piece'] = join($_SESSION['_AcField'][$requestingPage][$sourceUniqueId]['filters'], ' AND ');
+            $thisFieldSession['loaded_join_clause'] = $joinClause;
+            $whereClause['join_piece'] = join($_SESSION['_AcField'][$requestingPage][$sourceUniqueId]['filters'], ' AND ');
             }
         }//</if filtered>
         
         $thisFieldSession['loaded_pkey'] = $request['primaryInfo'][1];
     } else {
         //Hardcoded Load
-        $where_clause[] = $fakeThis->adapter->escape_table_name($this_field->bound_table)
-                . '.' . $fakeThis->adapter->escape_field_name($this_field->bound_pkey)
+        $whereClause[] = $fakeThis->adapter->escape_table_name($thisField->boundTable)
+                . '.' . $fakeThis->adapter->escape_field_name($thisField->boundPkey)
                 . ' = ' . $fakeThis->adapter->escape_field_value($thisFieldSession['hardcoded_loads'][$request['primaryInfo'][1]]);
 
         $thisFieldSession['loaded_pkey'] = $thisFieldSession['hardcoded_loads'][$request['primaryInfo'][1]];
     }
-    $thisFieldSession['loaded_where_clause'] = $where_clause;
+    $thisFieldSession['loaded_where_clause'] = $whereClause;
 
     
     /*
      * Generate the actual query
      */
-    $sql = "SELECT $values_clause FROM $table $join_clause WHERE " . join(' AND ', $where_clause);
+    $sql = "SELECT $valuesClause FROM $table $joinClause WHERE " . join(' AND ', $whereClause);
     $result = $fakeThis->adapter->query_read($sql);
 
     /**

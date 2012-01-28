@@ -74,7 +74,7 @@
  */
 
 @session_start();
-AcField::$unique_session_token = md5($_SERVER['PHP_SELF'] . microtime());
+AcField::$uniqueSessionToken = md5($_SERVER['PHP_SELF'] . microtime());
 
 /**    AcField is the PHP heart of this project. 
  * 
@@ -117,36 +117,39 @@ abstract class AcField {
     const ERROR_SAVE_DISALLOWED = "Field not savable";
     const ERROR_INVALID_TOKEN = "Invalid Token In Session";
 
-    public static $included_js_files; // to prevent double-inclusion of controls
-    public static $output_mode = "postponed";
-    public static $cached_output;
-    public static $cached_head_output;
-    public static $basics_included;
-    
-    /**
+     /**
      *  These constants should reflect your directory structure. Adjust as
      *  necessary.
+      * 
+      * THESE SHOULD START with a forward slash and not end with one
      */
-    public static $include_directory_js = "/js";
-    public static $path_to_start_php = "AliveFields";
-    public static $path_to_jquery = "/jquery.js";
-    public static $path_to_jqueryui = "/jquery-ui.js";
-    public static $path_to_controls = "/controls";
+    const INCLUDE_DIRECTORY_JS = "js";    
+    const PATH_TO_JQUERY = "/jquery.js";
+    const PATH_TO_JQUERYUI  = "/jquery-ui.js";
+    const PATH_TO_CONTROLS = "/controls";
     
-    public static $include_js_manually = false; //by default, handle including JS files for the user
-    public static $silence_errors = false;
-    public static $unique_session_token; //unique to each request
-    private static $declaration_progress = 0; //Help new users of the library avoid basic errors.
-    private static $default_adapter;
-    protected static $all_instances;
+    const PATH_TO_START_PHP = "AliveFields";
+    
+    public static $includedJsFiles; // to prevent double-inclusion of controls
+    public static $outputMode = "postponed";
+    public static $cachedOutput;
+    public static $cachedHeadOutput;
+    public static $basicsIncluded;
+    
+    public static $includeJsManually = false; //by default, handle including JS files for the user
+    public static $silenceErrors = false;
+    public static $uniqueSessionToken; //unique to each request
+    private static $declarationProgress = 0; //Help new users of the library avoid basic errors.
+    private static $defaultAdapter;
+    protected static $allInstances;
     //Definitions to explain the following fields:
     public $adapter;
-    public $bound_field, $bound_table, $bound_pkey, $filters;
+    public $boundField, $boundTable, $boundPkey, $filters;
     public $loadable, $savable; //whether this control can LOAD and or SAVE to the database
-    public $type_temp, $type;
-    public $filtered_fields; //keep public!
-    public $hardcoded_loads;
-    private $unique_id;
+    public $type;
+    public $filteredFields; //keep public!
+    public $hardcodedLoads;
+    private $uniqueId;
     protected $validators;
 
     /**
@@ -164,31 +167,31 @@ abstract class AcField {
     function __construct($field, $table, $id, $loadable, $savable) {
         $this->include_basics();
         $this->validators = array();
-        $this->filtered_fields = array();
-        $this->bound_field = $field;
-        $this->bound_table = $table;
-        $this->bound_pkey = $id;
+        $this->filteredFields = array();
+        $this->boundField = $field;
+        $this->boundTable = $table;
+        $this->boundPkey = $id;
 
         $this->loadable = $loadable;
         $this->savable = $savable;
         $this->filters = array(); //Filters applied TO this AcField
-        $this->unique_id = $this->generate_unique_id();
-        AcField::$all_instances[$this->unique_id] = &$this;
+        $this->uniqueId = $this->generate_unique_id();
+        AcField::$allInstances[$this->uniqueId] = &$this;
 
-        if (AcField::$declaration_progress > .25)
+        if (AcField::$declarationProgress > .25)
             AcField::register_error("Please declare all AcFields before proceeding to call handle_all_requests");
-        AcField::$declaration_progress = .25;
+        AcField::$declarationProgress = .25;
 
         $this->add_output("\n\nvar " . $this->get_js_fieldname() . " = "
                 . " new " . $this->get_field_type_for_javascript()
-                . "($this->unique_id, $loadable, $savable, null); \n "
-                . $this->get_js_fieldname() . ".uniqueId = '" . $this->unique_id . "';");
+                . "($this->uniqueId, $loadable, $savable, null); \n "
+                . $this->get_js_fieldname() . ".uniqueId = '" . $this->uniqueId . "';");
 
-        if (!AcField::$include_js_manually)
+        if (!AcField::$includeJsManually)
             $this->do_js_includes_for_this_control();
 
-        if (AcField::$default_adapter !== null)
-            $this->adapter = AcField::$default_adapter;
+        if (AcField::$defaultAdapter !== null)
+            $this->adapter = AcField::$defaultAdapter;
 
         /*
          * This serves to let the controller action verify at least that
@@ -205,7 +208,7 @@ abstract class AcField {
     function __destruct() {
         if ($this->adapter === null)
             AcField::register_error("Please make sure all fields have an adapter.");
-        if (AcField::$declaration_progress < 2)
+        if (AcField::$declarationProgress < 2)
             AcField::register_error("Flush output should be called somewhere in the document.");
     }
 
@@ -213,7 +216,7 @@ abstract class AcField {
      * Useful for var_dumps
      */
     function __toString() {
-        return "An AcField (" . get_class($this) . ") ID #" . $this->unique_id;
+        return "An AcField (" . get_class($this) . ") ID #" . $this->uniqueId;
     }
 
     /**
@@ -232,7 +235,7 @@ abstract class AcField {
             if (is_array($filt[reset(array_keys($filt))])) {
                 foreach ($filt as $f) {
                     if (strpos($f[0], ".") === false)
-                        $f[0] = _AcField_escape_table_name($this->bound_table) . "." . _AcField_escape_field_name($f[0]);
+                        $f[0] = _AcField_escape_table_name($this->boundTable) . "." . _AcField_escape_field_name($f[0]);
                     $this->filters[] = join($f, " ");
                 }
             }
@@ -247,40 +250,40 @@ abstract class AcField {
     /**
      * Add output that should be displayed in the head (namely javascript includes)
      */
-    static function add_head_output($html_code) {
-        AcField::$cached_head_output .= $html_code . "\n";
+    static function add_head_output($htmlCode) {
+        AcField::$cachedHeadOutput .= $htmlCode . "\n";
     }
 
     /**
      * Displays provided javascript appropriately.
      */
-    static function add_output($js_code) {
-        AcField::$cached_output .= $js_code . "\n";
+    static function add_output($jsCode) {
+        AcField::$cachedOutput .= $jsCode . "\n";
 
-        if (AcField::$output_mode != "postponed")
+        if (AcField::$outputMode != "postponed")
             AcField::flush_output();
     }
 
     /**
      * Inform the javascript class which HTML element id it should connect with.
      *
-     * @param string $html_element_id The id of the html element to connect this control to.
+     * @param string $htmlElementId The id of the html element to connect this control to.
      */
-    function bind($html_element_id) {    //spit out bound javascript    
+    function bind($htmlElementId) {    //spit out bound javascript    
         $this->add_output($this->get_js_fieldname() .
-                ".initialize(\"#" . $html_element_id . "\"); ");
+                ".initialize(\"#" . $htmlElementId . "\"); ");
     }
 
     /**
      * Determine if this field meets all validator criteria
      *      
-     * @param variant $prev_value Unvalidate value
-     * @param variant $key_val ID of unvalidate value's row (primary key)
+     * @param variant $prevValue Unvalidate value
+     * @param variant $keyVal ID of unvalidate value's row (primary key)
      * @return boolean 
      */
-    function do_validations(& $prev_value, $key_val) {
+    function do_validations(& $prevValue, $keyVal) {
         foreach ($this->validators as $validator) {
-            if (!$validator($prev_value, $key_val))
+            if (!$validator($prevValue, $keyVal))
                 return false;
         }
         return true;
@@ -290,28 +293,28 @@ abstract class AcField {
      * Include the relevant javascript files necessary to power the view.
      */
     function do_js_includes_for_this_control() {  //Unique to AcField
-        AcField::include_js_file(AcField::$path_to_jquery);
-        AcField::include_js_file(Acfield::$path_to_controls . "/AcControls.js");
+        AcField::include_js_file(AcField::PATH_TO_JQUERY);
+        AcField::include_js_file(Acfield::PATH_TO_CONTROLS . "/AcControls.js");
     }
 
     /**
      * Dumps includes that need to be in the HEAD of the html document
      */
     static function flush_head_output() {
-        echo AcField::$cached_head_output;
-        AcField::$cached_head_output = "";
+        echo AcField::$cachedHeadOutput;
+        AcField::$cachedHeadOutput = "";
 
         //Generate useful error messages in the event that a new user declares things out of order.
-        if (AcField::$declaration_progress < .5)
+        if (AcField::$declarationProgress < .5)
             AcField::register_error("Please call handle-all-requests before any "
                     . " output and call flush_head_output in the "
                     . " head of the document. Thus flush_head_output"
                     . " should not be called first. ");
-        elseif (AcField::$declaration_progress != .5)
+        elseif (AcField::$declarationProgress != .5)
             AcField::register_error("Flush head output should be called one time, before flush "
                     . "output, after handle_all_requests, and in the HEAD section"
                     . " of the HTML document");
-        AcField::$declaration_progress = 1;
+        AcField::$declarationProgress = 1;
     }
 
     /**
@@ -322,12 +325,12 @@ abstract class AcField {
      */
     static function flush_output() {
         //Generate useful error messages in the event that a new user declares things out of order.        
-        if (!AcField::$declaration_progress && !AcField::$include_js_manually)
+        if (!AcField::$declarationProgress && !AcField::$includeJsManually)
             AcField::register_error("Be sure to flush head output before flushing output.");
 
-        AcField::$declaration_progress = 2;
-        echo AcField::$cached_output;
-        AcField::$cached_output = "";
+        AcField::$declarationProgress = 2;
+        echo AcField::$cachedOutput;
+        AcField::$cachedOutput = "";
     }
 
     /**
@@ -352,23 +355,6 @@ abstract class AcField {
     abstract function get_field_type_for_javascript();
 
     /**
-     * This function returns a particular instance from an ID (useful for passing IDs through session)
-     *
-     * Every instance of AcField is generated a unique id (integer). This allows us to have one unique 
-     *     number that acts as an identifier *across requests* to show us where to direct controller requests to.
-     * 
-     * This function convers such a unique id back into the relevant instance of AcField
-     * @param int $id The id for which you seek the corresponding AcField.
-     * @return AcField The correspondin AcField
-     */
-    static function instance_from_id($id) {
-        if (!isset(static::$all_instances[$id]))
-            return false;
-        $tmp = static::$all_instances[$id];
-        return $tmp;
-    }
-
-    /**
      * Create a unique id for each AcField control
      * 
      * @staticvar int $x The total number of controls instantiated
@@ -386,7 +372,7 @@ abstract class AcField {
      * @return string
      */
     function get_js_fieldname() {
-        return "AcField" . $this->unique_id;
+        return "AcField" . $this->uniqueId;
     }
 
     /**
@@ -395,19 +381,19 @@ abstract class AcField {
      */
     function &get_session_object() {
         global $PAGE_INSTANCE;
-        $unique_key = AcField::$unique_session_token;
+        $uniqueKey = AcField::$uniqueSessionToken;
 
-        if (!isset($_SESSION['_AcField'][$unique_key][$this->unique_id]))
-            $_SESSION['_AcField'][$unique_key][$this->unique_id] = array();
+        if (!isset($_SESSION['_AcField'][$uniqueKey][$this->uniqueId]))
+            $_SESSION['_AcField'][$uniqueKey][$this->uniqueId] = array();
 
-        return $_SESSION['_AcField'][$unique_key][$this->unique_id];
+        return $_SESSION['_AcField'][$uniqueKey][$this->uniqueId];
     }
 
     /**
      * accessor 
      */
     public function get_unique_id() {
-        return $this->unique_id;
+        return $this->uniqueId;
     }
 
     /**
@@ -415,14 +401,14 @@ abstract class AcField {
      * 
      */
     static function handle_all_requests() {   // In release mode, I recommend changing these $_REQUEST to post for a minor reduction in xsrf risk, and just for consistency with the meaning of GET and POST.
-        if (AcField::$declaration_progress < .25)
+        if (AcField::$declarationProgress < .25)
             AcField::register_error("Please declare your AcFields before calling handle_all_requests");
-        AcField::$declaration_progress = .5;
+        AcField::$declarationProgress = .5;
 
         if (!isset($_REQUEST['request']))
             return; //No ajax requests. I.E. We're just loading the page normally.
         else {
-            AcField::$declaration_progress = 100; //Don't monitor declaration progress in ajax 
+            AcField::$declarationProgress = 100; //Don't monitor declaration progress in ajax 
             // request mode, we obviously don't want javascript declared.
             $request = json_decode($_REQUEST['request'], true);
 
@@ -444,11 +430,11 @@ abstract class AcField {
      */
     function include_basics() {
         global $PAGE_INSTANCE;
-        if (!AcField::$basics_included) {
-            AcField::$basics_included = true;
-            AcField::$output_mode = "postponed";
+        if (!AcField::$basicsIncluded) {
+            AcField::$basicsIncluded = true;
+            AcField::$outputMode = "postponed";
             AcField::add_output("function AcFieldGetThisPage() { "
-                    . " return '" . AcField::$unique_session_token . "'; }");
+                    . " return '" . AcField::$uniqueSessionToken . "'; }");
         }
     }
 
@@ -458,30 +444,47 @@ abstract class AcField {
      * @param string $file a javascript filename
      */
     static function include_js_file($file) {
-        // These 6 lines ensure that includes don't accidentally double or omit the / for paths.
-        if (strlen(AcField::$include_directory_js) && (substr(AcField::$include_directory_js, 0, 1) == '/'))
-            AcField::$include_directory_js = ltrim(AcField::$include_directory_js, "/");
-        if (strlen(AcField::$include_directory_js) && (substr(AcField::$include_directory_js, -1) == '/'))
-            AcField::$include_directory_js = rtrim(AcField::$include_directory_js, "/");
+       /*
+        if (strlen(AcField::INCLUDE_DIRECTORY_JS) && (substr(AcField::INCLUDE_DIRECTORY_JS, 0, 1) == '/'))
+            AcField::INCLUDE_DIRECTORY_JS = ltrim(AcField::INCLUDE_DIRECTORY_JS, "/");
+        if (strlen(AcField::INCLUDE_DIRECTORY_JS) && (substr(AcField::INCLUDE_DIRECTORY_JS, -1) == '/'))
+            AcField::INCLUDE_DIRECTORY_JS = rtrim(AcField::INCLUDE_DIRECTORY_JS, "/");
         if (strlen($file) && (substr($file, 0, 1) != '/'))
-            $file = '/' . $file;
-        if (isset(AcField::$included_js_files[$file])) //prevent double-inclusion of files
+            $file = '/' . $file;*/
+        if (isset(AcField::$includedJsFiles[$file])) //prevent double-inclusion of files
             return;
 
-        AcField::$included_js_files[$file] = true;
-        AcField::add_head_output("<script language='javascript' src='" . AcField::$include_directory_js . "$file'></script>");
+        AcField::$includedJsFiles[$file] = true;
+        AcField::add_head_output("<script language='javascript' src='" . AcField::INCLUDE_DIRECTORY_JS . "$file'></script>");
     }
 
+     /**
+     * This function returns a particular instance from an ID (useful for passing IDs through session)
+     *
+     * Every instance of AcField is generated a unique id (integer). This allows us to have one unique 
+     *     number that acts as an identifier *across requests* to show us where to direct controller requests to.
+     * 
+     * This function convers such a unique id back into the relevant instance of AcField
+     * @param int $id The id for which you seek the corresponding AcField.
+     * @return AcField The correspondin AcField
+     */
+    static function instance_from_id($id) {
+        if (!isset(static::$allInstances[$id]))
+            return false;
+        $tmp = static::$allInstances[$id];
+        return $tmp;
+    }
+    
     /**
      *    Load a value of a field based on a specified key. 
      */
     function load_unchecked($key) { //Take a key that refers to a primary key value in the table, and store it in the session to 
         // prevent client-side manipulation that would allow arbitrary load requests.
-        $hardcoded_key_id = generate_unique_id();
+        $hardcodedKeyId = generate_unique_id();
 
-        $this->hardcoded_loads[$hardcoded_key_id] = $key;
+        $this->hardcodedLoads[$hardcodedKeyId] = $key;
 
-        $this->add_output($this->get_js_fieldname() . ".loadField( $hardcoded_key_id, 'static'); ");
+        $this->add_output($this->get_js_fieldname() . ".loadField( $hardcodedKeyId, 'static'); ");
     }
 
     /**
@@ -490,7 +493,7 @@ abstract class AcField {
      * Alter this function as appropriate for your level of experience, error reporting system, and development/release systems.
      */
     static function register_error($string) {
-        if (!AcField::$silence_errors) {
+        if (!AcField::$silenceErrors) {
             trigger_error("Error: $string. <br>\n You may find the wiki useful: https://github.com/anfurny/ALive-Fields/wiki/Using-the-Library");
             die();
         }
@@ -500,16 +503,16 @@ abstract class AcField {
      * This function registers a validator
      */
     function register_validator($callback) {
-        $our_version = explode(".", phpversion());
+        $ourVersion = explode(".", phpversion());
         if (is_array($callback)) {//using an assoc array
             if (isset($callback["length"])) {
                 preg_match_all('/[0-9]?<' . '?' . '>' . '?=?/', $callback["length"], $matches);
-                $length_expr = join($matches[0], "");
+                $lengthExpr = join($matches[0], "");
 
-                if ($our_version[0] >= 5) {
-                    $this->register_validator(function($val) use ( $length_expr ) {
+                if ($ourVersion[0] >= 5) {
+                    $this->register_validator(function($val) use ( $lengthExpr ) {
                                 $x = strlen($val);
-                                return eval("return $x $length_expr;");
+                                return eval("return $x $lengthExpr;");
                             });
                 }
             }
@@ -532,9 +535,9 @@ abstract class AcField {
                 }
                 $copy = $this;
                 $this->register_validator(function($val, $pkey) use ($callback, $copy) {
-                            $query = "SELECT count(*) as res from " . $this->adapter->escape_table_name($copy->bound_table) . " WHERE  "
-                                    . $this->adapter->escape_field_name($copy->bound_field) . " = " . $this->adapter->escape_field_value($val)
-                                    . " AND " . $this->adapter->escape_field_name($copy->bound_pkey) . " != " . $this->adapter->escape_field_value($pkey);
+                            $query = "SELECT count(*) as res from " . $this->adapter->escape_table_name($copy->boundTable) . " WHERE  "
+                                    . $this->adapter->escape_field_name($copy->boundField) . " = " . $this->adapter->escape_field_value($val)
+                                    . " AND " . $this->adapter->escape_field_name($copy->boundPkey) . " != " . $this->adapter->escape_field_value($pkey);
                             $result = $this->adapter->query_read($query);
                             return (($result[0]['res'] == 0) == (bool) ($callback['unique']));
                         });
@@ -571,7 +574,7 @@ abstract class AcField {
     }
 
     static public function set_default_adapter($adapter) {
-        AcField::$default_adapter = $adapter;
+        AcField::$defaultAdapter = $adapter;
     }
 
     /**
@@ -585,7 +588,7 @@ abstract class AcField {
 
         $this->add_output($this->get_js_fieldname() . ".dependentFields = [];");
         foreach ($arr as $i) {
-            $tmp['dependent_fields'][] = $i->unique_id;
+            $tmp['dependent_fields'][] = $i->uniqueId;
             $this->add_output($this->get_js_fieldname() . ".dependentFields.push ( " . $i->get_js_fieldname() . ");");
         }
     }
@@ -597,19 +600,19 @@ abstract class AcField {
      * [type] = ("value" / "text") , ['control'] = the actual AcField being updated
      */
     function set_filtered_fields($filt) {
-        $my_session_object = &$this->get_session_object();
-        $my_session_object['filtered_fields'] = $this->filtered_fields = array();
+        $mySessionObject = &$this->get_session_object();
+        $mySessionObject['filtered_fields'] = $this->filteredFields = array();
 
         foreach ($filt as $i) {
             if (!isset($i['type']))
                 $i['type'] = "value";
 
-            $my_session_object['filtered_fields'][] = array($i['control']->unique_id, $i['field'], $i['type']);
-            $this->filtered_fields[] = array($i['control']->unique_id, $i['field'], $i['type']);
+            $mySessionObject['filtered_fields'][] = array($i['control']->uniqueId, $i['field'], $i['type']);
+            $this->filteredFields[] = array($i['control']->uniqueId, $i['field'], $i['type']);
 
-            $new_filt[] = $i['control']->get_js_fieldname();
+            $newFilter[] = $i['control']->get_js_fieldname();
         }
-        $this->add_output($this->get_js_fieldname() . ".filteredFields = [" . join($new_filt, ", ") . "]; ");
+        $this->add_output($this->get_js_fieldname() . ".filteredFields = [" . join($newFilter, ", ") . "]; ");
         return NULL;
     }
 

@@ -16,22 +16,22 @@
  */
 class AcAdapterMysql implements AcAdapter_Interface {
 
-    private $conn_readonly;
-    private $conn_readwrite;
+    private $connReadonly;
+    private $connReadwrite;
 
-    public function __construct($host, $user_readonly, $pass_readonly, $db, $user_readwrite = null, $pass_readwrite = null) {
-        if ($user_readwrite === null)
-            $user_readwrite = $pass_readonly;
-        if ($pass_readwrite === null)
-            $pass_readwrite = $pass_readwrite;
+    public function __construct($host, $userReadonly, $passReadonly, $db, $userReadwrite = null, $passReadwrite = null) {
+        if ($userReadwrite === null)
+            $userReadwrite = $passReadonly;
+        if ($passReadwrite === null)
+            $passReadwrite = $passReadwrite;
 
-        $this->conn_readonly = mysql_connect($host, $user_readonly, $pass_readonly)
+        $this->connReadonly = mysql_connect($host, $userReadonly, $passReadonly)
                 or handleError("Could not connect to Mysql database for read.");
-        mysql_query("USE $db;", $this->conn_readonly);
+        mysql_query("USE $db;", $this->connReadonly);
 
-        $this->conn_readwrite = mysql_connect($host, $user_readwrite, $pass_readwrite)
+        $this->connReadwrite = mysql_connect($host, $userReadwrite, $passReadwrite)
                 or handleError("could not connect to Mysql database for write.");
-        mysql_query("USE $db;", $this->conn_readwrite);
+        mysql_query("USE $db;", $this->connReadwrite);
     }
 
     /**
@@ -50,15 +50,15 @@ class AcAdapterMysql implements AcAdapter_Interface {
      *  Allows read access only. Useful in minimizing sql injection possibilities.
      */
 
-    function query_read($query, $limit_rows_returned = 0) {
+    function query_read($query, $limitRowsReturned = 0) {
         $DEBUG = false;
         $result = NULL;
 
         //In mysql (default) we limit selects by appending the string LIMIT X to them. Change this line according to your database
-        if ($limit_rows_returned > 0)
-            $query .= " LIMIT " . (int) $limit_rows_returned;
+        if ($limitRowsReturned > 0)
+            $query .= " LIMIT " . (int) $limitRowsReturned;
 
-        $rs = mysql_query($query, $this->conn_readonly);
+        $rs = mysql_query($query, $this->connReadonly);
         if (!$rs) {
             throw new ErrorException("Failed on query $query. = " . mysql_error());
         }
@@ -74,14 +74,14 @@ class AcAdapterMysql implements AcAdapter_Interface {
      * allows write access.
      *
      * @param string $query The SQL query that communicates how we want this adapter to change its data.
-     * @param type $limit_rows_affected a safety precaution which isn't strictly necessary if this tool is used properly, but certainly is recommended.
+     * @param type $limitRowsAffected a safety precaution which isn't strictly necessary if this tool is used properly, but certainly is recommended.
      */
-    function query_write($query, $limit_rows_affected = 0) {
+    function query_write($query, $limitRowsAffected = 0) {
 
-        if ($limit_rows_affected > 0)
-            $query .= " LIMIT " . (int) $limit_rows_affected;
+        if ($limitRowsAffected > 0)
+            $query .= " LIMIT " . (int) $limitRowsAffected;
 
-        $rs = mysql_query($query, $this->conn_readwrite);
+        $rs = mysql_query($query, $this->connReadwrite);
         if (!$rs) {
             throw new ErrorException("Failed on query $query " . mysql_error());
         }
@@ -94,9 +94,9 @@ class AcAdapterMysql implements AcAdapter_Interface {
      * @param type Whether or not to add quotes
      * @return Escaped field name
      */
-    function escape_field_name($field, $add_quotes = true) {
+    function escape_field_name($field, $addQuotes = true) {
 
-        return $this->escape_field_name_mysql($field, $add_quotes);
+        return $this->escape_field_name_mysql($field, $addQuotes);
     }
 
     /**
@@ -106,9 +106,9 @@ class AcAdapterMysql implements AcAdapter_Interface {
      * @param type Whether or not to add quotes
      * @return Escaped table name
      */
-    function escape_table_name($field, $add_quotes = true) {
+    function escape_table_name($field, $addQuotes = true) {
 
-        return $this->escape_field_name_mysql($field, $add_quotes); //happens to be the same for mysql
+        return $this->escape_field_name_mysql($field, $addQuotes); //happens to be the same for mysql
     }
 
     /**
@@ -118,9 +118,9 @@ class AcAdapterMysql implements AcAdapter_Interface {
      * @param type Whether or not to add quotes
      * @return Escaped field value
      */
-    function escape_field_value($field, $add_quotes = true) {
+    function escape_field_value($field, $addQuotes = true) {
 
-        return $this->escape_field_value_mysql($field, $add_quotes);
+        return $this->escape_field_value_mysql($field, $addQuotes);
     }
 
     /**
@@ -137,8 +137,8 @@ class AcAdapterMysql implements AcAdapter_Interface {
      * @param type $field
      * @return type
      */
-    function escape_field_value_mysql($val, $add_quotes = true) {
-        if ($add_quotes)
+    function escape_field_value_mysql($val, $addQuotes = true) {
+        if ($addQuotes)
             return "'" . mysql_real_escape_string($val) . "'";
         else
             return mysql_real_escape_string($val);
@@ -153,8 +153,8 @@ class AcAdapterMysql implements AcAdapter_Interface {
       return "[" . str_replace(array(" ", "'", "[", "]", "\\", "`", "&"), "", $field) . "]";
      * }
      *
-     * function escape_field_value_mssql($val, $add_quotes = true) {
-      if ($add_quotes)
+     * function escape_field_value_mssql($val, $addQuotes = true) {
+      if ($addQuotes)
       return "'" . str_replace("'", "''", $val) . "'";
       else
       return str_replace("'", "''", $val);

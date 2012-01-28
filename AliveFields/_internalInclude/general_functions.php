@@ -11,41 +11,41 @@
  * 
  * @param $_REQUEST $request
  * @param string $table
- * @param string $field_unique_id
+ * @param string $fieldUniqueId
  * @return array of "Filters" (restrictions) to be applied to the query 
  */
-function apply_list_filters($fakeThis, & $request, $table, $field_unique_id)
+function apply_list_filters(AcField $fakeThis, & $request, $table, $fieldUniqueId)
     {
     $filters = array();
     $fieldnames = array();
     $fieldvals = array();
     
     foreach ($request["filters"] as $filt) {// Only apply filters that are by asked for by the client-side request. 
-        foreach ($filt as $source_fieldUniqueId) //for each client-picked filterING control...
+        foreach ($filt as $sourceFieldUniqueId) //for each client-picked filterING control...
            {     
-                $source_field = AcField::instance_from_id($source_fieldUniqueId) or throw_error("Library Error #3"); 
+                $sourceField = AcField::instance_from_id($sourceFieldUniqueId) or throw_error("Library Error #3"); 
                 //In event of a nonexistent source_fieldUniqueId passed, terminate.
-                //Remember $source_field->filtered_fields  represents all of the OTHER fields that this given AcList FILTERS.
+                //Remember $sourceField->filteredFields  represents the fields that this given AcList FILTERS.
 
-                foreach ($source_field->filtered_fields as $filtering_type)  
-                    if ($filtering_type[0] == $field_unique_id) // For each alleged filter from the request, ensure that said filter actually is allowed to filter THIS control.
+                foreach ($sourceField->filteredFields as $filteringType)  
+                    if ($filteringType[0] == $fieldUniqueId) // For each alleged filter from the request, ensure that said filter actually is allowed to filter THIS control.
                         {
                         
-                        if ($filtering_type[2] == "value")
+                        if ($filteringType[2] == "value")
                             { //Filtering by Pkey
                               
-                            verify_control_could_contain_value($source_field, $request['requesting_page'], $request["requester_key"], "pkey") or die("security issue 1"); 
+                            verify_control_could_contain_value($sourceField, $request['requesting_page'], $request["requester_key"], "pkey") or die("security issue 1"); 
                        
-                            $filters[] = ($table) . "." . $fakeThis->adapter->escape_field_name($filtering_type[1]) . " = " 
+                            $filters[] = ($table) . "." . $fakeThis->adapter->escape_field_name($filteringType[1]) . " = " 
                                                   . $fakeThis->adapter->escape_field_value($request["requester_key"]);
-                            $fieldnames[] =  $fakeThis->adapter->escape_field_name($filtering_type[1]);
+                            $fieldnames[] =  $fakeThis->adapter->escape_field_name($filteringType[1]);
                             $fieldvals[]  =  $fakeThis->adapter->escape_field_value($request["requester_key"]);                            
                             }
                         else
                             { //Filtering by Text
-                            verify_control_could_contain_value($source_field, $request['requesting_page'], $request["requester_text"], "text") or die("security issue 2");                             
-                            $filters[] = ($table) . "." . _AcField_escape_field_name($filtering_type[1])  . " = " . _AcField_escape_field_value($request["requester_text"]);                    
-                            $fieldnames[] =  _AcField_escape_field_name($filtering_type[1]);
+                            verify_control_could_contain_value($sourceField, $request['requesting_page'], $request["requester_text"], "text") or die("security issue 2");                             
+                            $filters[] = ($table) . "." . _AcField_escape_field_name($filteringType[1])  . " = " . _AcField_escape_field_value($request["requester_text"]);                    
+                            $fieldnames[] =  _AcField_escape_field_name($filteringType[1]);
                             $fieldvals[] =  _AcField_escape_field_value($request["requester_text"]);
                             }
                         }
@@ -115,28 +115,28 @@ function remove_magic_quotes()
  * @param type $field - Where $fakeThis should contain the value 
  * @return boolean 
  */
-function verify_control_could_contain_value($fakeThis, $page, $value, $field)
+function verify_control_could_contain_value(AcField $fakeThis, $page, $value, $field)
 {
  /* echo "<BR><BR>";
   var_dump($fakeThis);
   echo "<BR><BR>";
   echo $fieldUniqueId;*/
   
-  $this_sess = $_SESSION['_AcField'][$page][$fakeThis->get_unique_id()];
+  $thisSess = $_SESSION['_AcField'][$page][$fakeThis->get_unique_id()];
 
-  if (! isset($this_sess["last_used_query"]) ) {
+  if (! isset($thisSess["last_used_query"]) ) {
       return false;
   }
   if ($field == "pkey")
-      $fieldname = $fakeThis->bound_pkey;
+      $fieldname = $fakeThis->boundPkey;
   elseif ($field == "text")
-      $fieldname = $fakeThis->bound_field;
+      $fieldname = $fakeThis->boundField;
   elseif ($field == "optionValue")
        $fieldname = $fakeThis->options_pkey;
   else
       die("unknown verify type: $field");
   //WHat about stuff? which queries are active which filters I mean? All will be used in its last query... Cool.
-  $query = $this_sess["last_used_query"] . " AND " . $fakeThis->adapter->escape_field_name($fieldname) . " = " . $fakeThis->adapter->escape_field_value($value);    
+  $query = $thisSess["last_used_query"] . " AND " . $fakeThis->adapter->escape_field_name($fieldname) . " = " . $fakeThis->adapter->escape_field_value($value);    
   
   $result = ($fakeThis->adapter->query_read($query, 1));
   
@@ -153,25 +153,25 @@ function verify_control_could_contain_value($fakeThis, $page, $value, $field)
  * 
  *  Used for AcJoinSelectboxes
  */
-function verify_control_could_contain_value_set($fakeThis, $page, $fieldUniqueId, $value_array /*, $field*/)
+function verify_control_could_contain_value_set($fakeThis, $page, $fieldUniqueId, $valueArray /*, $field*/)
 {
-  $test_field = $_SESSION['_AcField'][$page][$fieldUniqueId];
-  $this_field = AcField::instance_from_id($fieldUniqueId);
+  $testField = $_SESSION['_AcField'][$page][$fieldUniqueId];
+  $thisField = AcField::instance_from_id($fieldUniqueId);
 
-  if (! isset($test_field["last_used_query"]) )
+  if (! isset($testField["last_used_query"]) )
           return false;
 
-  $query = $test_field["last_used_query"]; 
+  $query = $testField["last_used_query"]; 
   $result = ($fakeThis->adapter->query_read($query, 1));
   
-  foreach ($result as $this_row)
-      $valid_values[] = $this_row['value'];
+  foreach ($result as $thisRow)
+      $validValues[] = $thisRow['value'];
 
   //var_dump($value_array);
-  foreach ($value_array as $value)
+  foreach ($valueArray as $value)
       {
     //echo "<BR> Testing $value against " . join(",", $valid_values);
-    if (! array_search($value, $valid_values) === false)
+    if (! array_search($value, $validValues) === false)
         return false;        
     }
   return true;

@@ -55,7 +55,7 @@ function AcListJoin_controller_save(& $fakeThis, $request) {
     $requesterPage = $request['requesting_page'];
     $sourceUniqueId = $request['source_field'];
     $thisFieldSession = & $_SESSION['_AcField'][$requesterPage][$fieldUniqueId];
-    $table = $fakeThis->bound_table;
+    $table = $fakeThis->boundTable;
     $values = $request["fieldInfo"];
 
     if ($fakeThis->mode == "limited")
@@ -91,9 +91,9 @@ function AcListJoin_controller_save(& $fakeThis, $request) {
     if (!$fakeThis->do_multi_validations($postVal, $thisFieldSession['loaded_pkey']))
         throw_error("Could not save field: Validation Failed");
 
-    $join_table = $fakeThis->adapter->escape_table_name($fakeThis->join_table);
-    $join_to_left = $fakeThis->adapter->escape_field_name($fakeThis->bound_pkey);
-    $join_to_right = $fakeThis->adapter->escape_field_name($fakeThis->join_to_right_field);
+    $joinTable = $fakeThis->adapter->escape_table_name($fakeThis->joinTable);
+    $joinToLeft = $fakeThis->adapter->escape_field_name($fakeThis->boundPkey);
+    $joinToRight = $fakeThis->adapter->escape_field_name($fakeThis->joinToRightField);
 
     /**
      * Does this need to go through session? ??? 
@@ -109,13 +109,13 @@ function AcListJoin_controller_save(& $fakeThis, $request) {
     $whereCondition = join(" AND ", $whereCondition);
 
 // remove all rows that weren't selected            
-    $sql = "DELETE FROM $join_table WHERE ($join_table.$join_to_right NOT IN (" . join(",", $valuesArr) . ") AND $whereCondition)";
+    $sql = "DELETE FROM $joinTable WHERE ($joinTable.$joinToRight NOT IN (" . join(",", $valuesArr) . ") AND $whereCondition)";
     $fakeThis->adapter->query_write($sql);
 
     /*
      *  Lastly, the primary key
      */
-    $insertFieldNames[] = $join_to_right;
+    $insertFieldNames[] = $joinToRight;
 
     // ensure all client-selected values now have a join-table row
     // Broaden $where_condition because we want to now individually focus on each item in post_val        
@@ -123,7 +123,7 @@ function AcListJoin_controller_save(& $fakeThis, $request) {
     /**
      *  get the list of already present appropriate keys
      */   
-    $query = "SELECT $join_to_right as id FROM $join_table WHERE $whereCondition"; 
+    $query = "SELECT $joinToRight as id FROM $joinTable WHERE $whereCondition"; 
     $result = $fakeThis->adapter->query_read($query);
     if (!$result)
        $result = array();
@@ -150,7 +150,7 @@ function AcListJoin_controller_save(& $fakeThis, $request) {
             $fakeThis->do_insert_validations($tmp = array_combine($insertFieldNames, $valuesRow));
             $insertValues[$key] = "(" . join(",", $valuesRow) . ")";
             }
-        $sql = "INSERT INTO $join_table (" . join(",", $insertFieldNames) . ") VALUES " . join(",", $insertValues) . " ";        
+        $sql = "INSERT INTO $joinTable (" . join(",", $insertFieldNames) . ") VALUES " . join(",", $insertValues) . " ";        
         $fakeThis->adapter->query_write($sql);
     }
 

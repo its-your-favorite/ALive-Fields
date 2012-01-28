@@ -15,8 +15,8 @@ class AcListJoin extends AcList
      * @var string "default" or "limited" Determines if control shows all possible values
      */
     public $mode; 
-    public  $join_table, $join_to_right_field, $join_from_right_field;
-    private $multi_validators;
+    public  $joinTable, $joinToRightField, $joinFromRightField;
+    private $multiValidators;
 
     /**
      * Constructor
@@ -24,20 +24,20 @@ class AcListJoin extends AcList
      * @param string $field Same as in AcField
      * @param string $table Same as in AcField
      * @param string $id Same as in AcField
-     * @param string $join_table Table name 
-     * @param string $join_to_right_field Field name
-     * @param string $join_from_right_field Field name
+     * @param string $joinTable Table name 
+     * @param string $joinToRightField Field name
+     * @param string $joinFromRightField Field name
      * @param CONST $loadable  Same as in AcField
      * @param CONST $savable  Same as in AcField
      */
-    function __construct($field, $table, $id, $join_table, $join_to_right_field, 
-                                    $join_from_right_field, $loadable, $savable)
+    function __construct($field, $table, $id, $joinTable, $joinToRightField, 
+                                    $joinFromRightField, $loadable, $savable)
     {
         parent::__construct($field,$table,$id,(int)$loadable,(int)$savable);
-        $this->join_to_right_field = $join_to_right_field;
-        $this->join_from_right_field = $join_from_right_field;
-        $this->join_table = $join_table;
-        $this->multi_validators = array();
+        $this->joinToRightField = $joinToRightField;
+        $this->joinFromRightField = $joinFromRightField;
+        $this->joinTable = $joinTable;
+        $this->multiValidators = array();
         $this->mode = "default";
     }    
 
@@ -52,10 +52,11 @@ class AcListJoin extends AcList
     
     function do_insert_validations( $prev_value_assoc_array)
     {
+        return true;
         //NEED TO WRITE THIS . Maybe move it to AcField
-        foreach ($this->multi_validators as $validator_multi)
+        foreach ($this->multiValidators as $validatorMulti)
             {
-                if (!$validator_multi($prev_value, $key_val))
+                if (!$validatorMulti($prev_value, $key_val))
                     return false;
             }
         return true;
@@ -66,10 +67,10 @@ class AcListJoin extends AcList
     */
     function do_js_includes_for_this_control()
     {  //Unique to AcField
-        AcField::include_js_file(AcField::$path_to_jquery);            
-        AcField::include_js_file(Acfield::$path_to_controls . "/AcControls.js");    
-        AcField::include_js_file(Acfield::$path_to_controls . "/AcSelectbox/AcSelectbox.js");
-        AcField::include_js_file(Acfield::$path_to_controls . "/AcSelectbox/AcJoinSelectbox.js");
+        AcField::include_js_file(AcField::PATH_TO_JQUERY);            
+        AcField::include_js_file(Acfield::PATH_TO_CONTROLS . "/AcControls.js");    
+        AcField::include_js_file(Acfield::PATH_TO_CONTROLS . "/AcSelectbox/AcSelectbox.js");
+        AcField::include_js_file(Acfield::PATH_TO_CONTROLS . "/AcSelectbox/AcJoinSelectbox.js");
     }    
     
     
@@ -77,16 +78,16 @@ class AcListJoin extends AcList
     * Validations
     * 
     * @INCOPMLETE
-    * @param type $prev_value
-    * @param type $key_val
+    * @param type $prevValue
+    * @param type $keyVal
     * @return boolean 
     */
-    function do_multi_validations(& $prev_value, $key_val)
+    function do_multi_validations(& $prevValue, $keyVal)
     {
         //NEED TO WRITE AN INSERT HANDLER FOR THIS.
-        foreach ($this->multi_validators as $validator_multi)
+        foreach ($this->multiValidators as $validatorMulti)
             {
-                if (!$validator_multi($prev_value, $key_val))
+                if (!$validatorMulti($prevValue, $keyVal))
                     return false;
             }
         return true;

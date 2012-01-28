@@ -9,7 +9,7 @@
  */
 abstract class AcList extends AcField {
 
-    public $options_field, $options_table, $options_pkey, $options_loadability;
+    public $optionsField, $optionsTable, $optionsPkey, $optionsLoadability;
 
     /**
      * Constructor follows much the same format as AcField
@@ -18,10 +18,10 @@ abstract class AcList extends AcField {
     function __construct($field, $table, $id, $loadable, $savable) {
         parent::__construct($field, $table, $id, (int) $loadable, (int) $savable);
         $tmp = &parent::get_session_object();
-        $this->options_field = $tmp['options_field'] = $field; //default to same values.
-        $this->options_table = $tmp['options_table'] = $table;
-        $this->options_pkey = $tmp['options_pkey'] = $id;
-        $this->options_loadability = $tmp['options_loadability'] = $loadable;
+        $this->optionsField = $tmp['options_field'] = $field; //default to same values.
+        $this->optionsTable = $tmp['options_table'] = $table;
+        $this->optionsPkey = $tmp['options_pkey'] = $id;
+        $this->optionsLoadability = $tmp['options_loadability'] = $loadable;
     }
 
     /**
@@ -33,25 +33,25 @@ abstract class AcList extends AcField {
      */
     function differentiate_options($field, $table, $id, $populatability) {
         $tmp = &$this->get_session_object();
-        $this->options_field = $tmp['options_field'] = $field; //default to same values.
-        $this->options_table = $tmp['options_table'] = $table;
-        $this->options_pkey = $tmp['options_pkey'] = $id;
-        $this->options_loadability = $tmp['options_loadability'] = $populatability;
+        $this->optionsField = $tmp['options_field'] = $field; //default to same values.
+        $this->optionsTable = $tmp['options_table'] = $table;
+        $this->optionsPkey = $tmp['options_pkey'] = $id;
+        $this->optionsLoadability = $tmp['options_loadability'] = $populatability;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
-    function bind($html_element_id, $autoload = true) {
-        $this->add_output($this->get_js_fieldname() . ".initialize(\"#" . $html_element_id . "\", null, " . (int) $autoload . "); ");
+    function bind($htmlElementId, $autoload = true) {
+        $this->add_output($this->get_js_fieldname() . ".initialize(\"#" . $htmlElementId . "\", null, " . (int) $autoload . "); ");
     }
 
     /** This function includes all the necessary javascript files for the javascript widget
      * in the view that that connects with this controller.
      */
     function do_js_includes_for_this_control() {  //Unique to AcField
-        AcField::include_js_file(AcField::$path_to_jquery);
-        AcField::include_js_file(Acfield::$path_to_controls . "/AcControls.js");
-        AcField::include_js_file(Acfield::$path_to_controls . "/AcSelectbox/AcSelectbox.js");
+        AcField::include_js_file(AcField::PATH_TO_JQUERY);
+        AcField::include_js_file(Acfield::PATH_TO_CONTROLS . "/AcControls.js");
+        AcField::include_js_file(Acfield::PATH_TO_CONTROLS . "/AcSelectbox/AcSelectbox.js");
     }
 
     /**

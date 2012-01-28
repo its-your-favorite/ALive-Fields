@@ -10,7 +10,7 @@ require_once("_internalInclude/general_functions.php");
 function internalAutoloader($name) {
     $dir = explode("/", __DIR__);
     $dir = explode("\\", end($dir));
-    $this_dir = end($dir);
+    $thisDir = end($dir);
 
     if ($name === "AcList")
         require_once("AcList/$name.php");
